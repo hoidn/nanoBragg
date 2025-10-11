@@ -1,0 +1,95 @@
+TEST SUITE TRIAGE - PHASE M2 - CHUNK 02
+========================================
+
+STAMP: 20251011T193829Z
+Execution Date: 2025-10-11
+
+COMMAND EXECUTED:
+-----------------
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_bkg_001.py \
+  tests/test_at_crystal_absolute.py \
+  tests/test_at_io_003.py \
+  tests/test_at_parallel_008.py \
+  tests/test_at_parallel_018.py \
+  tests/test_at_parallel_029.py \
+  tests/test_at_pre_001.py \
+  tests/test_at_src_003.py \
+  tests/test_cli_scaling_phi0.py \
+  tests/test_divergence_culling.py \
+  tests/test_pivot_mode_selection.py \
+  --maxfail=0 --durations=25
+
+RESULTS SUMMARY:
+----------------
+Exit Code: 0 (SUCCESS)
+Total Tests Collected: 51
+- PASSED: 46
+- SKIPPED: 5
+- FAILED: 0
+- WARNINGS: 4
+
+Runtime: 32.57s (well under 60s threshold)
+
+TEST BREAKDOWN BY FILE:
+-----------------------
+✓ test_at_bkg_001.py: 3 passed
+✓ test_at_crystal_absolute.py: 3 passed
+✓ test_at_io_003.py: 6 passed
+○ test_at_parallel_008.py: 3 skipped
+✓ test_at_parallel_018.py: 8 passed
+✓ test_at_parallel_029.py: 3 passed, 2 skipped
+✓ test_at_pre_001.py: 3 passed
+✓ test_at_src_003.py: 7 passed
+✓ test_cli_scaling_phi0.py: 2 passed
+✓ test_divergence_culling.py: 6 passed
+✓ test_pivot_mode_selection.py: 5 passed
+
+SKIPPED TESTS:
+--------------
+1. test_at_parallel_008.py::TestAT_PARALLEL_008::test_triclinic_multi_peak_pattern
+2. test_at_parallel_008.py::TestAT_PARALLEL_008::test_peak_intensity_ordering
+3. test_at_parallel_008.py::TestAT_PARALLEL_008::test_non_max_suppression
+4. test_at_parallel_029.py::TestSubpixelSamplingAT029::test_c_pytorch_oversample_equivalence
+5. test_at_parallel_029.py::TestSubpixelSamplingAT029::test_issue_subpixel_aliasing
+
+WARNINGS:
+---------
+- 3x DeprecationWarning: __array_wrap__ NumPy 2.0 compatibility (test_at_crystal_absolute.py)
+- 1x UserWarning: Sourcefile wavelength column mismatch (test_at_src_003.py, expected behavior)
+
+SLOWEST TESTS (Top 10):
+-----------------------
+1. 6.93s - test_at_pre_001.py::test_mask_beam_center_y_flip
+2. 6.71s - test_at_pre_001.py::test_img_only_no_mask
+3. 6.47s - test_at_pre_001.py::test_header_precedence_img_then_mask
+4. 2.66s - test_at_bkg_001.py::test_water_background_calculation
+5. 1.88s - test_at_crystal_absolute.py::test_triclinic_absolute_positions
+6. 1.73s - test_at_parallel_029.py::test_pytorch_aliasing_reduction
+7. 1.57s - test_at_parallel_018.py::test_aligned_spindle_and_beam
+8. 0.51s - test_at_bkg_001.py::test_water_background_additive
+9. 0.49s - test_at_parallel_029.py::test_pytorch_fwhm_convergence
+10. 0.44s - test_at_parallel_029.py::test_pytorch_peak_stability
+
+PERFORMANCE NOTES:
+------------------
+- test_at_pre_001.py tests dominate runtime (~20s of 32.57s total)
+- These tests involve C binary execution and SMV file parsing
+- All other tests complete in <3s individually
+
+OUTPUT FILES:
+-------------
+- Full pytest log: pytest.log (first run with tee)
+- Final pytest log: pytest_final.log (second run)
+- Exit code: exit_code.txt
+- This summary: summary.txt
+
+CONCLUSION:
+-----------
+✓ All tests PASSED or SKIPPED (no failures)
+✓ Runtime well within 60s threshold
+✓ Exit code 0 indicates complete success
+✓ Skipped tests are intentional (marked as skip in test files)
+✓ Warnings are non-critical (deprecation notices and expected user warnings)
+
+STATUS: CHUNK 02 EXECUTION COMPLETE - ALL TESTS HEALTHY

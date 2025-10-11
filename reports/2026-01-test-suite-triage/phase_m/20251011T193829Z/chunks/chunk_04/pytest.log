@@ -1,0 +1,176 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 86 items
+
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F PASSED [  1%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_hkl_file PASSED [  2%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_data_ordering_fast_major PASSED [  3%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_error_without_required_inputs PASSED [  4%]
+tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping PASSED [  5%]
+tests/test_at_noise_001.py::TestATNoise001::test_small_mean_exact_poisson PASSED [  6%]
+tests/test_at_noise_001.py::TestATNoise001::test_medium_mean_rejection_sampling PASSED [  8%]
+tests/test_at_noise_001.py::TestATNoise001::test_large_mean_gaussian_approximation PASSED [  9%]
+tests/test_at_noise_001.py::TestATNoise001::test_seed_reproducibility PASSED [ 10%]
+tests/test_at_noise_001.py::TestATNoise001::test_adc_and_clipping PASSED [ 11%]
+tests/test_at_noise_001.py::TestATNoise001::test_all_regimes_in_single_image PASSED [ 12%]
+tests/test_at_noise_001.py::TestATNoise001::test_noise_config_integration PASSED [ 13%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_point_pixel_distance_scaling SKIPPED [ 15%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_obliquity_distance_scaling SKIPPED [ 16%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_obliquity_with_tilts SKIPPED [ 17%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_combined_distance_and_tilt SKIPPED [ 18%]
+tests/test_at_parallel_021.py::TestCrystalPhiRotation::test_single_step_phi_rotation SKIPPED [ 19%]
+tests/test_at_parallel_021.py::TestCrystalPhiRotation::test_multi_step_phi_rotation SKIPPED [ 20%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_cpu_thread_scaling FAILED [ 22%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_pytorch_cpu_vs_c_performance PASSED [ 23%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_gpu_acceleration SKIPPED [ 24%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_thread_efficiency PASSED [ 25%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_bounds_default_to_full_detector PASSED [ 26%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_bounds_validation PASSED [ 27%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_limits_rendering_area PASSED [ 29%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_mask_array_filtering PASSED [ 30%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_and_mask_combination PASSED [ 31%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_mask_array_dimension_validation PASSED [ 32%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_statistics_exclude_masked_pixels PASSED [ 33%]
+tests/test_at_str_001.py::test_at_str_001_nearest_neighbor_lookup PASSED [ 34%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_cubic_regression PASSED [ 36%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_triclinic_correctness PASSED [ 37%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_metric_duality PASSED [ 38%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_volume_identity PASSED [ 39%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_resolution_shell_consistency PASSED [ 40%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_rotation_invariance PASSED [ 41%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_gradient_flow PASSED [ 43%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_identity PASSED [ 44%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_x_rotation PASSED [ 45%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_y_rotation PASSED [ 46%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_z_rotation PASSED [ 47%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_order PASSED [ 48%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_properties PASSED [ 50%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_tensor_types PASSED [ 51%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_orientation PASSED [ 52%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_zero_rotation PASSED [ 53%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_tensor_inputs PASSED [ 54%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_rotation_order PASSED [ 55%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_gradient_flow PASSED [ 56%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_read_identity_matrix PASSED [ 58%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_read_cubic_matrix PASSED [ 59%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_wavelength_scaling PASSED [ 60%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_triclinic_matrix PASSED [ 61%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_missing_file PASSED [ 62%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_invalid_format PASSED [ 63%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_comments_and_whitespace PASSED [ 65%]
+tests/test_suite.py::TestGeometryFunctions::test_dot_product PASSED      [ 66%]
+tests/test_suite.py::TestGeometryFunctions::test_cross_product PASSED    [ 67%]
+tests/test_suite.py::TestGeometryFunctions::test_magnitude PASSED        [ 68%]
+tests/test_suite.py::TestGeometryFunctions::test_unitize PASSED          [ 69%]
+tests/test_suite.py::TestGeometryFunctions::test_rotate_axis PASSED      [ 70%]
+tests/test_suite.py::TestGeometryFunctions::test_rotate_umat PASSED      [ 72%]
+tests/test_suite.py::TestCrystalModel::test_zero_rotation PASSED         [ 73%]
+tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg PASSED   [ 74%]
+tests/test_suite.py::TestCrystalModel::test_rotation_gradients PASSED    [ 75%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_golden_data_exists PASSED [ 76%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction XFAIL [ 77%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_cubic_tilted_detector_reproduction PASSED [ 79%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_triclinic_P1_reproduction PASSED [ 80%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_peak_position_validation PASSED [ 81%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params PASSED [ 82%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_simple_cubic PASSED [ 83%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_triclinic PASSED [ 84%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_memory_usage_analysis PASSED [ 86%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_extreme_cell_parameters PASSED [ 87%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_rotation_compatibility PASSED [ 88%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_mosaic_reproduction PASSED [ 89%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simulator_phi_rotation PASSED [ 90%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_crystal_params PASSED [ 91%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_detector_params PASSED [ 93%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_phi_rotation SKIPPED [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_mosaic_spread SKIPPED [ 95%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradient_numerical_stability SKIPPED [ 96%]
+tests/test_suite.py::TestTier3ScientificValidation::test_bragg_spot_position SKIPPED [ 97%]
+tests/test_suite.py::TestTier3ScientificValidation::test_polarization_limits SKIPPED [ 98%]
+tests/test_suite.py::test_import PASSED                                  [100%]
+
+=================================== FAILURES ===================================
+____________ TestATPERF002ParallelExecution.test_cpu_thread_scaling ____________
+
+self = <tests.test_at_perf_002.TestATPERF002ParallelExecution object at 0x7963579b6ad0>
+
+    def test_cpu_thread_scaling(self):
+        """Test CPU thread scaling performance."""
+        thread_counts = [1, 2, 4, 8]
+        pytorch_times = {}
+    
+        print("\n" + "="*60)
+        print("AT-PERF-002: CPU Thread Scaling")
+        print("="*60)
+        print("\nPyTorch thread scaling (1024×1024, N=10):")
+    
+        for threads in thread_counts:
+            time_taken = self.run_pytorch_with_threads(threads)
+            pytorch_times[threads] = time_taken
+            if threads == 1:
+                baseline = time_taken
+            speedup = baseline / time_taken if threads > 1 else 1.0
+            print(f"  {threads} threads: {time_taken:.3f}s (speedup: {speedup:.2f}x)")
+    
+        # Check speedup from 1 to 4 threads
+        speedup_4 = pytorch_times[1] / pytorch_times[4]
+        print(f"\nSpeedup from 1 to 4 threads: {speedup_4:.2f}x")
+    
+        # Spec requires ≥ 2.5x speedup for 4 threads
+        # However, for PyTorch with MKL/BLAS, we may see different scaling
+        # PyTorch operations are already internally parallelized, so adding more
+        # threads has limited benefit. Relax to ≥ 1.15x as a sanity check.
+>       assert speedup_4 >= 1.15, \
+            f"Thread scaling {speedup_4:.2f}x below 1.15x threshold"
+E       AssertionError: Thread scaling 0.97x below 1.15x threshold
+E       assert 0.9708502877520003 >= 1.15
+
+tests/test_at_perf_002.py:144: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+============================================================
+AT-PERF-002: CPU Thread Scaling
+============================================================
+
+PyTorch thread scaling (1024×1024, N=10):
+  1 threads: 0.103s (speedup: 1.00x)
+  2 threads: 0.111s (speedup: 0.93x)
+  4 threads: 0.106s (speedup: 0.97x)
+  8 threads: 0.100s (speedup: 1.02x)
+
+Speedup from 1 to 4 threads: 0.97x
+----------------------------- Captured stderr call -----------------------------
+No CUDA runtime is found, using CUDA_HOME='/usr'
+============================= slowest 25 durations =============================
+6.12s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_data_ordering_fast_major
+6.04s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_hkl_file
+5.55s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F
+5.28s call     tests/test_at_cli_002.py::TestAT_CLI_002::test_error_without_required_inputs
+4.88s call     tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_cpu_thread_scaling
+2.52s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_triclinic
+2.47s call     tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_thread_efficiency
+2.35s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_rotation_compatibility
+1.95s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction
+1.53s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_cubic_tilted_detector_reproduction
+0.85s call     tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_pytorch_cpu_vs_c_performance
+0.81s call     tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_limits_rendering_area
+0.72s call     tests/test_at_noise_001.py::TestATNoise001::test_small_mean_exact_poisson
+0.68s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_mosaic_reproduction
+0.38s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_memory_usage_analysis
+0.26s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_simulator_phi_rotation
+0.24s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_triclinic_P1_reproduction
+0.19s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params
+0.07s call     tests/test_at_noise_001.py::TestATNoise001::test_medium_mean_rejection_sampling
+0.06s call     tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_crystal_params
+0.04s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_extreme_cell_parameters
+0.02s call     tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_simple_cubic
+0.01s call     tests/test_suite.py::TestCrystalModel::test_rotation_gradients
+0.01s call     tests/test_at_roi_001.py::TestAT_ROI_001::test_statistics_exclude_masked_pixels
+0.01s call     tests/test_at_noise_001.py::TestATNoise001::test_large_mean_gaussian_approximation
+=========================== short test summary info ============================
+FAILED tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_cpu_thread_scaling
+============= 1 failed, 72 passed, 12 skipped, 1 xfailed in 45.38s =============

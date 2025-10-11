@@ -1,0 +1,98 @@
+Phase M2 Chunk 09 Test Execution Summary
+=========================================
+Timestamp: 20251011T193829Z
+Working Directory: /home/ollie/Documents/tmp/nanoBragg
+
+Test Command
+------------
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_cli_007.py \
+  tests/test_at_geo_006.py \
+  tests/test_at_parallel_005.py \
+  tests/test_at_parallel_015.py \
+  tests/test_at_parallel_026.py \
+  tests/test_at_perf_007.py \
+  tests/test_at_src_001_cli.py \
+  tests/test_beam_center_offset.py \
+  tests/test_detector_conventions.py \
+  tests/test_perf_pytorch_005_cudagraphs.py \
+  --maxfail=0 --durations=25
+
+Exit Code
+---------
+1 (FAILURE)
+
+Test Results
+------------
+Total tests collected: 45
+Passed: 35
+Failed: 1
+Skipped: 9
+
+Runtime
+-------
+96.37 seconds (0:01:36)
+
+Failed Tests
+------------
+1. tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive
+   - Assertion: Zero maximum intensity
+   - Issue: Comprehensive mixed unit test produces zero intensity in simulation output
+
+Skipped Tests
+-------------
+1. tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_mosflm_xbeam_ybeam_mapping
+2. tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_xds_orgx_orgy_mapping
+3. tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_pivot_mode_consistency
+4. tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_equivalent_configurations_produce_same_pattern
+5. tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_suite_execution
+6. tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_gpu_performance
+7. tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cuda]
+8. tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cuda_multiple_runs
+9. tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cuda]
+
+Warnings
+--------
+2 warnings about unknown pytest marks:
+- pytest.mark.parallel_validation
+- pytest.mark.requires_c_binary
+
+Top 10 Slowest Tests
+--------------------
+1. 17.94s - test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_overload_count_determinism
+2. 14.40s - test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_identical_seed_produces_identical_noise
+3. 12.66s - test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_different_seed_produces_different_noise
+4. 12.00s - test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_seed_determinism_without_roi
+5. 11.71s - test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_negative_seed_accepted
+6. 5.89s - test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_with_missing_columns
+7. 5.76s - test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_takes_precedence_over_divergence
+8. 5.67s - test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_loading_via_cli
+9. 2.81s - test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved
+10. 2.08s - test_at_parallel_015.py::TestATParallel015MixedUnits::test_distance_units_consistency
+
+Test Files Summary
+------------------
+✓ tests/test_at_cli_007.py - 5/5 passed (noise determinism tests)
+✓ tests/test_at_geo_006.py - 5/5 passed (solid angle tests)
+⊗ tests/test_at_parallel_005.py - 0/4 skipped (beam center mapping - all skipped)
+✗ tests/test_at_parallel_015.py - 4/5 passed, 1 failed (mixed units tests)
+✓ tests/test_at_parallel_026.py - 3/3 passed (triclinic position tests)
+⊗ tests/test_at_perf_007.py - 3/5 passed, 2 skipped (performance benchmarks)
+✓ tests/test_at_src_001_cli.py - 3/3 passed (sourcefile CLI tests)
+✗ tests/test_beam_center_offset.py - 0/0 collected (no tests found)
+✓ tests/test_detector_conventions.py - 9/9 passed (detector conventions)
+⊗ tests/test_perf_pytorch_005_cudagraphs.py - 3/6 passed, 3 skipped (CUDA graphs)
+
+Key Observations
+----------------
+1. High success rate: 77.8% passed (35/45)
+2. One failed test related to zero intensity output in mixed units scenario
+3. Most skipped tests are GPU-related (CUDA not available) or beam center mapping tests
+4. Noise determinism tests are comprehensive but slow (11-18 seconds each)
+5. All detector convention tests passed
+6. Triclinic absolute position tests passed successfully
+
+Output Files
+------------
+- Full pytest log: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_09/pytest.log
+- This summary: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_09/summary.txt

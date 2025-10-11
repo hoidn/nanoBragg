@@ -1,0 +1,87 @@
+Test Suite Triage Phase M2 - Chunk 06
+======================================
+
+Execution Details
+-----------------
+Timestamp: 20251011T193829Z
+Working Directory: /home/ollie/Documents/tmp/nanoBragg
+Output Directory: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_06/
+
+Test Results
+------------
+Exit Code: 0 (SUCCESS)
+Total Tests: 72
+Passed: 59
+Failed: 0
+Skipped: 13
+Runtime: 83.45 seconds (1:23)
+
+Test Files Executed
+-------------------
+1. tests/test_at_cli_004.py
+2. tests/test_at_geo_003.py
+3. tests/test_at_parallel_002.py
+4. tests/test_at_parallel_012.py
+5. tests/test_at_parallel_023.py
+6. tests/test_at_perf_004.py
+7. tests/test_at_sam_002.py
+8. tests/test_at_str_003.py
+9. tests/test_debug_trace.py
+10. tests/test_oversample_autoselect.py
+11. tests/test_tricubic_vectorized.py
+
+Skipped Tests (13 total)
+------------------------
+All skipped tests are from tests/test_at_parallel_023.py:
+- 10 tests in TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence
+  (various misset_angles and cell_params combinations)
+- 1 test: TestAT_PARALLEL_023_MissetAnglesEquivalence::test_misset_changes_pattern
+
+All skipped tests are from test_at_parallel_023.py (misset angles equivalence tests).
+Additionally, 2 CUDA tests were skipped from test_tricubic_vectorized.py:
+- TestTricubicGather::test_device_neutrality[cuda]
+- TestTricubicPoly::test_polynomials_device_neutral[cuda]
+
+Slowest Tests (Top 10)
+----------------------
+1. test_header_precedence_img_then_mask: 8.45s
+2. test_mask_zeros_are_skipped: 7.60s
+3. test_printout_pixel_flag: 6.78s
+4. test_conflicting_detector_size: 6.48s
+5. test_mask_beam_center_y_flip: 6.42s
+6. test_out_of_bounds_pixel: 6.35s
+7. test_img_only_no_mask: 6.03s
+8. test_printout_flag: 5.91s
+9. test_combined_debug_flags: 5.74s
+10. test_trace_pixel_flag: 5.58s
+
+Test Categories Covered
+-----------------------
+- CLI validation (test_at_cli_004.py): 5 tests
+- Geometry calculations (test_at_geo_003.py): 8 tests
+- Parallel validation - pixel size (test_at_parallel_002.py): 4 tests
+- Parallel validation - reference patterns (test_at_parallel_012.py): 4 tests
+- Parallel validation - misset angles (test_at_parallel_023.py): 11 tests (all skipped)
+- Performance optimization (test_at_perf_004.py): 5 tests
+- Sampling validation (test_at_sam_002.py): 3 tests
+- Structure factor models (test_at_str_003.py): 7 tests
+- Debug tracing (test_debug_trace.py): 5 tests
+- Oversample auto-selection (test_oversample_autoselect.py): 4 tests
+- Tricubic interpolation (test_tricubic_vectorized.py): 16 tests
+
+Summary
+-------
+✓ All executed tests passed (59/59 non-skipped tests)
+✓ No failures detected
+✓ 13 tests skipped (expected behavior for misset angles tests and CUDA tests)
+✓ Total runtime: 1 minute 23 seconds
+✓ Exit code: 0 (SUCCESS)
+
+Notable Observations
+--------------------
+- CLI tests (test_at_cli_004.py) and debug trace tests (test_debug_trace.py) are the slowest,
+  taking 6-8 seconds each due to subprocess invocations of the nb-diffract CLI
+- All misset angles equivalence tests in test_at_parallel_023.py are currently skipped
+- CUDA device tests are skipped (expected when CUDA_VISIBLE_DEVICES=-1)
+- Performance tests (test_at_perf_004.py) completed successfully, validating hot path optimization
+- Tricubic interpolation tests show robust vectorization and gradient flow validation

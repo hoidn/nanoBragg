@@ -1,0 +1,81 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 44 items
+
+tests/test_at_cli_003.py::TestATCLI003::test_mosflm_default_pivot_beam PASSED [  2%]
+tests/test_at_cli_003.py::TestATCLI003::test_xds_default_pivot_sample PASSED [  4%]
+tests/test_at_cli_003.py::TestATCLI003::test_pivot_override_mosflm_to_sample PASSED [  6%]
+tests/test_at_cli_003.py::TestATCLI003::test_pivot_override_xds_to_beam PASSED [  9%]
+tests/test_at_cli_003.py::TestATCLI003::test_convention_header_keys_consistency PASSED [ 11%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_a_distance_only PASSED   [ 13%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_b_close_distance_only PASSED [ 15%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_c_explicit_override PASSED [ 18%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_c_beam_override PASSED   [ 20%]
+tests/test_at_geo_002.py::test_at_geo_002_direct_instantiation PASSED    [ 22%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[64] PASSED [ 25%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[128] PASSED [ 27%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[256] PASSED [ 29%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[512] PASSED [ 31%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[1024] PASSED [ 34%]
+tests/test_at_parallel_001.py::TestATParallel001::test_peak_position_at_beam_center PASSED [ 36%]
+tests/test_at_parallel_001.py::TestATParallel001::test_cli_beam_center_calculation PASSED [ 38%]
+tests/test_at_parallel_001.py::TestATParallel001::test_intensity_scaling_with_solid_angle PASSED [ 40%]
+tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_unpolarized_theory PASSED [ 43%]
+tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_polarized_kahn_model PASSED [ 45%]
+tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_c_pytorch_equivalence SKIPPED [ 47%]
+tests/test_at_parallel_022.py::TestATParallel022::test_single_step_with_detector_rotations SKIPPED [ 50%]
+tests/test_at_parallel_022.py::TestATParallel022::test_multi_step_with_detector_rotations SKIPPED [ 52%]
+tests/test_at_parallel_022.py::TestATParallel022::test_large_detector_rotations SKIPPED [ 54%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage PASSED [ 56%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance PASSED [ 59%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access PASSED [ 61%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization PASSED [ 63%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization PASSED [ 65%]
+tests/test_at_sam_001.py::test_at_sam_001_steps_normalization PASSED     [ 68%]
+tests/test_at_str_002.py::test_tricubic_interpolation_enabled PASSED     [ 70%]
+tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback PASSED    [ 72%]
+tests/test_at_str_002.py::test_auto_enable_interpolation PASSED          [ 75%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_vectors_in_detector_config PASSED [ 77%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_vectors_in_detector PASSED [ 79%]
+tests/test_custom_vectors.py::TestCustomVectors::test_cli_custom_vectors PASSED [ 81%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_convention_detection PASSED [ 84%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_spindle_axis PASSED [ 86%]
+tests/test_multi_source_integration.py::test_multi_source_intensity_normalization PASSED [ 88%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cpu] PASSED [ 90%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cuda] SKIPPED [ 93%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cpu] PASSED [ 95%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cuda] SKIPPED [ 97%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_with_absorption[cpu] PASSED [100%]
+
+============================= slowest 25 durations =============================
+20.52s call     tests/test_at_parallel_001.py::TestATParallel001::test_cli_beam_center_calculation
+19.54s call     tests/test_at_cli_003.py::TestATCLI003::test_convention_header_keys_consistency
+6.94s call     tests/test_at_cli_003.py::TestATCLI003::test_pivot_override_xds_to_beam
+6.18s call     tests/test_custom_vectors.py::TestCustomVectors::test_cli_custom_vectors
+6.14s call     tests/test_at_cli_003.py::TestATCLI003::test_xds_default_pivot_sample
+6.13s call     tests/test_custom_vectors.py::TestCustomVectors::test_custom_convention_detection
+5.91s call     tests/test_at_cli_003.py::TestATCLI003::test_mosflm_default_pivot_beam
+5.77s call     tests/test_at_cli_003.py::TestATCLI003::test_pivot_override_mosflm_to_sample
+5.51s call     tests/test_custom_vectors.py::TestCustomVectors::test_custom_spindle_axis
+5.12s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance
+3.72s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage
+2.10s call     tests/test_at_parallel_001.py::TestATParallel001::test_peak_position_at_beam_center
+1.55s call     tests/test_at_sam_001.py::test_at_sam_001_steps_normalization
+1.44s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.91s call     tests/test_multi_source_integration.py::test_multi_source_intensity_normalization
+0.83s call     tests/test_at_parallel_001.py::TestATParallel001::test_intensity_scaling_with_solid_angle
+0.81s call     tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_unpolarized_theory
+0.46s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access
+0.23s call     tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cpu]
+0.17s call     tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cpu]
+0.02s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization
+0.01s call     tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_with_absorption[cpu]
+0.01s call     tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_polarized_kahn_model
+0.01s call     tests/test_custom_vectors.py::TestCustomVectors::test_custom_vectors_in_detector
+
+(1 durations < 0.005s hidden.  Use -vv to show these durations.)
+================== 38 passed, 6 skipped in 102.96s (0:01:42) ===================

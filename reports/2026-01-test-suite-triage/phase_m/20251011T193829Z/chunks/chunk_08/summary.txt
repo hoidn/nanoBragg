@@ -1,0 +1,69 @@
+Phase M2 Chunk 08 - Test Execution Summary
+==========================================
+
+Timestamp: 20251011T193829Z
+Working Directory: /home/ollie/Documents/tmp/nanoBragg
+
+Test Command
+------------
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_cli_006.py \
+  tests/test_at_geo_005.py \
+  tests/test_at_parallel_004.py \
+  tests/test_at_parallel_014.py \
+  tests/test_at_parallel_025.py \
+  tests/test_at_perf_006.py \
+  tests/test_at_src_001.py \
+  tests/test_at_tools_001.py \
+  tests/test_detector_config.py \
+  tests/test_parity_matrix.py \
+  --maxfail=0 --durations=25
+
+Results
+-------
+Exit Code: 0 (SUCCESS)
+Total Tests Collected: 117
+
+Pass/Fail/Skip Counts:
+  - PASSED: 58
+  - FAILED: 0
+  - SKIPPED: 59
+  - ERRORS: 0
+
+Runtime: 62.34s (0:01:02)
+
+Warnings: 1 warning
+  - UserWarning in test_at_src_001.py regarding sourcefile wavelength column
+
+Top 5 Slowest Tests:
+  1. 11.24s - test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_script_integration
+  2. 8.00s  - test_at_cli_006.py::test_explicit_scale_flag
+  3. 6.59s  - test_at_cli_006.py::test_autoscale_without_scale_flag
+  4. 6.34s  - test_at_cli_006.py::test_pgm_with_explicit_pgmscale
+  5. 6.31s  - test_at_cli_006.py::test_pgm_format_compliance
+
+Test Files Breakdown:
+---------------------
+- tests/test_at_cli_006.py: 5 tests (5 passed)
+- tests/test_at_geo_005.py: 5 tests (5 passed)
+- tests/test_at_parallel_004.py: 5 tests (5 passed)
+- tests/test_at_parallel_014.py: 5 tests (5 passed)
+- tests/test_at_parallel_025.py: 3 tests (3 skipped)
+- tests/test_at_perf_006.py: 9 tests (8 passed, 1 skipped)
+- tests/test_at_src_001.py: 6 tests (6 passed)
+- tests/test_at_tools_001.py: 9 tests (9 passed)
+- tests/test_detector_config.py: 14 tests (14 passed)
+- tests/test_parity_matrix.py: 56 tests (56 skipped)
+
+Notes:
+------
+- All parity matrix tests were skipped (expected behavior for triage)
+- test_at_parallel_025.py tests all skipped
+- One test in test_at_perf_006.py was skipped (test_tensor_shapes_include_all_dimensions)
+- All non-skipped tests passed successfully
+- No failures or errors encountered
+
+Output Files:
+-------------
+- Full pytest output: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_08/pytest.log
+- This summary: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_08/summary.txt

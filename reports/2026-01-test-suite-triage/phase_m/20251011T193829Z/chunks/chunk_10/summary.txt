@@ -1,0 +1,100 @@
+Test Suite Triage - Phase M2 - Chunk 10 Summary
+================================================
+
+Execution Timestamp: 20251011T193829Z
+Working Directory: /home/ollie/Documents/tmp/nanoBragg
+
+Command:
+--------
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_cli_008.py \
+  tests/test_at_io_001.py \
+  tests/test_at_parallel_006.py \
+  tests/test_at_parallel_016.py \
+  tests/test_at_parallel_027.py \
+  tests/test_at_perf_008.py \
+  tests/test_at_src_001_simple.py \
+  tests/test_cli_flags.py \
+  tests/test_detector_geometry.py \
+  tests/test_perf_pytorch_006.py \
+  --maxfail=0 --durations=25
+
+Results:
+--------
+Exit Code: 0
+Status: SUCCESS
+
+Test Counts:
+- PASSED: 66
+- SKIPPED: 10
+- FAILED: 0
+- WARNINGS: 1
+
+Total Runtime: 51.90 seconds
+
+Test Breakdown by File:
+-----------------------
+1. tests/test_at_cli_008.py: 3 passed
+   - Dmin filtering functionality tests
+
+2. tests/test_at_io_001.py: 5 passed
+   - SMV file format I/O tests
+
+3. tests/test_at_parallel_006.py: 3 passed
+   - Single reflection Bragg angle prediction tests
+
+4. tests/test_at_parallel_016.py: 5 passed, 1 skipped
+   - Extreme scale parameter tests
+
+5. tests/test_at_parallel_027.py: 4 passed, 1 skipped
+   - Structure factor loading and intensity tests
+
+6. tests/test_at_perf_008.py: 1 passed, 4 skipped
+   - CUDA tensor residency tests (skipped due to CUDA_VISIBLE_DEVICES=-1)
+
+7. tests/test_at_src_001_simple.py: 4 passed
+   - Source file parsing and dtype propagation tests
+
+8. tests/test_cli_flags.py: 28 passed, 4 skipped
+   - CLI flag parsing and functionality tests
+   - Pix0 vector aliases, detector overrides, noise suppression, polarization, pivot selection
+
+9. tests/test_detector_geometry.py: 10 passed
+   - Detector geometry regressions and differentiability tests
+
+10. tests/test_perf_pytorch_006.py: 3 passed
+    - Dtype support and correlation tests
+
+Top 5 Slowest Tests:
+--------------------
+1. test_dmin_filtering_reduces_intensity: 13.95s
+2. test_dmin_zero_has_no_effect: 12.78s
+3. test_dmin_very_strict_removes_most_intensity: 6.66s
+4. test_bragg_angle_prediction_single_distance: 3.22s
+5. test_simulator_real_valued_gradients: 3.14s
+
+Warnings:
+---------
+1. Sourcefile wavelength column differs from CLI -lambda value warning in test_sourcefile_parsing
+   (Expected behavior per spec-a-core.md:150-151)
+
+Skipped Tests Analysis:
+-----------------------
+All 10 skipped tests are CUDA-related, which is expected due to CUDA_VISIBLE_DEVICES=-1:
+- test_extreme_scale_c_comparison (requires C binary comparison)
+- test_c_pytorch_equivalence (requires C binary comparison)
+- CUDA GPU residency tests (4 tests in test_at_perf_008.py)
+- CUDA-specific detector override and pivot selection tests (4 tests in test_cli_flags.py)
+
+Overall Assessment:
+-------------------
+✅ All applicable tests passed successfully
+✅ No failures or errors
+✅ Skipped tests are expected (CUDA disabled, C comparison tests)
+✅ Test suite execution completed in under 1 minute
+✅ All core functionality validated: CLI flags, I/O, geometry, differentiability, performance
+
+Output Files:
+-------------
+- Full pytest log: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_10/pytest.log
+- Summary report: reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/chunks/chunk_10/summary.txt

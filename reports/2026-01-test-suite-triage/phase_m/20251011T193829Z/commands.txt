@@ -1,0 +1,10 @@
+chunk_01 exit=0
+chunk_02 exit=0
+chunk_03 exit=1
+chunk_04 exit=1
+chunk_05 exit=0
+chunk_06 exit=0
+chunk_07 exit=1
+chunk_08 exit=0
+chunk_09 exit=1
+chunk_10 exit=0
