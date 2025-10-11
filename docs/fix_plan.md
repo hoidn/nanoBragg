@@ -231,10 +231,12 @@
 - Plan Reference: `plans/active/detector-config.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py`
 - Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase K triage (2 failures)
-- Attempts History: none yet
+- Attempts History:
+  * [2025-10-11] Attempt #38 — Result: ⚠ partial (Phase C1/C2 in review). Applied commit 804eb119 and captured evidence in `reports/2026-01-test-suite-triage/phase_m3/20251011T182635Z/mosflm_fix/`. MOSFLM +0.5 offset now lives in `Detector.__init__` and targeted selectors pass, but `DetectorConfig` defaults remain at 51.2 mm (mismatching specs/spec-a-core.md §72 `(detsize + pixel)/2 = 51.25 mm`), documentation/tracker updates were deferred, and `pytest_full_suite.log` shows detector geometry regressions mid-run. Await spec alignment + doc sync before closing Phase C.
 - Next Actions:
-  1. Execute Phase C1–C3 implementation per `plans/active/detector-config.md`: apply the MOSFLM +0.5 pixel offset inside `Detector.__init__`, extend `tests/test_detector_config.py`, and update documentation plus tracker entries; capture artifacts under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/`.
-  2. Once targeted selectors pass, decide on Phase C4 full-suite timing and record the outcome (run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation` before any full-suite rerun).
+  1. Audit MOSFLM default handling against C traces/spec (§§68-73) and adjust implementation/tests so user-facing defaults remain `(detsize + pixel)/2` mm while the +0.5 pixel mapping is applied exactly once; re-run targeted selectors under a fresh `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/` bundle.
+  2. Once MOSFLM behaviour is reconciled, refresh `docs/architecture/detector.md` §§8.2/9, `docs/development/c_to_pytorch_config_map.md` (beam-center row), `docs/fix_plan.md` Attempts ledger, and `reports/2026-01-test-suite-triage/phase_k/…/remediation_tracker.md` to log the outcome (C8 cluster).
+  3. Re-run the authoritative chunked Phase L commands (`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE …`) after the fix to baseline remaining failures; archive logs under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/chunks/` with summary + delta vs triage_summary.md.
 - Exit Criteria:
   - MOSFLM offset implementation merged with targeted selectors passing (`tests/test_at_parallel_002.py`, `tests/test_detector_config.py`).
   - Documentation (`docs/architecture/detector.md`, `docs/development/c_to_pytorch_config_map.md`) and remediation tracker updated to reflect the new convention handling.

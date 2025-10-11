@@ -2616,3 +2616,15 @@
 - Reissued input.md with Parity-mode instructions for executing Phase C1–C3 (MOSFLM +0.5 offset, targeted selectors, doc/tracker updates).
 - No new evidence gathered; awaiting Ralph to implement detector changes per detector-config plan (Phase C).
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-22 (galph loop - focus selection note)
+- Focus issue: [DETECTOR-CONFIG-001] Phase C ledger refresh
+- Action type: Planning
+- Mode: Docs
+
+- Reviewed commit 804eb119 (MOSFLM offset) and found spec drift: DetectorConfig now holds 51.2 mm instead of `(detsize + pixel)/2` mm; tests updated to match the drift.
+- Updated plans/active/detector-config.md Phase C rows to [P], flagging the spec mismatch, partial regression coverage, and incomplete full-suite gating.
+- Logged Attempt #38 in docs/fix_plan.md with partial status and refreshed next actions to call for spec/C trace audit, doc sync, and chunked rerun.
+- Rewrote input.md with Parity-mode guidance: update tests to spec values, adjust DetectorConfig + Detector mapping once, rerun targeted selectors, refresh docs/tracker, then redo chunked suite captures under a new STAMP.
+- Action State: [ready_for_implementation]
+
