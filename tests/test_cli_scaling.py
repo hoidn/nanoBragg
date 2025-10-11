@@ -727,6 +727,7 @@ class TestSourceWeightsDivergence:
                 'nanoBragg',  # Program name
                 '-mat', str(mat_file.resolve()),
                 '-sourcefile', str(sourcefile.resolve()),
+                '-default_F', '100',  # Required to pass CLI validation
                 '-hdivrange', '0.5',  # This should trigger the warning
                 '-distance', '231.274660',
                 '-lambda', '0.9768',

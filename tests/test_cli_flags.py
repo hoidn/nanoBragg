@@ -36,6 +36,7 @@ class TestPix0VectorAlias:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector', '0.1', '-0.2', '0.3'
         ])
 
@@ -49,6 +50,7 @@ class TestPix0VectorAlias:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector_mm', '100', '-200', '300'
         ])
 
@@ -61,12 +63,14 @@ class TestPix0VectorAlias:
         config_m = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector', '0.1', '-0.2', '0.3'
         ])
 
         config_mm = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector_mm', '100', '-200', '300'
         ])
 
@@ -78,6 +82,7 @@ class TestPix0VectorAlias:
             run_parse([
                 '-cell', '100', '100', '100', '90', '90', '90',
                 '-pixel', '0.1',
+                '-default_F', '100',
                 '-pix0_vector', '0', '0', '0',
                 '-pix0_vector_mm', '0', '0', '0'
             ])
@@ -92,12 +97,14 @@ class TestPix0VectorAlias:
         config_m = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector', str(pix0_m[0]), str(pix0_m[1]), str(pix0_m[2])
         ])
 
         config_mm = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector_mm', str(pix0_mm[0]), str(pix0_mm[1]), str(pix0_mm[2])
         ])
 
@@ -208,6 +215,7 @@ class TestNoiseSuppressionFlag:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-floatfile', 'out.bin',
             '-noisefile', 'noise.img',
             '-nonoise'
@@ -223,6 +231,7 @@ class TestNoiseSuppressionFlag:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-floatfile', 'out.bin',
             '-noisefile', 'noise.img'
         ])
@@ -235,6 +244,7 @@ class TestNoiseSuppressionFlag:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-floatfile', 'out.bin',
             '-noisefile', 'noise.img',
             '-seed', '1234',
@@ -249,6 +259,7 @@ class TestNoiseSuppressionFlag:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-floatfile', 'out.bin',
             '-nonoise'
         ])
@@ -265,6 +276,7 @@ class TestCLIIntegrationSanity:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector', '0.1', '0.2', '0.3'
         ])
 
@@ -276,6 +288,7 @@ class TestCLIIntegrationSanity:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector_mm', '100', '200', '300'
         ])
 
@@ -287,6 +300,7 @@ class TestCLIIntegrationSanity:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-pix0_vector', '0', '0', '0',
             '-nonoise'
         ])
@@ -298,6 +312,7 @@ class TestCLIIntegrationSanity:
         config = run_parse([
             '-cell', '100', '100', '100', '90', '90', '90',
             '-pixel', '0.1',
+            '-default_F', '100',
             '-mosflm'  # Use the flag form, not -convention
         ])
 
@@ -535,6 +550,7 @@ class TestCLIPix0Override:
             '-distance', '100',  # mm
             '-pixel', '0.1',      # mm
             '-detpixels', '512',
+            '-default_F', '100',
             '-pix0_vector_mm', str(pix0_override_mm[0]), str(pix0_override_mm[1]), str(pix0_override_mm[2])
         ])
 

@@ -1,0 +1,54 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias FAILED [100%]
+
+=================================== FAILURES ===================================
+__________________ TestPix0VectorAlias.test_pix0_meters_alias __________________
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x79720b2287d0>
+
+    def test_pix0_meters_alias(self):
+        """Verify -pix0_vector accepts meters and stores correctly."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', '0.1', '-0.2', '0.3'
+        ])
+
+tests/test_cli_flags.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+=========================== short test summary info ============================
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias
+============================== 1 failed in 1.99s ===============================

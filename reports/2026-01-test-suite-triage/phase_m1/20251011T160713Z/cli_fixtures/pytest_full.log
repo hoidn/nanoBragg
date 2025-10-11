@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 31 items
+
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias PASSED [  3%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_millimeter_alias PASSED [  6%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence PASSED [  9%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_dual_pix0_flag_rejection PASSED [ 12%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0] PASSED [ 16%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1] PASSED [ 19%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2] PASSED [ 22%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cpu PASSED [ 25%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cuda SKIPPED [ 29%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_dtype_preservation PASSED [ 32%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_suppresses_noise_output PASSED [ 35%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_noisefile_without_nonoise PASSED [ 38%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_preserves_seed PASSED [ 41%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_without_noisefile PASSED [ 45%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_does_not_alter_beam_vector PASSED [ 48%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_triggers_custom_convention PASSED [ 51%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_roi_unaffected_by_new_flags PASSED [ 54%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_convention_preserved_without_pix0 PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates PASSED [ 61%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cpu-dtype0] PASSED [ 64%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cuda-dtype1] SKIPPED [ 67%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] PASSED [ 70%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda] SKIPPED [ 74%]
+tests/test_cli_flags.py::TestCLIPolarization::test_default_polarization_parity PASSED [ 77%]
+tests/test_cli_flags.py::TestCLIPolarization::test_nopolar_flag PASSED   [ 80%]
+tests/test_cli_flags.py::TestCLIPolarization::test_polar_override PASSED [ 83%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cpu] PASSED [ 87%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cuda] SKIPPED [ 90%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cpu] PASSED [ 93%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cuda] SKIPPED [ 96%]
+tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip PASSED [100%]
+
+======================== 26 passed, 5 skipped in 2.34s =========================
