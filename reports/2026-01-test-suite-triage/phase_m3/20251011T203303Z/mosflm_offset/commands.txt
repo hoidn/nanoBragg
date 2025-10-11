@@ -1,0 +1,43 @@
+# DETECTOR-CONFIG-001 Phase B: Option A Design Generation
+# STAMP: 20251011T203303Z
+# Mode: Docs (no pytest execution)
+
+## Environment Setup
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset
+
+## Design Document Generation
+# Authored design.md covering:
+# - Option A specification (beam_center_source explicit tracking)
+# - Configuration layer changes (DetectorConfig field)
+# - CLI parsing logic (8 explicit flags detection)
+# - Detector model conditional offset logic
+# - Test impact matrix (5 new tests, 3 existing updates)
+# - Documentation impact (3 files requiring updates)
+# - Risk assessment (API-002, CONVENTION-001, header precedence, backward compatibility)
+# - Acceptance criteria (implementation, tests, C-parity, docs)
+# - Implementation sequence (Phase C tasks with time estimates)
+# - Decision rationale (Option A vs Option B comparison)
+
+## References Consulted
+# - specs/spec-a-core.md §68-73 (MOSFLM convention normative statement)
+# - arch.md §ADR-03 (beam-center mapping implementation decision)
+# - reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md (Phase L evidence)
+# - reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mosflm_offset/summary.md (Phase M3 failure analysis)
+# - plans/active/detector-config.md (blueprint tasks B1-B4)
+# - docs/findings.md (API-002, CONVENTION-001 interactions)
+
+## Artifacts Generated
+# - reports/2026-01-test-suite-triage/phase_m3/20251011T203303Z/mosflm_offset/design.md
+# - reports/2026-01-test-suite-triage/phase_m3/20251011T203303Z/mosflm_offset/commands.txt (this file)
+
+## Next Actions
+# Phase B tasks B1-B4 complete per plans/active/detector-config.md
+# Ready for supervisor approval to proceed with Phase C implementation
+# Expected input.md update with Phase C Do Now directive
+
+## Exit Criteria Met
+# [x] B1: Remediation option ratified (Option A chosen with documented rationale)
+# [x] B2: Config/CLI propagation defined (code examples provided)
+# [x] B3: Test & doc impacts mapped (comprehensive matrices)
+# [x] B4: Risk & compatibility assessment (PyTorch neutrality verified)
