@@ -2431,3 +2431,15 @@
 - Issued input.md instructing targeted pytest run and artifact capture for Phase L kickoff.
 - <Action State>: [ready_for_implementation]
 
+### 2025-10-11 (galph loop - focus selection note)
+- Focus issue: [DETECTOR-CONFIG-001] MOSFLM beam-center offset remediation plan
+- Action type: Planning
+- Mode: Docs
+
+### 2025-10-11T10:55:20Z (galph loop - Detector MOSFLM offset plan)
+- Authored `plans/active/detector-config.md` with Phase A–C roadmap covering MOSFLM +0.5 offset remediation, regression testing, and docs/tracker updates.
+- Updated `docs/fix_plan.md` [DETECTOR-CONFIG-001] to reference the new plan and align next actions with Phase B/C sequencing.
+- Rewrote `input.md` to direct Ralph through Phase B1–B3 & C1–C2: implement MOSFLM pixel offset fix, extend detector-config tests, and capture targeted pytest artifacts under a fresh Phase L stamp.
+- Key references: specs/spec-a-core.md:68-73, arch.md ADR-03, reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md.
+- <Action State>: [ready_for_implementation]
+

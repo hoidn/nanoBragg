@@ -213,13 +213,14 @@
 - Priority: High
 - Status: in_planning
 - Owner/Date: ralph/2025-10-10
+- Plan Reference: `plans/active/detector-config.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py`
 - Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase K triage (2 failures)
 - Attempts History: none yet
 - Next Actions:
   1. Consume `[TEST-SUITE-TRIAGE-001]` Phase L targeted rerun artifacts (detector_config) once captured.
-  2. Audit detector config dataclass + CLI mapping against spec-a-core §4 and arch.md §2; document gaps.
-  3. Implement default fixes + regression tests before rerunning the full suite gate.
+  2. Audit detector config dataclass + CLI mapping against spec-a-core §4 and arch.md §2; document gaps (track via Phase B blueprint tasks).
+  3. Implement default fixes + regression tests before rerunning the full suite gate (Phase C execution).
 - Exit Criteria:
   - Detector initialization tests pass
   - Defaults match spec; CLI mapping documented
