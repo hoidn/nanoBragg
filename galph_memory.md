@@ -2556,3 +2556,14 @@
 - Rewrote input.md for Phase M1e (Cluster C7) with stamped artifact cadence and Detector fixture guidance.
 - No semantic changes this loop; awaiting Ralph to implement test fixture updates and log Attempt #27.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-21 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1 ledger refresh
+- Action type: Review/housekeeping
+- Mode: Docs
+### 2026-01-21 (galph loop - Phase M1f prep recap)
+- Marked Sprint 0 complete in plans/active/test-suite-triage.md (lines 11-26) and row M1e now [D]; M1f guidance refreshed with summary/ledger instructions.
+- Updated docs/fix_plan.md (lines 3-52) so Next Actions call for Phase M1f summary + Phase M2 brief; Active Focus reflects Sprint 0 closure.
+- Rewrote input.md directing Ralph to produce the new summary bundle, sync remediation_tracker.md, and draft the Phase M2 guard strategy.
+- Action State: [ready_for_implementation]
+

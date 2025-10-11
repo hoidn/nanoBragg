@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-21 (galph loop — Phase M1 remediation launch)
+**Last Updated:** 2026-01-21 (galph loop — Phase M1 ledger refresh prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Drive Phase M1 quick-fix sprint (C1/C3/C4/C5/C7) and stand up Phase M2 gradient guard before resuming MOSFLM remediation.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Sprint 0 (C1/C3/C4/C5/C7) complete; finish M1f ledger/tracker refresh and stage Phase M2 gradient guard before resuming MOSFLM remediation.
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -45,10 +45,10 @@
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`, `phase_k`, `phase_l`, `phase_m0`, `phase_m`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
-- Next Actions (2026-01-21 sprint relaunch):
-1. Continue Phase M1 Sprint 0 quick fixes (remaining cluster C7 — C1 closed in Attempt #21, C3 closed in Attempt #22, C4 closed in Attempt #25, C5 closed in Attempt #26) with artifact bundles under `reports/2026-01-test-suite-triage/phase_m1/<STAMP>/` as outlined in `plans/active/test-suite-triage.md`; lattice shape baseline log: `reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:218-243` plus `.../commands.txt` reproduction snippets.
-  2. Update `docs/fix_plan.md`, `remediation_tracker.md`, and `reports/.../phase_m1/<STAMP>/summary.md` with refreshed failure counts once Phase M1 selectors pass (target ≤15 failures remaining).
-  3. Kick off Phase M2 gradient infrastructure guard: draft compile-disable approach, land targeted `tests/test_gradients.py` run, and archive logs under `reports/2026-01-test-suite-triage/phase_m2/<STAMP>/`.
+- Next Actions (2026-01-21 Sprint 0 wrap-up):
+1. Execute Phase M1f: create `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`, capture `reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md` with Sprint 0 closure (11 failures remaining), and refresh `[TEST-SUITE-TRIAGE-001]` Attempts + `remediation_tracker.md` with Attempt #27 context.
+2. Cross-check Attempt #27 artifacts (`reports/2026-01-test-suite-triage/phase_m1/20251011T170539Z/shape_models/`) against plan row M1e to ensure evidence is indexed; flag any drift before proceeding.
+3. Draft Phase M2 guardrail brief: populate `reports/2026-01-test-suite-triage/phase_m2/$STAMP/strategy.md` with proposed `NANOBRAGG_DISABLE_COMPILE=1` workflow referencing `arch.md` §15 and testing_strategy §1.4 so implementation can be delegated next loop.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.

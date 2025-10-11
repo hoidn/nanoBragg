@@ -1,44 +1,44 @@
-Summary: Restore the lattice-shape acceptance tests by giving them a real Detector so Cluster C7 stops invoking Simulator with None.
-Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Phase M1e — Cluster C7 lattice-shape fixtures
+Summary: Capture Sprint 0 closure artifacts and sync the ledger/tracker before scoping the Phase M2 gradient guard.
+Mode: Docs
+Focus: [TEST-SUITE-TRIAGE-001] Phase M1f — Sprint 0 ledger refresh
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model; tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_model_comparison
-Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/shape_models/{env.txt,pytest_before.log,pytest_module.log,summary.md}
-Do Now: [TEST-SUITE-TRIAGE-001] Phase M1e — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model
-If Blocked: Capture the failing log as reports/2026-01-test-suite-triage/phase_m1/$STAMP/shape_models/blocked.log, note the blocker + command in docs/fix_plan.md Attempt history and remediation_tracker.md, then halt for supervisor review.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md; reports/2026-01-test-suite-triage/phase_m2/$STAMP/strategy.md; remediation_tracker.md
+Do Now: Execute docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Next Actions #1 — Phase M1f ledger refresh (doc updates only, no pytest)
+If Blocked: Log the blocker + attempted command in docs/fix_plan.md Attempt history and drop a TODO in reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md; stop and wait for supervisor guidance.
 
 Priorities & Rationale:
-- docs/fix_plan.md:36-113 — Sprint 0 now only has Cluster C7 outstanding; Next Actions call for the lattice-shape quick fix before M2.
-- plans/active/test-suite-triage.md:202-222 — Phase M1e directs us to supply a Detector fixture and validate with the shape-model tests.
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:218-243 — Cluster C7 scope, failure message, and reproduction command.
-- tests/test_at_str_003.py:1-220 — The failing fixtures currently pass detector=None and must be updated.
-- src/nanobrag_torch/models/detector.py:24-140 — Constructor contract that requires a valid DetectorConfig (mirrors the AttributeError the tests hit).
+- docs/fix_plan.md:3-48 — Next Actions now require the M1f ledger refresh and Phase M2 brief before any new fixes.
+- plans/active/test-suite-triage.md:11-26 — Status snapshot notes Sprint 0 clusters closed and calls out M1f + M2 as the remaining Phase M1 work.
+- plans/active/test-suite-triage.md:210-215 — Row M1e marked [D]; row M1f still open pending ledger/tracker updates.
+- reports/2026-01-test-suite-triage/phase_m1/20251011T170539Z/shape_models/summary.md:1 — Source of Attempt #27 data that must be rolled into the new summary bundle.
+- docs/development/testing_strategy.md:52-86 — Authoritative guidance for documenting environment + commands even when no tests run.
 
 How-To Map:
-1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/shape_models` and record `env | sort > .../env.txt`.
-2. Reproduce the failure and tee output: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model | tee reports/.../pytest_before.log`.
-3. Update `tests/test_at_str_003.py` so every Simulator invocation constructs a `Detector(self.detector_config, device="cpu", dtype=torch.float32)` (or the test’s dtype) and passes it positionally. Keep crystal/beam setups untouched.
-4. Rerun the focused selector and the companion case: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_str_003.py -k "TestAT_STR_003_LatticeShapeModels" | tee reports/.../pytest_module.log`.
-5. Summarise edits, commands, pass counts, remaining skips (if any), and follow-ups in `reports/.../summary.md`; include pointers to updated code lines.
-6. Update docs/fix_plan.md Attempt #27 (or next) with the new artifact path + pass counts and refresh plans/active/test-suite-triage.md row M1e to [D]; sync remediation_tracker.md with the reduced failure tally.
+1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP` and `reports/2026-01-test-suite-triage/phase_m2/$STAMP`.
+2. Copy key metrics from Attempt #27: summarise 11 remaining failures, Sprint 0 completion, and artifact pointers into `reports/2026-01-test-suite-triage/phase_m1/$STAMP/summary.md` (include command log snippets and environment notes per testing_strategy §1.5).
+3. Update `remediation_tracker.md` Sprint 0 rows with Attempt #27 data (failure counts, status → COMPLETE) and record the new STAMP/path.
+4. Append Attempt #27 closure + the new summary path to `[TEST-SUITE-TRIAGE-001]` Attempts in docs/fix_plan.md; note that Sprint 0 is done and Phase M2 planning is next.
+5. Draft Phase M2 guard brief: create `reports/2026-01-test-suite-triage/phase_m2/$STAMP/strategy.md` describing the proposed `NANOBRAGG_DISABLE_COMPILE=1` guard, expected selectors (`pytest -v tests/test_gradients.py -k "gradcheck"`), and documentation touch points.
+6. Confirm plans/active/test-suite-triage.md row M1f flips to [D] and reference the new summary; leave M2a ready for delegation.
 
 Pitfalls To Avoid:
-- Do not leave any Simulator invocation with `detector=None`.
-- Keep device/dtype neutrality—no `.cpu()` calls in the tests after results.
-- Preserve existing assertions; only touch setup wiring needed for Detector construction.
-- Ensure every pytest command includes `KMP_DUPLICATE_LIB_OK=TRUE` and runs with CUDA disabled.
-- Store artifacts under the new `$STAMP/shape_models` folder without overwriting prior attempts.
-- Avoid editing production Simulator code; this loop is test-fixture only.
-- Update both docs/fix_plan.md and remediation_tracker.md in the same loop to keep counts consistent.
-- Reference DetectorConfig defaults (beam centers) rather than hard-coding new coordinates.
-- Leave gradient compilation guards (Phase M2 work) untouched for now.
-- Keep the summary concise but include pass/fail deltas and any residual TODOs.
+- Do not rerun pytest; this loop is evidence-only.
+- Preserve prior Attempt numbering in docs/fix_plan.md; append rather than overwrite.
+- Keep `$STAMP` directories unique—never reuse an existing timestamp.
+- Include environment + command strings in the summary even if no tests were executed.
+- When editing remediation_tracker.md, update both the table row and any aggregate counts.
+- Reference the Attempt #27 artifact path exactly (`20251011T170539Z`) when citing prior evidence.
+- Avoid editing production code or deleting historical artifacts.
+- Maintain UTF-8 ASCII only; no fancy characters beyond what already exists.
+- Double-check Mode in future loops before dispatching new work.
+- Leave Phase M2 implementation tasks untouched; we only author the strategy doc this loop.
 
 Pointers:
-- docs/fix_plan.md:36-113
-- plans/active/test-suite-triage.md:202-222
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:218-243
-- tests/test_at_str_003.py:1-220
-- src/nanobrag_torch/models/detector.py:24-140
+- docs/fix_plan.md:3-48
+- plans/active/test-suite-triage.md:11-222
+- reports/2026-01-test-suite-triage/phase_m1/20251011T170539Z/shape_models/summary.md:1
+- docs/development/testing_strategy.md:52-86
+- remediation_tracker.md:1-200
 
-Next Up: Phase M1f — ledger + remediation tracker refresh once Cluster C7 passes.
+Next Up: Phase M2a — implement the gradient compile guard once the brief is approved.
