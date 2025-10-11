@@ -41,6 +41,7 @@ class TestATParallel003:
         for beam_s_mm, beam_f_mm in beam_centers_mm:
             for detector_size in detector_sizes:
                 # Create detector config with specified beam center
+                # DETECTOR-CONFIG-001: Explicitly provided beam centers must set source="explicit"
                 detector_config = DetectorConfig(
                     detector_convention=DetectorConvention.MOSFLM,
                     distance_mm=100.0,
@@ -49,6 +50,7 @@ class TestATParallel003:
                     fpixels=detector_size,
                     beam_center_s=beam_s_mm,
                     beam_center_f=beam_f_mm,
+                    beam_center_source="explicit",  # No MOSFLM +0.5 offset for explicit values
                 )
 
                 # Verify beam centers are preserved in mm
@@ -89,6 +91,7 @@ class TestATParallel003:
 
         for beam_s_mm, beam_f_mm in beam_centers_mm:
             # Create configurations
+            # DETECTOR-CONFIG-001: Explicitly provided beam centers must set source="explicit"
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
                 distance_mm=100.0,
@@ -97,6 +100,7 @@ class TestATParallel003:
                 fpixels=detector_size,
                 beam_center_s=beam_s_mm,
                 beam_center_f=beam_f_mm,
+                beam_center_source="explicit",  # No MOSFLM +0.5 offset for explicit values
             )
 
             crystal_config = CrystalConfig(
@@ -157,6 +161,7 @@ class TestATParallel003:
             # Adjust pixel size to maintain same physical detector size
             pixel_size = base_pixel_size * base_detector_size / detector_size
 
+            # DETECTOR-CONFIG-001: Explicitly provided beam centers must set source="explicit"
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
                 distance_mm=100.0,
@@ -165,6 +170,7 @@ class TestATParallel003:
                 fpixels=detector_size,
                 beam_center_s=beam_center_mm[0],
                 beam_center_f=beam_center_mm[1],
+                beam_center_source="explicit",  # No MOSFLM +0.5 offset for explicit values
             )
 
             # Calculate offset ratio (beam center position relative to detector center)

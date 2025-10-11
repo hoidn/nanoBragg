@@ -390,6 +390,45 @@ Examples:
     return parser
 
 
+def determine_beam_center_source(args: argparse.Namespace, config: Dict[str, Any]) -> str:
+    """Determine if beam center is explicit or auto-calculated.
+
+    Per DETECTOR-CONFIG-001 Phase C2, beam_center_source tracks whether
+    beam centers were explicitly provided by the user ("explicit") or should
+    be auto-calculated from detector size defaults ("auto").
+
+    The MOSFLM +0.5 pixel offset (spec-a-core.md §72, arch.md §ADR-03)
+    applies ONLY to auto-calculated beam centers, not explicit user inputs.
+
+    Args:
+        args: Parsed command-line arguments
+        config: Configuration dict (may contain beam centers from headers)
+
+    Returns:
+        "explicit" if beam center was explicitly provided, "auto" otherwise
+    """
+    # Check CLI flags that explicitly provide beam centers
+    explicit_flags = [
+        args.Xbeam is not None,
+        args.Ybeam is not None,
+        args.Xclose is not None,
+        args.Yclose is not None,
+        args.ORGX is not None,
+        args.ORGY is not None
+    ]
+
+    if any(explicit_flags):
+        return "explicit"
+
+    # Check if beam centers were set via header ingestion (from -img or -mask)
+    # Header-derived beam centers are treated as explicit (user provided the file)
+    if 'beam_center_x_mm' in config or 'beam_center_y_mm' in config:
+        return "explicit"
+
+    # Default: beam centers will be auto-calculated from detector size
+    return "auto"
+
+
 def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     """Parse and validate command-line arguments into configuration."""
 
@@ -843,6 +882,11 @@ def main():
         # Validate and convert arguments
         config = parse_and_validate_args(args)
 
+        # DETECTOR-CONFIG-001 Phase C2: Determine beam center source (explicit vs auto)
+        # This must be called AFTER parse_and_validate_args (which may set beam centers from headers)
+        # but BEFORE creating DetectorConfig (which needs this information)
+        beam_center_source = determine_beam_center_source(args, config)
+
         # Create configuration objects
         if 'cell_params' in config:
             crystal_config = CrystalConfig(
@@ -898,6 +942,8 @@ def main():
             oversample_omega=config.get('oversample_omega', False),
             oversample_polar=config.get('oversample_polar', False),
             oversample_thick=config.get('oversample_thick', False),
+            # DETECTOR-CONFIG-001 Phase C2: Pass beam_center_source for MOSFLM offset logic
+            beam_center_source=beam_center_source,
             # Custom vectors for CUSTOM convention
             custom_fdet_vector=config.get('custom_fdet_vector'),
             custom_sdet_vector=config.get('custom_sdet_vector'),

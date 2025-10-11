@@ -67,6 +67,63 @@ Before writing any test or implementation that involves C-code validation, you *
 
 Implicit pivot rules, beam-center mappings (including MOSFLM +0.5 pixel adjustment), default twotheta axes per convention, and coordinate transforms are defined in `specs/spec-a.md` (Geometry Model & Conventions). Refer there for canonical behavior. For practical debugging/validation checklists, use `docs/debugging/detector_geometry_checklist.md`.
 
+### Beam Center Source Detection (DETECTOR-CONFIG-001)
+
+**NEW in Phase C:** The CLI parsing layer automatically detects whether beam centers are explicitly provided and sets `DetectorConfig.beam_center_source` accordingly.
+
+**Detection Logic:** The following CLI flags indicate **explicit** beam center input:
+
+| Flag | Description | Maps To |
+|------|-------------|---------|
+| `-Xbeam <val>` | Explicit slow-axis beam center | `beam_center_source="explicit"` |
+| `-Ybeam <val>` | Explicit fast-axis beam center | `beam_center_source="explicit"` |
+| `-Xclose <val>` | Close distance X (forces SAMPLE pivot) | `beam_center_source="explicit"` |
+| `-Yclose <val>` | Close distance Y (forces SAMPLE pivot) | `beam_center_source="explicit"` |
+| `-ORGX <val>` | XDS-style origin X coordinate | `beam_center_source="explicit"` |
+| `-ORGY <val>` | XDS-style origin Y coordinate | `beam_center_source="explicit"` |
+| `-img <file>` | Header ingestion from SMV image | `beam_center_source="explicit"` (if header contains beam center) |
+| `-mask <file>` | Header ingestion from mask file | `beam_center_source="explicit"` (if header contains beam center) |
+
+**Default Behavior:** If **none** of these flags are provided, `beam_center_source="auto"` (default value).
+
+**Critical:** This detection occurs in `src/nanobrag_torch/__main__.py` via the `determine_beam_center_source()` helper function, which is called during config construction.
+
+**Rationale:** Per spec-a-core.md §72 and arch.md §ADR-03, the MOSFLM +0.5 pixel offset applies **only** to auto-calculated beam center defaults, not explicit user-provided values. The CLI layer must track the provenance of beam center values to enable correct offset application in the Detector layer.
+
+**Example CLI Commands:**
+
+```bash
+# Explicit beam center (no MOSFLM offset applied)
+nanoBragg -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
+  -distance 100 -detpixels 256 -Xbeam 12.8 -Ybeam 12.8
+# Result: beam_center_source="explicit", beam_center in pixels = 128.0
+
+# Auto-calculated beam center (MOSFLM offset applied)
+nanoBragg -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100 \
+  -distance 100 -detpixels 256
+# Result: beam_center_source="auto", beam_center in pixels = 128.5 (MOSFLM default)
+```
+
+**Direct API Usage Warning:** When constructing `DetectorConfig` directly in Python code (not via CLI), users **must** explicitly set `beam_center_source="explicit"` if providing explicit beam centers. Otherwise, the default `"auto"` will apply MOSFLM offset unintentionally.
+
+```python
+# CORRECT: Explicit beam center in direct API usage
+config = DetectorConfig(
+    detector_convention=DetectorConvention.MOSFLM,
+    beam_center_s=12.8,
+    beam_center_f=12.8,
+    beam_center_source="explicit",  # Required for correct behavior
+)
+
+# INCORRECT: Missing beam_center_source (will apply unwanted offset)
+config = DetectorConfig(
+    detector_convention=DetectorConvention.MOSFLM,
+    beam_center_s=12.8,
+    beam_center_f=12.8,
+    # beam_center_source defaults to "auto" → applies MOSFLM +0.5 offset
+)
+```
+
 ## References
 
 - Source: `nanoBragg.c` lines 506-1850 (configuration parsing and setup)

@@ -60,7 +60,7 @@ if(strstr(argv[i], "-pixel") && (argc > (i+1)))
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -186,6 +186,14 @@ class DetectorConfig:
     # Beam center (mm from detector origin)
     beam_center_s: Union[float, torch.Tensor, None] = None  # slow axis (auto-calculated if None)
     beam_center_f: Union[float, torch.Tensor, None] = None  # fast axis (auto-calculated if None)
+
+    # Beam center source tracking (DETECTOR-CONFIG-001 Phase C1)
+    # Distinguishes auto-calculated defaults from explicit user-provided values
+    # - "auto": Beam center derived from detector size defaults → apply MOSFLM +0.5 pixel offset
+    # - "explicit": Beam center explicitly provided by user → no implicit offset
+    # Per spec-a-core.md §72 and arch.md §ADR-03, the MOSFLM +0.5 pixel offset
+    # applies ONLY to auto-calculated defaults, not explicit user inputs.
+    beam_center_source: Literal["auto", "explicit"] = "auto"
 
     # Detector rotations (degrees)
     detector_rotx_deg: Union[float, torch.Tensor] = 0.0

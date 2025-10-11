@@ -151,10 +151,58 @@ Default Xbeam = (detsize_s + pixel)/2
 Default Ybeam = (detsize_f + pixel)/2
 ```
 
+#### 8.2.1 Beam Center Source Tracking (DETECTOR-CONFIG-001)
+
+**NEW in Phase C:** The `beam_center_source` attribute distinguishes between auto-calculated and explicit beam centers to control MOSFLM +0.5 pixel offset application.
+
+**Per spec-a-core.md §72 and arch.md §ADR-03:**
+- **MOSFLM convention** applies a +0.5 pixel offset when converting beam centers from mm to pixels: `Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel`
+- This offset is part of the **default beam center mapping formula** and applies **only to auto-calculated defaults**
+- **Explicit user-provided beam centers** are used as-is without implicit adjustment
+
+**Attribute Values:**
+- `beam_center_source="auto"` (default): Beam center derived from detector size defaults → apply MOSFLM +0.5 pixel offset
+- `beam_center_source="explicit"`: Beam center explicitly provided by user → no implicit offset
+
 **Examples:**
 
 ```python
-# For a 512×512 detector with 0.1mm pixels:
+# Auto-calculated beam center (applies MOSFLM +0.5 offset)
+config = DetectorConfig(
+    detector_convention=DetectorConvention.MOSFLM,
+    spixels=256,
+    fpixels=256,
+    pixel_size_mm=0.1,
+    beam_center_s=12.8,  # (256 * 0.1) / 2 = 12.8mm
+    beam_center_f=12.8,
+    beam_center_source="auto",  # +0.5 pixel offset will be applied
+)
+# Result: beam_center_s_pixels = 128.5, beam_center_f_pixels = 128.5
+
+# Explicit beam center (no MOSFLM offset)
+config = DetectorConfig(
+    detector_convention=DetectorConvention.MOSFLM,
+    spixels=256,
+    fpixels=256,
+    pixel_size_mm=0.1,
+    beam_center_s=12.8,
+    beam_center_f=12.8,
+    beam_center_source="explicit",  # Use as-is, no offset
+)
+# Result: beam_center_s_pixels = 128.0, beam_center_f_pixels = 128.0
+
+# XDS convention (no offset regardless of source)
+config = DetectorConfig(
+    detector_convention=DetectorConvention.XDS,
+    beam_center_s=12.8,
+    beam_center_f=12.8,
+    beam_center_source="auto",  # XDS never applies offset
+)
+# Result: beam_center_s_pixels = 128.0, beam_center_f_pixels = 128.0
+```
+
+**For a 512×512 detector with 0.1mm pixels:**
+```python
 # MOSFLM default: (51.2 + 0.1)/2 = 25.65 mm
 # Note: The +0.5 pixel mapping offset is applied during mm→pixel conversion
 config = DetectorConfig(
@@ -162,10 +210,13 @@ config = DetectorConfig(
     fpixels=512,
     pixel_size_mm=0.1,
     beam_center_s=25.65,  # mm from detector edge (MOSFLM default)
-    beam_center_f=25.65   # mm from detector edge (MOSFLM default)
+    beam_center_f=25.65,   # mm from detector edge (MOSFLM default)
+    beam_center_source="auto",  # Apply MOSFLM +0.5 offset
 )
+```
 
-# For a 1024×1024 detector with 0.1mm pixels:
+**For a 1024×1024 detector with 0.1mm pixels:**
+```python
 # MOSFLM default: (102.4 + 0.1)/2 = 51.25 mm
 # Mapping to pixels: Fbeam = Ybeam + 0.5·pixel → 51.25 + 0.05 = 51.3 → pixel 513
 config = DetectorConfig(
@@ -173,7 +224,8 @@ config = DetectorConfig(
     fpixels=1024,
     pixel_size_mm=0.1,
     beam_center_s=51.25,  # mm from detector edge (MOSFLM default)
-    beam_center_f=51.25   # mm from detector edge (MOSFLM default)
+    beam_center_f=51.25,   # mm from detector edge (MOSFLM default)
+    beam_center_source="auto",  # Apply MOSFLM +0.5 offset
 )
 ```
 
@@ -181,6 +233,7 @@ config = DetectorConfig(
 - Using pixel coordinates (256, 512) instead of physical distances (25.65mm, 51.25mm)
 - Using formula `detsize/2` instead of `(detsize + pixel)/2` for MOSFLM defaults
 - Confusing the user-facing beam center (mm) with the internal +0.5 pixel mapping offset
+- **NEW:** Providing explicit beam centers in direct API usage without setting `beam_center_source="explicit"` (will incorrectly apply MOSFLM offset)
 
 ## 9. Example Configurations
 
