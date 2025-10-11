@@ -16,6 +16,8 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig
+from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
 
 
@@ -49,11 +51,16 @@ class TestCUDAGraphsCompatibility:
             wavelength_A=6.2
         )
 
+        # Create Crystal and Detector objects
+        crystal = Crystal(crystal_config, beam_config, device=device, dtype=torch.float32)
+        detector = Detector(detector_config, device=device, dtype=torch.float32)
+
         # Create simulator on target device (dtype defaults to float32)
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
-            beam_config=beam_config,
+            crystal,
+            detector,
+            crystal_config,
+            beam_config,
             device=device,
             dtype=torch.float32
         )
@@ -92,10 +99,15 @@ class TestCUDAGraphsCompatibility:
             wavelength_A=6.2
         )
 
+        # Create Crystal and Detector objects
+        crystal = Crystal(crystal_config, beam_config, device="cuda", dtype=torch.float32)
+        detector = Detector(detector_config, device="cuda", dtype=torch.float32)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
-            beam_config=beam_config,
+            crystal,
+            detector,
+            crystal_config,
+            beam_config,
             device="cuda",
             dtype=torch.float32
         )
@@ -139,10 +151,15 @@ class TestCUDAGraphsCompatibility:
             wavelength_A=6.2
         )
 
+        # Create Crystal and Detector objects
+        crystal = Crystal(crystal_config, beam_config, device="cpu", dtype=torch.float64)
+        detector = Detector(detector_config, device="cpu", dtype=torch.float64)
+
         simulator = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
-            beam_config=beam_config,
+            crystal,
+            detector,
+            crystal_config,
+            beam_config,
             device="cpu",
             dtype=torch.float64
         )
@@ -181,10 +198,13 @@ class TestCUDAGraphsCompatibility:
         )
 
         # Run on CPU
+        crystal_cpu = Crystal(crystal_config, beam_config, device="cpu", dtype=torch.float32)
+        detector_cpu = Detector(detector_config, device="cpu", dtype=torch.float32)
         simulator_cpu = Simulator(
-            crystal_config=crystal_config,
-            detector_config=detector_config,
-            beam_config=beam_config,
+            crystal_cpu,
+            detector_cpu,
+            crystal_config,
+            beam_config,
             device="cpu",
             dtype=torch.float32
         )
@@ -192,10 +212,13 @@ class TestCUDAGraphsCompatibility:
 
         if device == "cuda":
             # Run on CUDA and compare
+            crystal_cuda = Crystal(crystal_config, beam_config, device="cuda", dtype=torch.float32)
+            detector_cuda = Detector(detector_config, device="cuda", dtype=torch.float32)
             simulator_cuda = Simulator(
-                crystal_config=crystal_config,
-                detector_config=detector_config,
-                beam_config=beam_config,
+                crystal_cuda,
+                detector_cuda,
+                crystal_config,
+                beam_config,
                 device="cuda",
                 dtype=torch.float32
             )

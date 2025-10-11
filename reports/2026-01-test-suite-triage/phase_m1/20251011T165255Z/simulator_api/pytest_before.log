@@ -1,0 +1,58 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 2 items
+
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu] FAILED [ 50%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cuda] SKIPPED [100%]
+
+=================================== FAILURES ===================================
+____________ TestCUDAGraphsCompatibility.test_basic_execution[cpu] _____________
+
+self = <tests.test_perf_pytorch_005_cudagraphs.TestCUDAGraphsCompatibility object at 0x7aa97dc58550>
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_basic_execution(self, device):
+        """Test that basic simulation runs on both CPU and CUDA without errors."""
+        # Simple cubic crystal configuration
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            misset_deg=(0.0, 0.0, 0.0),
+            phi_start_deg=0.0, osc_range_deg=0.0, phi_steps=1,
+            spindle_axis=(0.0, 0.0, 1.0),
+            mosaic_spread_deg=0.0, mosaic_domains=1,
+            N_cells=(3, 3, 3),
+            default_F=100.0
+        )
+    
+        # Small detector for fast test
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=64, fpixels=64,
+            beam_center_s=3.2, beam_center_f=3.2
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=6.2
+        )
+    
+        # Create simulator on target device (dtype defaults to float32)
+>       simulator = Simulator(
+            crystal_config=crystal_config,
+            detector_config=detector_config,
+            beam_config=beam_config,
+            device=device,
+            dtype=torch.float32
+        )
+E       TypeError: Simulator.__init__() got an unexpected keyword argument 'detector_config'
+
+tests/test_perf_pytorch_005_cudagraphs.py:53: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu]
+========================= 1 failed, 1 skipped in 2.10s =========================
