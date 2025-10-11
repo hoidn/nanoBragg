@@ -2443,3 +2443,12 @@
 - Key references: specs/spec-a-core.md:68-73, arch.md ADR-03, reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md.
 - <Action State>: [ready_for_implementation]
 
+### 2025-10-11 (galph loop - focus selection pre-edit note)
+- Recorded focus/action/mode before edits: focus=`[DETECTOR-CONFIG-001] MOSFLM offset remediation`, action=Planning, mode=Docs.
+- <Action State>: [planning]
+
+- Updated `plans/active/test-suite-triage.md` to mark Phase L complete, added Phase M post-fix validation gate, and noted tracker sync still pending until MOSFLM remediation closes.
+- Expanded `plans/active/detector-config.md` Phase B guidance with explicit file references and testing expectations; fix_plan now points Ralph at Phase C1–C3 execution.
+- Refreshed `docs/fix_plan.md` Active Focus, Next Actions (both `[TEST-SUITE-TRIAGE-001]` + `[DETECTOR-CONFIG-001]`), and issued `input.md` (Parity mode) directing MOSFLM offset implementation + detector-config pytest rerun.
+- <Action State>: [ready_for_implementation]
+

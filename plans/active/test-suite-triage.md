@@ -20,7 +20,8 @@
 - Phase I ✅ complete (Attempt #11 — `reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/` delivers triage_summary.md + classification_overview.md with 36 failures classified; fix_plan updated accordingly).
 - Phase J ✅ tracker maintained — `remediation_tracker.md` and `remediation_sequence.md` refreshed (Attempt #16) with determinism clusters cleared; Phase D4 closure appended C3 ✅ resolved and Sprint 1 progress advanced to 30.6% (9/17 failures retired).
 - Phase K ✅ complete — Attempt #15 (rerun) + Attempt #16 (analysis + tracker) delivered the 512/31/143 baseline; Attempt #19 Phase D closure now recorded in `analysis/summary.md`, yielding the current 516 passed / 27 failed / 143 skipped snapshot.
-- Phase L ⏳ pending — Sprint 1.3 (C8 detector config) launch will begin once Phase L artifacts are captured under `reports/2026-01-test-suite-triage/phase_l/<STAMP>/` per checklist below.
+- Phase L ✅ complete (Attempt #17 — `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/`); targeted detector-config rerun captured, failure brief authored, ledger pending tracker sync with `[DETECTOR-CONFIG-001]` remediation.
+- Phase M ⏳ pending — reopen full-suite gate once MOSFLM offset fix ships (dependent on `[DETECTOR-CONFIG-001]` Phase C1–C3 completion and targeted retest).
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -159,15 +160,26 @@ Exit Criteria: Targeted detector-config rerun archived under `reports/2026-01-te
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| L1 | Capture detector-config targeted run | [ ] | Run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; store console log, `pytest.xml`, and `env/` snapshot under `reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config/`. Include `commands.txt` per testing_strategy §§1.4–1.5. |
-| L2 | Draft detector-config failure brief | [ ] | Summarise outcomes into `analysis.md` in the same stamp referencing `specs/spec-a-core.md` §4 (detector defaults), `arch.md` §2, and `phase_k/analysis/triage_summary.md` (C8) to highlight default mismatches + CLI mapping gaps. |
-| L3 | Sync ledger + tracker | [ ] | Update `docs/fix_plan.md` (`[TEST-SUITE-TRIAGE-001]`, `[DETECTOR-CONFIG-001]`) and refresh `remediation_tracker.md` with the Phase L attempt ID, reproduction command, and failure count (2) before delegating implementation work. |
+| L1 | Capture detector-config targeted run | [D] | Attempt #17 (20251011T104618Z) executed `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; artifacts stored under `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/` with `commands.txt`, env snapshot, and junit XML. |
+| L2 | Draft detector-config failure brief | [D] | Attempt #17 produced `analysis.md` citing `specs/spec-a-core.md` §4 and `arch.md` §ADR-03; documents MOSFLM +0.5 pixel gap blocking `[DETECTOR-CONFIG-001]`. |
+| L3 | Sync ledger + tracker | [P] | Fix plan `[TEST-SUITE-TRIAGE-001]` updated (Attempt #17). `remediation_tracker.md` still needs Phase L attempt row once `[DETECTOR-CONFIG-001]` remediation closes — leave open until post-fix validation. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).
 - All artifacts stored under `reports/2026-01-test-suite-triage/` with timestamped folders and referenced in `docs/fix_plan.md`.
 - `triage_summary.md` (Phase I) identifies categories for every failing test and maps each to a next action (bug fix, test removal request, infrastructure follow-up).
 - `handoff addendum` plus Phase J tracker are approved (by supervisor) and actively steering remediation; once backlog execution is underway, archive this plan.
+
+### Phase M — Post-Fix Validation & Suite Refresh
+Goal: Confirm detector-config remediation clears C8 and refresh overall failure counts before the next sprint.
+Prereqs: `[DETECTOR-CONFIG-001]` Phase C1–C3 complete; targeted detector-config pytest passes locally.
+Exit Criteria: Phase M directory contains targeted + full-suite rerun artifacts, fix plan/tracker synced with updated failure counts.
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| M1 | Retest detector-config after fix | [ ] | Once MOSFLM offset patch merges, rerun `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; archive under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/detector_config/` with diff vs Attempt #17. |
+| M2 | Full-suite validation sweep | [ ] | Execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/<STAMP>/artifacts/pytest_full.xml`; ensure runtime guardrails per testing_strategy §§1.4–1.5. |
+| M3 | Tracker + ledger sync | [ ] | Update `[TEST-SUITE-TRIAGE-001]`, `[DETECTOR-CONFIG-001]`, and `remediation_tracker.md` with new pass/fail counts; note residual failing clusters for Sprint 1.4 planning. |
 
 ### Metrics & Reporting Guidelines
 - Capture total runtime, pass/fail counts, and slowest tests (top 25) from `--durations=25` output.

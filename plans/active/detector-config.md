@@ -27,10 +27,10 @@ Exit Criteria: Annotated blueprint covering code edits, regression risks, and te
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Pinpoint conversion sites | [ ] | Inspect `src/nanobrag_torch/models/detector.py` lines ~70–120 (beam center tensors) and `_calculate_pix0_vector` (~640–660). Confirm only the initialization path needs +0.5 for MOSFLM, while downstream `Fclose/Sclose` logic already adds offsets conditionally. |
-| B2 | Decide offset application strategy | [ ] | Preferred: add convention-aware +0.5 in Detector.__init__ when translating mm→pixels (so `beam_center_*` tensors represent pixel corners per spec). Ensure config-level defaults remain physical mm distances (51.25 mm), not pre-offset. |
-| B3 | Guard against double offsets | [ ] | Audit `_calculate_pix0_vector` and header update block (lines ~520–590) to ensure applying +0.5 during initialization doesn’t require subtracting offsets elsewhere. Document adjustments needed (e.g., update MOSFLM branch subtracting 0.5 when mapping back to mm). |
-| B4 | Outline regression tests | [ ] | Plan targeted assertions: retain existing tests in `tests/test_detector_config.py`; add parametrised case covering MOSFLM vs DENZO vs XDS to verify only MOSFLM gains +0.5. Consider adding property test for `Detector.get_pixel_coords()` verifying beam center maps to correct physical position. |
+| B1 | Pinpoint conversion sites | [ ] | Read `src/nanobrag_torch/models/detector.py:78-142` (`Detector.__init__`) and `:612-690` (`_calculate_pix0_vector`). Document where `beam_center_{s,f}_mm` become pixel counts; capture notes in Attempt log so Ralph edits the exact helper(s) instead of sprinkling offsets across the codebase. |
+| B2 | Decide offset application strategy | [ ] | Finalise rule: during mm→pixel conversion inside `Detector.__init__`, add MOSFLM-only `+0.5` offsets using the detector `pixel_size` tensor. Record the formula in plan + fix_plan so Ralph can implement as `beam_center_s_pixels = beam_center_s_mm / pixel_size_mm + 0.5` (MOSFLM) while other conventions remain unchanged. |
+| B3 | Guard against double offsets | [ ] | Verify `_calculate_pix0_vector` (beam pivot path) and SMV header export (`write_headers` block around line ~520) do not reapply offsets. If they currently add/subtract 0.5, note required adjustments in the blueprint and cite spec-a-core §72 + arch.md ADR-03 to justify the single application point. |
+| B4 | Outline regression tests | [ ] | Specify required coverage: extend `tests/test_detector_config.py::TestMosflmDefaults` with expected pixel centres (513.0/512.5 etc.), add negative control for XDS to prove we did **not** offset there, and confirm `Detector.get_pixel_coords()` still maps beam centre to `pix0_vector`. Record selectors + expected assertions so Ralph can implement with confidence. |
 
 ### Phase C — Implementation, Validation, and Documentation
 Goal: Execute the fix, refresh tests/docs, and close ledger items with reproducible evidence.
@@ -44,4 +44,3 @@ Exit Criteria: Detector fixes merged, targeted + full-suite validations recorded
 | C3 | Update docs + trackers | [ ] | Refresh `docs/architecture/detector.md` §§8.2/9 to cite convention-aware formula; ensure `docs/development/c_to_pytorch_config_map.md` beam-center row clarifies offset. Update `docs/fix_plan.md` ([DETECTOR-CONFIG-001] → in_progress → done once validated) and `remediation_tracker.md` (C8 cluster progress). |
 | C4 | Full-suite regression (gate) | [ ] | Once targeted tests pass, rerun `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --maxfail=0 --durations=25` (Phase L follow-up). Capture artifacts under `reports/2026-01-test-suite-triage/phase_l/<STAMP>/full_suite/`. |
 | C5 | Plan closure | [ ] | When C1–C4 complete, archive this plan (move to `plans/archive/`) and mark `[DETECTOR-CONFIG-001]` done with Attempt summary in docs/fix_plan.md.
-

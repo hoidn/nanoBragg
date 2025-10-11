@@ -1,38 +1,39 @@
-Summary: Fix MOSFLM beam-center pixel conversion so detector defaults match spec and unblock C8.
+Summary: Apply MOSFLM +0.5 beam-center offset and clear detector-config regressions ahead of Phase M.
 Mode: Parity
 Focus: [DETECTOR-CONFIG-001] Detector defaults audit
 Branch: feature/spec-based-2
-Mapped tests: tests/test_detector_config.py
-Artifacts: reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config_fix/
-Do Now: [DETECTOR-CONFIG-001] Phase B1–B3 & C1–C2 — implement the MOSFLM +0.5 pixel offset fix and rerun KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py
-If Blocked: Capture the failing pytest output to reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config_fix/blocked.log, note the stack/context in analysis.md, and stop (leave code edits staged but uncommitted).
+Mapped tests: pytest -v tests/test_detector_config.py --maxfail=0
+Artifacts: reports/2026-01-test-suite-triage/phase_m/$STAMP/{detector_config,full_suite}/
+Do Now: [DETECTOR-CONFIG-001] Detector defaults audit — KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0
+If Blocked: Capture notes in plans/active/detector-config.md Phase B checklist, add Attempt entry in docs/fix_plan.md, and pause implementation.
 Priorities & Rationale:
-- plans/active/detector-config.md Phase B — spell out the code touch-points (Detector.__init__, pix0/header flows) that must change; follow it before editing.
-- docs/fix_plan.md:212 — `[DETECTOR-CONFIG-001]` Next Actions now depend on the Phase B blueprint and Phase C implementation.
-- reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md — authoritative failure analysis citing spec §72 and ADR-03; we must eliminate that gap.
-- specs/spec-a-core.md:72 — MOSFLM mandates `Fbeam = Ybeam + 0.5·pixel`; current code violates this contract.
-- arch.md:ADR-03 — confirms CUSTOM must not gain the offset; treat non-MOSFLM conventions carefully.
+- plans/active/detector-config.md Phase B: blueprint enumerates mm→pixel conversion sites and offset rules that must be implemented this loop.
+- docs/fix_plan.md#detector-config-001: Next Actions now require Phase C1–C3 to land before we can rerun the suite.
+- reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md: documents failing expectations (513.0/1024.5 px) caused by missing MOSFLM +0.5 offset.
+- specs/spec-a-core.md:72-75 & arch.md ADR-03: normative references for MOSFLM beam-center offsets you must match exactly.
+- docs/development/pytorch_runtime_checklist.md item 1 & 2: maintain vectorization and device/dtype neutrality while editing Detector.
 How-To Map:
-- Set `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and create `reports/2026-01-test-suite-triage/phase_l/$STAMP/detector_config_fix/{logs,env}`.
-- Edit `src/nanobrag_torch/models/detector.py` so the mm→pixel conversion adds +0.5 only when `config.detector_convention` is MOSFLM; audit `_calculate_pix0_vector` and the header back-propagation block (~520–590) to prevent double offsets (document any adjustments in analysis.md).
-- Ensure config defaults stay in mm (51.25) — do not pre-offset in `DetectorConfig.__post_init__`; update code comments if behavior changes.
-- Extend `tests/test_detector_config.py` with convention-aware assertions if needed (e.g., parametrised cases for MOSFLM vs DENZO vs XDS) and adjust existing expectations to reflect the corrected pixel values.
-- Run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py | tee reports/2026-01-test-suite-triage/phase_l/$STAMP/detector_config_fix/logs/pytest.log`; move `pytest.xml` to the same directory and capture `env/torch_env.txt`, `env/pip_freeze.txt`, `commands.txt` with the exact invocation.
-- Summarise code changes, verification steps, and spec references in `reports/2026-01-test-suite-triage/phase_l/$STAMP/detector_config_fix/analysis.md`; call out any follow-up needed for full-suite rerun (Phase C4).
+- Implementation: adjust `src/nanobrag_torch/models/detector.py` mm→pixel conversion (see lines 78-142, 612-690). Apply MOSFLM-only +0.5 offsets; document rationale in code comments only if non-obvious.
+- Tests: extend `tests/test_detector_config.py` to assert MOSFLM pixel centres shift by +0.5 while XDS remains unchanged. Add regression for `Detector.get_pixel_coords()` if needed.
+- Docs/ledger: update `docs/architecture/detector.md` (§8.2) and `docs/development/c_to_pytorch_config_map.md` beam-center row to mention the MOSFLM +0.5 application site; refresh `docs/fix_plan.md` Attempt log and `reports/.../analysis.md` with results.
+- Commands: `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-triage/phase_m/$STAMP/detector_config`; `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0 | tee reports/2026-01-test-suite-triage/phase_m/$STAMP/detector_config/pytest.log`.
+- Optional (post-pass): if time, run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/$STAMP/full_suite/pytest_full.xml`.
 Pitfalls To Avoid:
-- Do not add `.cpu()`/`.cuda()` or `.item()` on tensors inside the detector core; maintain dtype/device neutrality.
-- Avoid double-applying the +0.5 when later converting back to mm (check header/pix0 recalculations).
-- Preserve non-MOSFLM conventions (DENZO, XDS, CUSTOM) — add explicit tests if you change branching logic.
-- Keep Protected Assets (loop.sh, input.md, docs/index.md references) untouched.
-- Update comments/docstrings only if they remain accurate after the fix; cite spec sections when clarifying.
-- Store artifacts under the new `$STAMP` directory; do not overwrite the earlier Phase L bundle.
-- Run the targeted pytest command before attempting the full suite; abort if targeted still fails.
-- If you touch docs, ensure they stay consistent with spec wording (no ad-hoc semantics changes without supervisor sign-off).
-- Avoid reformatting unrelated sections of detector.py to keep diffs tight.
+- Do not offset non-MOSFLM conventions; verify conditional logic before editing.
+- Preserve tensor dtype/device neutrality; avoid `.item()` or hard-coded CPU tensors in Detector.
+- Keep vectorization intact; no Python loops added around pixel calculations.
+- Respect Protected Assets listed in docs/index.md (e.g., input.md, loop.sh); do not rename or remove them.
+- Maintain differentiability by using tensor operations; no `.detach()`/`.numpy()` in core paths.
+- Update docs together with code; avoid drift between spec references and implementation.
+- Capture artifacts under the documented reports/ path with timestamped STAMP directories.
+- Record Attempt details in docs/fix_plan.md and plans/active/detector-config.md once execution completes.
+- Run targeted pytest before any full-suite invocation; only run the full suite if the targeted tests pass.
+- Set `KMP_DUPLICATE_LIB_OK=TRUE` for every pytest/python command involving torch.
 Pointers:
-- plans/active/detector-config.md — Phase breakdown and checklist for this workstream.
-- docs/development/c_to_pytorch_config_map.md:54-82 — beam-center mapping table.
-- specs/spec-a-core.md:68-86 — convention defaults and +0.5 offset rule.
-- arch.md:ADR-03 — detector beam-center ADR.
-- reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md — failure reproduction details.
-Next Up: After targeted tests pass, rerun the full `pytest tests/` Phase L sweep (plans/active/detector-config.md Phase C4) and refresh remediation_tracker.md.
+- src/nanobrag_torch/models/detector.py:78-142,612-690
+- tests/test_detector_config.py:1
+- docs/architecture/detector.md#L60
+- docs/development/c_to_pytorch_config_map.md:35
+- reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md
+- plans/active/detector-config.md:1
+Next Up: 1. After targeted pass, execute Phase M full-suite rerun and sync remediation_tracker.md per plans/active/test-suite-triage.md.

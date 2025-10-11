@@ -1,10 +1,10 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-20 (galph loop — Phase L launch prep)
+**Last Updated:** 2025-10-11 (galph loop — MOSFLM offset handoff prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Launch Phase L (Sprint 1.3) detector-config rerun; keep plan/tracker aligned to the 516 / 27 / 143 baseline and document new artifacts.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Steward MOSFLM remediation handoff, then trigger Phase M detector-config + full-suite reruns once the fix lands.
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
-- WATCH: `[DETECTOR-CONFIG-001]` — Await Phase L evidence bundle before delegating implementation.
+- WATCH: `[DETECTOR-CONFIG-001]` — Blueprint outstanding; delegate MOSFLM +0.5 offset implementation and regression coverage.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
 ## Index
@@ -47,9 +47,9 @@
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions:
-  1. Phase L targeted rerun — Execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0` and archive logs/JUnit/env under `reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config/` (per testing_strategy §§1.4–1.5).
-  2. Phase L failure brief — Summarise outcomes into `analysis.md` (same stamp) citing `specs/spec-a-core.md` §4, `arch.md` §2, and `phase_k/analysis/triage_summary.md` (C8) to document default vs CLI mapping gaps; note blockers for `[DETECTOR-CONFIG-001]`.
-  3. Ledger & tracker refresh — Update `plans/active/test-suite-triage.md` (Phase L checklist), this entry, and `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` with the new attempt ID + 2-failure count before delegating implementation.
+  1. Delegate `[DETECTOR-CONFIG-001]` Phase B blueprint + Phase C1–C3 implementation to Ralph (MOSFLM +0.5 offset fix, test extensions, doc updates). Reference `plans/active/detector-config.md` and Attempt #17 artifacts when preparing input.md.
+  2. After the detector-config patch lands, rerun the targeted detector-config suite per `plans/active/test-suite-triage.md` Phase M (store results under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/detector_config/`).
+  3. Once targeted tests pass, execute the full `pytest tests/` rerun (Phase M M2) and update `remediation_tracker.md` + this ledger with the new failure counts.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -218,9 +218,9 @@
 - Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase K triage (2 failures)
 - Attempts History: none yet
 - Next Actions:
-  1. Consume `[TEST-SUITE-TRIAGE-001]` Phase L targeted rerun artifacts (detector_config) once captured.
-  2. Audit detector config dataclass + CLI mapping against spec-a-core §4 and arch.md §2; document gaps (track via Phase B blueprint tasks).
-  3. Implement default fixes + regression tests before rerunning the full suite gate (Phase C execution).
+  1. Finalise Phase B blueprint (tasks B1–B4 in `plans/active/detector-config.md`): document the mm→pixel conversion sites, decide the single-application offset rule, and note any downstream adjustments required.
+  2. Execute Phase C1–C3: implement MOSFLM +0.5 offset in `Detector`, extend `tests/test_detector_config.py` with MOSFLM/XDS coverage, and refresh docs/ledger artefacts (analysis.md, fix_plan, tracker).
+  3. Gate with Phase C4: rerun targeted detector-config pytest followed by full-suite validation per test-suite-triage Phase M, archiving results under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/`.
 - Exit Criteria:
   - Detector initialization tests pass
   - Defaults match spec; CLI mapping documented
