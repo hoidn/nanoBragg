@@ -1,9 +1,9 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-19 (galph loop — Phase K handoff closure)
+**Last Updated:** 2025-10-11 (galph loop — Phase D4 tracker prep)
 **Active Focus:**
 - CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Keep Phase K artifacts consistent (analysis ↔ tracker) and steward Sprint 1 sequencing while Source Weighting remediation executes.
-- IN PROGRESS: `[SOURCE-WEIGHT-002]` — Phase D validation (spec/doc updates + acceptance suite) to retire cluster C3 after the Phase K rerun.
+- IN PROGRESS: `[SOURCE-WEIGHT-002]` — Phase D tracker/ledger closure after the Phase K rerun (full-suite delta captured; sync artifacts before marking C3 resolved).
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 - `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 
@@ -155,7 +155,7 @@
 ## [SOURCE-WEIGHT-002] Simulator source weighting
 - Spec/AT: `specs/spec-a-core.md` §§142–166 (Sources, Divergence & Dispersion), AT-SRC-001
 - Priority: High (Sprint 1.2 — Critical Path)
-- Status: in_progress — Phase D2 regression run + D4 closure outstanding (full-suite delta + tracker sync)
+- Status: in_progress — Phase D4 tracker/ledger closure outstanding (document C3=0 + sprint artefacts)
 - Owner/Date: ralph/2025-10-11
 - Plan Reference: `plans/active/source-weighting.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py`
@@ -166,9 +166,9 @@
   * [2025-10-11] Attempt #17 — Result: ✅ **Phase C implementation COMPLETE.** Executed Option A task list under `reports/2026-01-test-suite-triage/phase_j/20251011T064811Z/source_weighting/`: (C1) confirmed `read_sourcefile()` already uses `dtype: Optional[torch.dtype] = None` with default fallback; logged pre/post diff in `source.py.diff`; (C2) added parametrised `test_sourcefile_dtype_propagation` covering float32/float64/None; (C3) realigned AT-SRC-001 expectations to CLI λ semantics (wavelength assertions now reference `default_wavelength_m`, dtype assertions consume `directions.dtype`); (C4) targeted validation `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` captured in `pytest_final.log` (10 passed, 1 warning, 3.92 s). Baseline failure evidence retained in `pytest_baseline.log` (6 failed) for provenance. No production code changes beyond test alignment; warning for λ mismatch acknowledged per spec §151. Next: advance to Phase D (documentation update + acceptance suite) and propagate Attempt #17 into plans/ledger.
   * [2025-10-11] Attempt #18 — Result: ⏸ **Phase D2 regression INCOMPLETE** (docs-only evidence loop). Executed `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=5` with `--junitxml` artifact capture. **Test Results:** 305 passed, 5 failed, 57 skipped, 367 total (runtime 122.96s). Pass rate 83.1%. **Critical Finding:** Regression run stopped at --maxfail=5 limit before AT-SRC-001 suite fully executed, preventing C3 cluster resolution verification. **Failures:** (1) `test_at_parallel_015::test_mixed_units_comprehensive` (zero intensity assertion), (2) `test_at_parallel_026::test_triclinic_absolute_peak_position_vs_c` (detector=None AttributeError at `simulator.py:569`, matches baseline C3 tracker), (3) `test_at_src_001_simple::test_sourcefile_parsing` — **dtype expectation still hard-coded to float32**, causing `torch.testing.assert_close` to fail when an upstream test leaves the global default at float64; (4-5) `test_at_str_003` lattice shape model failures (not exercised before hitting maxfail). **Observation:** Need to make AT-SRC-001 assertions dtype-neutral before reattempting the suite; afterwards rerun without `--maxfail` to capture the C3 delta. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251011T091844Z/source_weighting/{artifacts/pytest_full.xml (84K, 367 testcases), env/{torch_env.txt, pip_freeze.txt}, logs/summary.md}`. **Recommendation:** Update AT-SRC-001 tests to derive expectations from output dtype, add float64-default coverage, then rerun targeted selectors followed by the full suite to confirm clearance. Elapsed: ~2 min docs + ~2 min pytest. Git SHA: pending commit.
 - Next Actions:
-  1. Stabilise AT-SRC-001 dtype expectations — update `tests/test_at_src_001_simple.py` to derive expected tensors from the parser outputs (`directions.dtype`, `weights.dtype`) and add an explicit float64-default coverage path (fixture or parametrisation that temporarily sets `torch.set_default_dtype(torch.float64)`). Capture targeted runs for both default dtype scenarios under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/source_weighting/` (`pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py`).
-  2. Phase D2 regression delta — Once targeted tests pass, execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=0 --durations=25` with a fresh Phase D stamp; archive `pytest_full.log`, `pytest_full.xml`, and `env/` under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/source_weighting/`, then refresh C3 counts inside `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` and the Sprint 1 tracker.
-  3. Phase D4 closure — After logging the regression delta, update `plans/active/source-weighting.md` Phase D checklist and this ledger (Attempt #18 follow-up) to mark C3 resolved; sync `[TEST-SUITE-TRIAGE-001]` remediation tracker entries to show the cleared failures.
+  1. Phase D4 tracker sync — Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` and `remediation_sequence.md` plus Phase K `analysis/{summary.md,classification_overview.md}` to reflect C3 = 0 and the new suite totals from Attempt #19; capture diff notes under a fresh `$STAMP` subdirectory.
+  2. Phase D4 closure memo — Produce a short `closure.md` under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/source_weighting/` summarising Attempt #19 deltas (targeted run, full-suite totals, default dtype coverage) and linking the refreshed plan/ledger entries so evidence stays co-located with the artifact bundle.
+  3. Close `[SOURCE-WEIGHT-002]` — After tracker + ledger updates are committed, mark this item `done`, update Sprint 1 progress in the remediation tracker, and log Attempt #19 follow-up outcome (C3 resolved, suite 27 failures remaining).
 - Exit Criteria:
   - All tests in `tests/test_at_src_001.py` and `tests/test_at_src_001_simple.py` pass with updated expectations
   - Parser respects caller dtype/device (dtype regression test passes) and default behaviour matches `torch.get_default_dtype()`

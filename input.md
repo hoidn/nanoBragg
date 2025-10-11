@@ -1,34 +1,32 @@
-Summary: Make AT-SRC-001 tests dtype-neutral so we can prove the source-weighting cluster is cleared by a full-suite run.
-Mode: Parity
+Summary: Capture Phase D4 closure evidence for source weighting by syncing trackers/analysis to show cluster C3 resolved and logging the Attempt #19 deltas.
+Mode: Docs
 Focus: [SOURCE-WEIGHT-002] Simulator source weighting
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_src_001_simple.py; tests/test_at_src_001.py; tests/
+Mapped tests: none — evidence-only
 Artifacts: reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/
-Do Now: [SOURCE-WEIGHT-002] Simulator source weighting — patch dtype-neutral assertions, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` followed by `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=0 --durations=25`
-If Blocked: Capture the failing log under the same $STAMP directory with a notes.md summarising the blocker and stop.
+Do Now: [SOURCE-WEIGHT-002] Simulator source weighting — author the Phase D4 closure bundle (tracker updates + closure memo); no pytest this loop
+If Blocked: Record blocker notes in `$outdir/notes.md`, include links to any files you could not update, and stop.
 Priorities & Rationale:
-- Fix-plan next steps demand dtype-neutral tests before rerunning the suite (`docs/fix_plan.md:155`).
-- The active plan marks Phase D2 blocked until that dtype work lands (`plans/active/source-weighting.md:74`).
-- Spec AT-SRC-001 enforces equal weighting plus dtype guardrails (`specs/spec-a-core.md:635`).
-- Testing strategy mandates authoritative commands and device/dtype discipline for parity verification (`docs/development/testing_strategy.md:44`).
+- plans/active/source-weighting.md marks D2 done and leaves D4 tracker/ledger sync outstanding (lines 5-35, 73-83).
+- docs/fix_plan.md:155-205 sets new Next Actions for D4 (tracker sync, closure memo, final status update).
+- reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/ holds Attempt #19 logs that must anchor the closure memo.
+- remediation tracker still lists C3 with 4 failures, so Sprint 1 metrics remain stale (`reports/.../remediation_tracker.md:24-88`).
 How-To Map:
-- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `outdir=reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting`; `mkdir -p "$outdir" "$outdir/artifacts" "$outdir/env"`.
-- After edits, `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py --junitxml "$outdir/artifacts/pytest_targeted.xml" | tee "$outdir/pytest_targeted.log"`.
-- Record env snapshot: `python - <<'PY' > "$outdir/env/default_dtype.txt"\nimport torch;print(torch.get_default_dtype())\nPY`; `pip freeze > "$outdir/env/pip_freeze.txt"`.
-- Full suite: `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=0 --durations=25 --junitxml "$outdir/artifacts/pytest_full.xml" | tee "$outdir/pytest_full.log"`.
-- Update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` and tracker files once counts shift; note edits in Attempts History.
+- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `outdir=reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting`; `mkdir -p "$outdir" "$outdir/artifacts"`.
+- Diff the current tracker docs (`reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/{remediation_tracker.md,remediation_sequence.md}`) and Phase K analysis files (`reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/{summary.md,classification_overview.md}`); update each to reflect C3=0, total failures 27, pass count 516, skip count 143.
+- In `$outdir/closure.md`, summarise: targeted selector results (10/10 pass), full-suite totals (516/27/143, 2 xfail), default dtype coverage outcome, and reference the Attempt #19 artifacts (`20251011T093344Z`).
+- Note edits in `commands.txt` within `$outdir` (list files touched + git status snippets).
+- After document edits, update `docs/fix_plan.md` Attempts History with the new Attempt ID and note where closure memo lives; adjust plan status if anything changed beyond the tracker counts.
 Pitfalls To Avoid:
-- Do not reintroduce float32 assumptions in tests; derive expectations from actual tensor dtypes.
-- Keep Option A semantics (equal weighting, CLI wavelength) intact; no per-weight scaling.
-- Avoid bringing back `--maxfail` limits once rerunning the suite; we need full counts.
-- Preserve vectorization and device neutrality; no `.cpu()`/`.cuda()` in hot paths.
-- Respect Protected Assets list in `docs/index.md`; do not touch those files.
-- Capture artifacts under the new $STAMP; do not overwrite earlier Phase D bundles.
-- Maintain torch default dtype hygiene in tests using fixtures/context managers, not global side effects.
-- Keep Attempt numbering consistent in `docs/fix_plan.md` when logging results.
+- Do not rerun pytest; this is a documentation loop only.
+- Keep Attempt numbering consistent when you log the closure (next Attempt should be #20 for this initiative).
+- Preserve Protected Assets from docs/index.md; do not relocate existing report folders.
+- When editing trackers, retain the sprint sequencing tables and only adjust the counts/status fields relevant to C3.
+- Ensure all markdown tables remain properly aligned; avoid introducing trailing spaces in tables.
 Pointers:
-- `docs/fix_plan.md:155`
-- `plans/active/source-weighting.md:74`
-- `specs/spec-a-core.md:635`
-- `docs/development/testing_strategy.md:44`
-Next Up: 1. After D2 succeeds, close Phase D4 (docs/fix_plan.md update + tracker refresh). 2. If time remains, prep `[VECTOR-PARITY-001]` Tap 5.3 instrumentation brief per plan Phase E.
+- plans/active/source-weighting.md:1-85
+- docs/fix_plan.md:1-220, 620-700
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md:1-120
+- reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md:1-200
+- reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/summary.md:1-120
+Next Up: 1. Once C3 is marked resolved, archive `[SOURCE-WEIGHT-002]` (mark done + update Sprint 1 metrics). 2. Begin prep for `[VECTOR-PARITY-001]` Tap 5.3 instrumentation brief per plan Phase E.

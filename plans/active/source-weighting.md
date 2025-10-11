@@ -3,7 +3,7 @@
 **Initiative:** `[TEST-SUITE-TRIAGE-001]` Sprint 1.2
 **Owner:** ralph
 **Priority:** High (Critical Path — Spec Compliance)
-**Status Snapshot (2025-10-11):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) approved with Option A. Phase C implementation COMPLETE (Attempt #17 @ `reports/2026-01-test-suite-triage/phase_j/20251011T064811Z/` — targeted pytest 10/10 passing). **Phase D1+D3 COMPLETE** (Attempt #18 @ `20251011T090906Z` — acceptance tests pass, spec updated); Phase D2 regression + D4 closure deferred per supervisor guidance.
+**Status Snapshot (2025-10-11):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) approved with Option A. Phase C implementation COMPLETE (Attempt #17 @ `reports/2026-01-test-suite-triage/phase_j/20251011T064811Z/` — targeted pytest 10/10 passing). **Phase D1+D3 COMPLETE** (Attempt #18 @ `20251011T090906Z` — acceptance tests pass, spec updated). **Phase D2 COMPLETE** (Attempt #19 @ `reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/` — full suite 516✔ / 27✖ / 143 skipped, cluster C3 cleared). **Phase D4 remains OPEN** to sync remediation trackers and ledger after the regression delta.
 
 ---
 
@@ -74,9 +74,9 @@ Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix-plan ite
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | D1 | Run acceptance suite | [D] | ✅ Attempt #18 executed `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py -x` on CPU; 10 passed, 1 warning, runtime 3.93s. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251011T090906Z/source_weighting/`. |
-| D2 | Full-suite regression delta | [ ] | Blocked until AT-SRC-001 tests become dtype-neutral. First update `tests/test_at_src_001_simple.py` expectations to use parser dtypes and add a float64-default fixture; rerun targeted selectors on both defaults. Then execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=0 --durations=25` to capture the new C3 counts. |
+| D2 | Full-suite regression delta | [D] | ✅ Attempt #19 @ `reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/` — targeted dtype-neutral tests + full `pytest tests/` run (516 passed / 27 failed / 143 skipped, ΔC3 = -4). |
 | D3 | Documentation updates | [D] | ✅ Attempt #18 updated `specs/spec-a-core.md:637` AT-SRC-001 text (references spec §151-155 + runtime checklist item #4); confirmed `docs/development/pytorch_runtime_checklist.md` item #4 already compliant (no edits needed). |
-| D4 | Fix-plan closure | [ ] | ⏸ Pending D2 full-suite run. Then: mark `[SOURCE-WEIGHT-002]` done in docs/fix_plan.md with Phase D artifacts + remediation tracker update. |
+| D4 | Tracker & ledger closure | [ ] | Update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/{summary.md,classification_overview.md}`, `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/{remediation_tracker.md,remediation_sequence.md}`, and `[SOURCE-WEIGHT-002]` attempts ledger to reflect C3 = 0; archive notes in this plan + docs/fix_plan.md before marking the initiative complete. |
 
 ---
 
@@ -89,4 +89,4 @@ Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix-plan ite
 
 ---
 
-**Plan Status:** Phases A–C complete (Attempt #17 delivers Option A implementation); **Phase D1+D3 complete (Attempt #18 @ 20251011T090906Z)**; Phase D2 regression + D4 closure deferred before closing `[SOURCE-WEIGHT-002]` and clearing C3.
+**Plan Status:** Phases A–C complete (Attempt #17 delivers Option A implementation); **Phase D1+D3 complete (Attempt #18 @ 20251011T090906Z)**; **Phase D2 regression complete (Attempt #19 @ 20251011T093344Z)**; Phase D4 tracker/ledger closure remains outstanding before archiving `[SOURCE-WEIGHT-002]`.

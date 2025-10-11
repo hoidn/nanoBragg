@@ -2408,3 +2408,15 @@
 - Adjusted `plans/active/source-weighting.md` Phase D2 row to gate the regression run on those dtype fixes.
 - Rewrote `input.md` with Parity-mode guidance covering the test edits, targeted AT-SRC-001 run, and full-suite command (no `--maxfail`).
 - Action State: [ready_for_implementation]
+
+### 2025-10-11 (galph loop - focus selection note)
+- Focus issue: [SOURCE-WEIGHT-002] Phase D4 closure alignment
+- Action type: Planning
+- Mode: Docs
+
+- Updated plans/active/source-weighting.md to record Attempt #19 (Phase D2 complete) and define D4 tracker/ledger closure tasks.
+- Refreshed docs/fix_plan.md header + [SOURCE-WEIGHT-002] Next Actions for D4 tracker sync and closure memo.
+- Replaced input.md with Docs-mode instructions directing Ralph to produce the Phase D4 closure bundle (no pytest).
+- Outstanding: Ralph must update Phase J/K tracker docs, author closure.md under a new Phase D stamp, then mark `[SOURCE-WEIGHT-002]` done.
+- <Action State>: [ready_for_implementation]
+
