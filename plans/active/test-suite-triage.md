@@ -8,14 +8,17 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2026-01-16)
+### Status Snapshot (2026-01-17)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
 - Phase D ✅ complete (D1–D4). This loop issued the supervisor handoff for `[CLI-DEFAULTS-001]` (input stamp 20251010T153734Z) unlocking remediation attempts.
 - Phase E ✅ complete (Attempt #7 — `reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/`); 691 executed tests, 516 passed, 49 failed, 126 skipped. CLI defaults cluster cleared; other clusters unchanged.
 - Phase F ✅ complete (Attempt #8 — `reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/`); refreshed triage bundle with 49-failure classification, cluster deltas, and pending actions table. C1 resolved, 17 active clusters documented.
-- Phase G ✅ progressing — Attempt #9 (this loop) captured the refreshed remediation ladder addendum at `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/` and the supervisor playbook has been refreshed for `[DTYPE-NEUTRAL-001]` Phase E delegation.
+- Phase G ✅ progressing — Attempt #9 recorded the refreshed remediation ladder addendum at `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/`.
+- **Phase H (new)** — mandated relaunch of `pytest tests/` with fresh artifacts per 2026-01-17 supervisor directive; pending execution.
+- **Phase I (new)** — failure classification refresh to separate lingering implementation bugs from candidate deprecations; pending Phase H completion.
+- **Phase J (new)** — remediation gating + fix scheduling built on refreshed failure inventory; pending Phase I completion.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -101,11 +104,46 @@ Exit Criteria: `handoff.md` appendix updated with 2026 priority ladder and super
 | G1 | Update remediation ladder | [D] | Attempt #9 → Published Phase G addendum (`reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`) superseding the Phase D ladder with status-aware priorities. |
 | G2 | Sync supervisor playbook | [D] | Attempt #9 → `input.md` and galph_memory baton updated to reference the Phase G addendum and delegate `[DTYPE-NEUTRAL-001]` Phase E validation. |
 
+### Phase H — 2026 Suite Relaunch
+Goal: Execute a fresh `pytest tests/` run at current HEAD, capturing complete artifacts to supersede the October 2025 attempt and align with the 2026-01-17 supervisor directive.
+Prereqs: Reconfirm Phase A guardrails (env sanity, disk space), pause downstream remediation per directive, ensure ≥60 GB free for duplicated logs/JUnit bundles.
+Exit Criteria: `reports/2026-01-test-suite-triage/phase_h/<STAMP>/` contains env snapshot, full-suite log, junit XML, slowest-test table, and attempt metadata; `docs/fix_plan.md` logs Attempt #10 with refreshed pass/fail counts and artifact links.
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| H1 | Stage timestamped workspace | [ ] | `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_h/${STAMP}/{collect_only,full_suite,artifacts,docs}`; capture commands in `commands.txt`. |
+| H2 | Capture preflight snapshot | [ ] | Optional: `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee .../collect_only/pytest.log`; record env metadata (`python -V`, `pip list | grep torch`, `nvidia-smi`) into `.../collect_only/env.json`. |
+| H3 | Run authoritative full suite | [ ] | `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/${STAMP}/artifacts/pytest_full.xml | tee .../full_suite/pytest_full.log`; note exit code and runtime in `commands.txt`. |
+| H4 | Summarise metrics | [ ] | Draft `.../docs/summary.md` with runtime, pass/fail/skip counts, delta vs 20251010T180102Z, and top-25 duration table. |
+| H5 | Update fix-plan attempt ledger | [ ] | Add Attempt #10 under `[TEST-SUITE-TRIAGE-001]` with counts + artifact paths; cite Phase H tasks and new summary doc. |
+
+### Phase I — Failure Classification Refresh
+Goal: Reclassify Phase H failures, distinguishing implementation bugs from deprecation candidates, and refresh cluster mapping + ownership.
+Prereqs: Phase H artifacts complete (summary, junit, logs); gather prior classifications (`reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/`).
+Exit Criteria: `reports/2026-01-test-suite-triage/phase_i/<STAMP>/` hosts updated cluster table, bug/deprecation rationale, and selector mapping; `docs/fix_plan.md` reflects refreshed classification and any new/remediated clusters.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| I1 | Build comparative failure table | [ ] | Clone Phase F `triage_summary.md` template to `phase_i/${STAMP}/triage_summary.md`; parse Phase H junit/log to populate counts, mark deltas, and flag suspected deprecations. |
+| I2 | Classify failure causes | [ ] | For each failure annotate `Implementation Bug`, `Likely Deprecation`, or `Needs Verification`; cite supporting evidence (spec sections, doc notes) in an appended rationale column and summarise tallies in `classification_overview.md`. |
+| I3 | Sync ledger + baton | [ ] | Update `docs/fix_plan.md` Next Actions/Attempts with Phase I findings and add galph_memory note linking to the new artifacts and classification decisions. |
+
+### Phase J — Remediation Launch & Tracking
+Goal: Translate refreshed failure inventory into an actionable remediation roadmap and sequencing across fix-plan items.
+Prereqs: Phase I classification complete; confirm dependent plans (`determinism.md`, `vectorization-parity-regression.md`, etc.) incorporate latest blocking signals.
+Exit Criteria: `reports/2026-01-test-suite-triage/phase_j/<STAMP>/remediation_tracker.md` enumerates each active cluster with owner, fix-plan ID, reproduction command, and exit criteria; fix-plan items reference the tracker for execution order.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| J1 | Draft remediation tracker | [ ] | Author `remediation_tracker.md` listing per-cluster owner, fix-plan ID, reproduction selector, blocking dependencies, and deliverable expectations (logs, doc updates, code patches). |
+| J2 | Define execution sequence | [ ] | Produce `remediation_sequence.md` outlining sprint order (e.g., Determinism → dtype → vectorization); include success criteria + gating tests for each step. |
+| J3 | Update fix_plan dependencies | [ ] | Align `[TEST-SUITE-TRIAGE-001]` Next Actions and related entries (e.g., mark `[DTYPE-NEUTRAL-001]` paused) to reference Phase J artifacts; capture the adjustments in `galph_memory.md`. |
+
 ### Exit Criteria (Plan Completion)
-- Phases A–G marked complete with `[D]` status in tables (Phase E onward newly activated for 2026 refresh).
+- Phases A–J marked `[D]` once delivered (Phase H–J newly added for 2026 rerun, classification refresh, and remediation sequencing).
 - All artifacts stored under `reports/2026-01-test-suite-triage/` with timestamped folders and referenced in `docs/fix_plan.md`.
-- `triage_summary.md` identifies categories for every failing test and maps each to a next action (bug fix, test removal request, infrastructure follow-up) for the refreshed run.
-- `handoff.md` approved (by supervisor) and used to steer subsequent loops; once remediation backlog is underway, this plan can move to archive.
+- `triage_summary.md` (Phase I) identifies categories for every failing test and maps each to a next action (bug fix, test removal request, infrastructure follow-up).
+- `handoff addendum` plus Phase J tracker are approved (by supervisor) and actively steering remediation; once backlog execution is underway, archive this plan.
 
 ### Metrics & Reporting Guidelines
 - Capture total runtime, pass/fail counts, and slowest tests (top 25) from `--durations=25` output.

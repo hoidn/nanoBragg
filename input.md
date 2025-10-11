@@ -1,37 +1,33 @@
-Summary: Finish dtype neutrality Phase E validation (rerun determinism tests, publish report, update docs).
+Summary: Relaunch the full pytest suite (Phase H) and capture fresh artifacts to feed the new failure triage cycle.
 Mode: Parity
-Focus: [DTYPE-NEUTRAL-001] dtype neutrality guardrail
+Focus: [TEST-SUITE-TRIAGE-001] Phase H suite relaunch
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_parallel_013.py; tests/test_at_parallel_024.py
-Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/dtype-neutral/phase_e/
-Do Now: [DTYPE-NEUTRAL-001] Phase E1–E3 — run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10 --tb=short` and `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short`, archiving logs + validation.md under phase_e/, then apply the documented checklist/doc updates.
-If Blocked: If TorchDynamo still hits device-index errors even with `CUDA_VISIBLE_DEVICES=-1`, capture the full stderr to phase_e/debug/ and halt before editing docs.
+Mapped tests: pytest tests/
+Artifacts: reports/2026-01-test-suite-triage/phase_h/<STAMP>/; reports/2026-01-test-suite-triage/phase_i/<STAMP>/
+Do Now: [TEST-SUITE-TRIAGE-001] Phase H H1–H4 — run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/${STAMP}/artifacts/pytest_full.xml` and draft `reports/2026-01-test-suite-triage/phase_h/${STAMP}/docs/summary.md` plus the initial failure list for Phase I.
+If Blocked: Capture the partial log + exit code in `reports/2026-01-test-suite-triage/phase_h/${STAMP}/full_suite/pytest_full.log`, record the blocker in `docs/summary.md`, and halt before editing docs or fix_plan.
 Priorities & Rationale:
-- docs/fix_plan.md#L47 — Phase G addendum requires dtype Phase E close-out before other triage work can progress.
-- docs/fix_plan.md#L540 — `[DTYPE-NEUTRAL-001]` Next Actions call for Phase E validation + documentation updates.
-- plans/active/dtype-neutral.md#L68 — Phase E checklist (E1–E3) defines deliverables and artifact layout.
-- reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/pending_actions.md — Cluster C15 marked as critical blocker for determinism tests.
+- plans/active/test-suite-triage.md (Phase H–J) — fresh run is prerequisite for the new remediation ladder.
+- docs/fix_plan.md#test-suite-triage-001-full-pytest-run-and-triage — Active Focus now demands Attempt #10 artifacts before other work.
+- docs/development/testing_strategy.md§1.5 — authoritative guidance for full-suite execution and artifact capture.
+- reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/triage_summary.md — prior failure baseline to compare against after the rerun.
 How-To Map:
-- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and `mkdir -p reports/2026-01-test-suite-triage/phase_d/${STAMP}/dtype-neutral/phase_e/{collect_only,at_parallel_013,at_parallel_024,docs}`.
-- Optional sanity check: `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee reports/2026-01-test-suite-triage/phase_d/${STAMP}/dtype-neutral/phase_e/collect_only/pytest.log`.
-- Run the mapped determinism suites with CPU-only env; tee each log into `at_parallel_013/pytest.log` and `at_parallel_024/pytest.log`; note pass/fail counts and any remaining Dynamo skips.
-- Summarise outcomes (dtype of cached tensors, remaining failures, Dynamo notes, CPU timing) in `reports/2026-01-test-suite-triage/phase_d/${STAMP}/dtype-neutral/phase_e/validation.md` alongside `commands.txt` and `env.json` (reuse Phase A template).
-- Apply doc updates from `reports/2026-01-test-suite-triage/phase_d/20251010T174636Z/dtype-neutral/phase_c/docs_updates.md`: edit `docs/development/pytorch_runtime_checklist.md`, `docs/architecture/detector.md`, and any referenced guardrails, noting dtype cache requirements.
-- Update `docs/fix_plan.md` Attempt history for `[DTYPE-NEUTRAL-001]` (Attempt #4) and `galph_memory.md` per plan task E3; mention whether `[DETERMINISM-001]` can proceed immediately.
+- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_h/${STAMP}/{collect_only,full_suite,artifacts,docs}` and open `commands.txt` for the loop.
+- Optional preflight: `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee reports/2026-01-test-suite-triage/phase_h/${STAMP}/collect_only/pytest.log`; gather env metadata via `python -V`, `pip list | grep torch`, and `nvidia-smi`, saving JSON to `collect_only/env.json`.
+- Run the full suite command above, teeing stdout/stderr to `reports/.../full_suite/pytest_full.log`; note wall-clock runtime and pytest exit code in `commands.txt`.
+- Generate `docs/summary.md` detailing pass/fail/skip counts, runtime, and top-25 durations; extract failing selectors (`pytest_full.xml` or log) into `docs/failures_raw.md` for Phase I consumption.
+- Kick off Phase I by copying the Phase F template: `mkdir -p reports/2026-01-test-suite-triage/phase_i/${STAMP}` then seed `triage_summary.md` with the new failure list (classification can remain TODO markers for next loop if needed).
+- Update `docs/fix_plan.md` Attempt log and this plan’s H1–H5 checkboxes only after artifacts exist.
 Pitfalls To Avoid:
-- Keep `CUDA_VISIBLE_DEVICES=-1` set throughout to avoid the known TorchDynamo GPU bug; if you lift it, document why.
-- Do not mark `[DTYPE-NEUTRAL-001]` complete unless validation.md + doc updates are committed.
-- Preserve Protected Assets listed in docs/index.md (e.g., `loop.sh`, `input.md`).
-- No production code edits in this loop; limit changes to docs, reports, and metadata.
-- Store every artifact under the stamped phase_e/ directory—no ad-hoc scratch folders.
-- Note skipped tests explicitly in validation.md so future loops know whether GPU coverage still needs follow-up.
-- When editing docs, cite the new artifact path and guardrails (avoid paraphrasing without references).
-- Run `git diff` before staging docs to ensure only dtype-related edits appear.
-- Maintain `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest command to prevent MKL conflicts.
-- Do not delete prior phase directories; append new STAMP.
+- Forgetting `CUDA_VISIBLE_DEVICES=-1` (TorchDynamo GPU bug) or `KMP_DUPLICATE_LIB_OK=TRUE` (MKL crash).
+- Overwriting prior phase directories; always use a fresh `${STAMP}`.
+- Skipping artifact capture (logs, junit, summary) — Phase I depends on these.
+- Editing production code or non-doc assets during this loop.
+- Neglecting to note exit code/runtime in `commands.txt` for reproducibility.
+- Omitting comparison against the 20251010 baseline in `summary.md`.
 Pointers:
-- docs/fix_plan.md#L540
-- plans/active/dtype-neutral.md#L68
-- reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md#L1
-- docs/development/testing_strategy.md#L19
-Next Up: `[DETERMINISM-001]` Phase A rerun with TorchDynamo workaround once dtype Phase E attempt is logged.
+- plans/active/test-suite-triage.md#phase-h-—-2026-suite-relaunch
+- docs/fix_plan.md#test-suite-triage-001-full-pytest-run-and-triage
+- docs/development/testing_strategy.md#15-loop-execution-notes-do-now--validation-scripts
+- reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/triage_summary.md
+Next Up: Begin Phase I classification (fill triage_summary.md and classification_overview.md) once the fresh run artifacts are in place.

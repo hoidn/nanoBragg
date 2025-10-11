@@ -1,11 +1,11 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-11 (galph loop — Phase G addendum + dtype status sync)
+**Last Updated:** 2026-01-17 (galph loop — Phase H suite relaunch directive)
 **Active Focus:**
-- CRITICAL: `[DETERMINISM-001]` — apply TorchDynamo workaround and rerun Phase A selectors per `plans/active/determinism.md` once dtype validation unblocks; capture fresh AT-PARALLEL-013/024 logs.
-- FOLLOW-UP: `[DTYPE-NEUTRAL-001]` — execute Phase E validation & documentation closeout per `plans/active/dtype-neutral.md` (Phase D fix landed; validation artifacts outstanding).
-- `[TEST-SUITE-TRIAGE-001]` — Phase G addendum published (`reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/`); refresh supervisor playbook with new priorities before dispatching remediation loops.
-- Tap 5.3 oversample instrumentation for `[VECTOR-PARITY-001]` stays paused until suite triage critical path clears.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Execute Phase H suite relaunch and Phase I classification per `plans/active/test-suite-triage.md` (Phase H–J tables added this loop). Produce Attempt #10 artifacts under `reports/2026-01-test-suite-triage/phase_h/<STAMP>/` before resuming any other initiatives.
+- ON HOLD: `[DETERMINISM-001]` — paused until `[TEST-SUITE-TRIAGE-001]` Phase I delivers refreshed failure classification (determinism cluster depends on dtype + suite rerun evidence).
+- ON HOLD: `[DTYPE-NEUTRAL-001]` — validation complete (Attempt #4, 20260116); additional documentation edits deferred until suite relaunch confirms no regressions.
+- `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused; unblock after Phase H–I artifacts land and remediation tracker (Phase J) sequences follow-up work.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -40,16 +40,17 @@
 - Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `specs/spec-a-core.md` (Acceptance Tests), `docs/development/pytorch_runtime_checklist.md` (runtime guardrails).
 - Priority: Critical
 - Status: in_progress
-- Owner/Date: galph/2026-01-12
+- Owner/Date: galph/2026-01-17
 - Plan Reference: `plans/active/test-suite-triage.md`
-- Reproduction: Full-suite baseline (already captured): `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/artifacts/pytest_full.xml`
-- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a`, `phase_b`, `phase_c`, `phase_d`, `phase_e`, `phase_f`)
+- Reproduction: Phase H command — `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/<STAMP>/artifacts/pytest_full.xml`
+- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions:
-  1. Finalise Phase G task G2 this loop: update `input.md` + galph_memory to cite the new addendum and queue `[DTYPE-NEUTRAL-001]` Phase E validation as the next engineer action.
-  2. Record Attempt #9 below (addendum published) and ensure `plans/active/test-suite-triage.md` Phase G table reflects G1=[D], G2 updated once the supervisor playbook refresh lands.
-  3. Next supervisor review: confirm `[DTYPE-NEUTRAL-001]` Phase E Attempt artifacts and, once logged, green-light `[DETERMINISM-001]` Phase A rerun per addendum priorities.
+  1. Phase H execution: complete tasks H1–H4 (stage stamped directory, optional collect-only snapshot, full suite run, `summary.md`). Store artifacts under `reports/2026-01-test-suite-triage/phase_h/<STAMP>/` and record env/runtime metadata.
+  2. Log Attempt #10 here once Phase H artifacts exist (counts, runtime, exit code, artifact paths) and tick `plans/active/test-suite-triage.md` H1–H5 to [D].
+  3. Phase I classification: create `phase_i/<STAMP>/triage_summary.md` + `classification_overview.md`, classify each failure (implementation bug vs deprecation candidate), and update this ledger + galph_memory with findings before re-enabling dependent initiatives.
+  4. Prepare Phase J scaffolding (remediation tracker + execution sequence) for handoff immediately after Phase I so engineers have a sequenced backlog when fixes begin.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.

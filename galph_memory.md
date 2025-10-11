@@ -2193,3 +2193,12 @@
 - Updated `docs/fix_plan.md` header + `[TEST-SUITE-TRIAGE-001]` Attempt #9/logistics and corrected `[DTYPE-NEUTRAL-001]` status/next steps (Phase E outstanding).
 - Replaced `input.md` with Parity-mode Do Now for `[DTYPE-NEUTRAL-001]` Phase E validation; baton now points Ralph at CPU-only rerun + docs updates.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - planning note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase H relaunch
+- Action type: Planning
+- Mode: Docs
+- Updated `plans/active/test-suite-triage.md` with Phase H–J relaunch workflow and refreshed status snapshot (2026-01-17 directive).
+- Refreshed `docs/fix_plan.md` Active Focus + `[TEST-SUITE-TRIAGE-001]` Next Actions to mandate Attempt #10 suite rerun before other initiatives resume.
+- Replaced `input.md` with Parity-mode instructions for Ralph to run the full `pytest tests/` suite (Phase H) and stage Phase I triage scaffolding.
+- <Action State>: [ready_for_implementation]
