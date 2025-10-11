@@ -2210,3 +2210,11 @@
 - Refined plans/active/test-suite-triage.md status lines to show Phase I active, Phase J pending; preserved Phase H table as completed.
 - Authored input.md directing Ralph to build the new phase_i/<STAMP>/triage_summary.md + classification_overview.md bundle and log Attempt #11.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - Phase J remediation prep)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase J remediation tracker (Action: Review/housekeeping, Mode: Docs).
+- Updated `docs/fix_plan.md` header + Active Focus to call for Phase J bundle, expanded Next Actions with explicit tracker/sequence artifacts (lines 1-60, 44-52).
+- Refreshed `plans/active/test-suite-triage.md` status snapshot to mark Phase I complete and Phase J active; no structural plan edits beyond status realignment.
+- Authored `input.md` (Docs mode) directing Ralph to create `reports/2026-01-test-suite-triage/phase_j/<STAMP>/` with `remediation_tracker.md`, `remediation_sequence.md`, and `commands.txt`, and to log Attempt #12 in fix_plan.
+- Follow-up for Ralph: build Phase J documentation bundle, update fix_plan attempts/Next Actions, and keep commands.txt referencing Phase I artifacts.
+- <Action State>: [ready_for_implementation]

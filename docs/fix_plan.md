@@ -1,11 +1,11 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-17 (galph loop — Phase I classification kickoff)
+**Last Updated:** 2026-01-17 (galph loop — Phase J remediation tracker prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Complete Phase I classification per `plans/active/test-suite-triage.md` (tasks I1–I3). Produce Attempt #11 artifacts under `reports/2026-01-test-suite-triage/phase_i/<STAMP>/`, refresh this ledger, and prepare Phase J scaffolding before resuming other initiatives.
-- ON HOLD: `[DETERMINISM-001]` — paused until `[TEST-SUITE-TRIAGE-001]` Phase I delivers refreshed failure classification (determinism cluster depends on dtype + suite rerun evidence).
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Execute Phase J (tasks J1–J3) by authoring the remediation tracker bundle under `reports/2026-01-test-suite-triage/phase_j/<STAMP>/`, updating this ledger, and logging the baton in galph_memory before scheduling code-level fixes.
+- ON HOLD: `[DETERMINISM-001]` — resume once Phase J assigns ownership and confirms dtype dependency cleared for determinism cluster.
 - ON HOLD: `[DTYPE-NEUTRAL-001]` — validation complete (Attempt #4, 20260116); additional documentation edits deferred until suite relaunch confirms no regressions.
-- `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused; unblock after Phase H–I artifacts land and remediation tracker (Phase J) sequences follow-up work.
+- `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused; unblock after Phase J sequences follow-up work and remediation tracker confirms dependency order.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -49,7 +49,7 @@
 - Next Actions:
   1. ✅ Phase I classification complete (Attempt #11) — created triage_summary.md and classification_overview.md with 36 failures classified (35 bugs, 1 deprecation)
   2. ✅ Ledger sync complete — Attempt #11 recorded with counts and artifact paths
-  3. Phase J remediation tracker: next loop should draft remediation_tracker.md per plan tasks J1-J3
+  3. Phase J remediation tracker launch: capture a new `reports/2026-01-test-suite-triage/phase_j/<STAMP>/` bundle with `remediation_tracker.md` (cluster→owner→fix-plan mapping) and `remediation_sequence.md` (execution order + gating rules), plus `commands.txt` citing data sources; follow `plans/active/test-suite-triage.md` tasks J1–J3 and reference Phase I artifacts.
   4. Update galph_memory with Phase I classification outcome and remediation priorities
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.

@@ -1,34 +1,32 @@
-Summary: Publish the Phase I classification bundle for the freshly rerun test suite so we can unblock remediation sequencing.
+Summary: Build Phase J remediation tracker bundle so we can hand failures to targeted fix streams.
 Mode: Docs
 Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
-Branch: main
+Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_i/<STAMP>/{triage_summary.md,classification_overview.md,commands.txt}
-
-Do Now: [TEST-SUITE-TRIAGE-001] Phase I classification (plan I1–I2) — create a new timestamped `phase_i` bundle with refreshed triage_summary.md and classification_overview.md; docs-only, no pytest run.
-If Blocked: Log `phase_i/<STAMP>/blocked.md` with the missing data/artifact and update `docs/fix_plan.md` Attempt #11 with the blocker summary.
+Artifacts: reports/2026-01-test-suite-triage/phase_j/<STAMP>/{remediation_tracker.md,remediation_sequence.md,commands.txt}
+Do Now: [TEST-SUITE-TRIAGE-001] Phase J — author remediation tracker + sequence docs (no pytest run; docs only)
+If Blocked: Capture a note under reports/2026-01-test-suite-triage/phase_j/<STAMP>/blocked.md explaining what data is missing and update docs/fix_plan.md Attempts.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:11-21 promotes Phase I as the active gate after Attempt #10; we need the new tables to progress.
-- docs/fix_plan.md:5-8 now lists Phase I artifacts as the critical focus; ledger must reflect Attempt #11.
-- reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/docs/summary.md documents the 36 failing selectors we must reclassify.
-- docs/development/testing_strategy.md:15-35 defines reporting cadence and evidence expectations for suite-wide analysis.
+- Use Phase I cluster data to map every failure to an owner and fix-plan item (reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/docs/triage_summary.md).
+- Follow plan guidance for deliverables (plans/active/test-suite-triage.md:11-140) so J1–J3 close cleanly.
+- Keep fix_plan ledger authoritative (docs/fix_plan.md:1-110) with Attempt #12 summary and updated Next Actions.
+- Reference testing strategy for command formatting and env notes (docs/development/testing_strategy.md:1-120).
 How-To Map:
-- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_i/${STAMP}/{docs}`; record the commands you run into `reports/.../phase_i/${STAMP}/commands.txt` (keep ASCII).
-- Use `reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/triage_summary.md` as the structural template; clone the table layout into the new `docs/triage_summary.md` and fill counts/deltas from the Phase H junit (`phase_h/.../artifacts/pytest_full.xml`) and log (`phase_h/.../full_suite/pytest_full.log`).
-- Build `docs/classification_overview.md` summarising tallies by label (Implementation Bug, Likely Deprecation, Needs Verification) and cite supporting evidence (spec sections, doc notes) per failure cluster.
-- Capture any supporting snippets (e.g., `pytest --junitxml` parsing, `grep` commands) directly in `commands.txt`; include line-count checks that prove all 36 failures were reviewed.
-- Once docs are written, update `docs/fix_plan.md` Attempt #11 with the new stamp, counts by classification bucket, and primary deltas vs Attempt #8; add a brief galph_memory note covering outcomes + Phase J readiness checklist.
+- Create a new ISO timestamped folder under reports/2026-01-test-suite-triage/phase_j/ and record the timestamp inside commands.txt (include provenance + inputs consulted).
+- Draft remediation_tracker.md: table listing cluster ID, failure count, owner, fix_plan ID, reproduction selector (from triage_summary), dependencies, exit criteria.
+- Draft remediation_sequence.md: narrative ordering of clusters (e.g., determinism → source weighting → vectorization) with gating tests and rationale; cite spec/arch lines where relevant.
+- Update docs/fix_plan.md Attempt history with Attempt #12 (Phase J start) and refresh Next Actions to reflect remaining follow-ups (mark tracker tasks done once artifacts exist).
+- Add entries to reports/.../commands.txt describing how triage_summary.md and classification_overview.md were consumed; link both docs explicitly.
 Pitfalls To Avoid:
-- Do not rerun pytest; analysis must stick to existing Phase H artifacts.
-- Keep all new files ASCII and within `reports/.../phase_i/${STAMP}/`.
-- Preserve triage table formatting (pipe tables) so diff noise stays low.
-- Reference authoritative doc sections (spec/arch/test strategy) when justifying deprecation calls.
-- Maintain fix_plan attempt numbering continuity; do not overwrite Attempt #10 details.
-- Do not edit `input.md` or rename any assets listed in `docs/index.md`.
+- Do not run pytest or edit production code this loop.
+- Keep protected assets (loop.sh, input.md, docs/index.md) untouched.
+- Preserve vectorization parity gating; do not promise code changes until tracker is signed off.
+- Ensure cluster owners/IDs exactly match triage_summary.md (no renumbering).
+- Include env notes (KMP_DUPLICATE_LIB_OK, CUDA visibility) in commands.txt even if no tests run.
+- Avoid inventing new fix-plan IDs; reuse the ledger entries already listed.
 Pointers:
-- docs/fix_plan.md:5
-- plans/active/test-suite-triage.md:11-21
-- reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/docs/summary.md
-- docs/development/testing_strategy.md:15-60
-Next Up:
-- Sketch the Phase J remediation tracker stub once Phase I docs land (plans/active/test-suite-triage.md:137-150).
+- docs/fix_plan.md:1-110 (Active Focus + Next Actions expectations)
+- plans/active/test-suite-triage.md:11-140 (Phase J task definitions)
+- reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/docs/triage_summary.md:1-80 (cluster table + selectors)
+- reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/docs/classification_overview.md:1-120 (rationale + deltas)
+Next Up: If you finish early, prep a skeleton for remediation_sequence.md dependencies cross-check (no code changes).
