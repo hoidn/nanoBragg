@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 10 items
+
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype0] PASSED [ 10%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype1] PASSED [ 20%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[None] PASSED [ 30%]
+tests/test_at_src_001_simple.py::test_sourcefile_parsing PASSED          [ 40%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_all_columns PASSED [ 50%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_missing_columns PASSED [ 60%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_default_position PASSED [ 70%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_multiple_sources_normalization PASSED [ 80%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_empty_sourcefile PASSED [ 90%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_weighted_sources_integration PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_at_src_001_simple.py::test_sourcefile_parsing
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001_simple.py:71: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 6.200000e-10 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/artifacts/pytest_targeted.xml -
+======================== 10 passed, 1 warning in 3.93s =========================

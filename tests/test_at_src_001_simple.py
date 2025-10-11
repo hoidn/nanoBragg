@@ -80,7 +80,8 @@ def test_sourcefile_parsing():
 
         # Check directions are normalized
         norms = torch.linalg.norm(directions, dim=1)
-        torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float32))
+        # Use dtype from parser output (defaults to torch.get_default_dtype())
+        torch.testing.assert_close(norms, torch.ones(2, dtype=directions.dtype))
 
         # Per spec-a-core.md:151-153, wavelength column is IGNORED.
         # All sources use CLI -lambda value (default_wavelength_m).
@@ -88,7 +89,8 @@ def test_sourcefile_parsing():
         assert wavelengths[1].item() == pytest.approx(default_wavelength_m)
 
         # Check weights are preserved from file (for parsing correctness)
-        expected_weights = torch.tensor([2.0, 3.0], dtype=torch.float32)
+        # Use dtype from parser output (defaults to torch.get_default_dtype())
+        expected_weights = torch.tensor([2.0, 3.0], dtype=weights.dtype)
         torch.testing.assert_close(weights, expected_weights)
 
         print(f"✓ Source file parsing successful")
