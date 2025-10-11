@@ -364,6 +364,14 @@ The PyTorch implementation **MUST** maintain end-to-end differentiability to ena
 3. **Stability test:** Verify gradients remain stable across parameter variations
 4. **Use `torch.autograd.gradcheck`:** With `dtype=torch.float64` for numerical precision (note: gradient tests explicitly override to float64 for accuracy, even though default dtype is float32)
 
+**Gradient Test Execution Requirement:**
+- **All gradient tests MUST set `NANOBRAGG_DISABLE_COMPILE=1` environment variable** before importing torch to prevent torch.compile interference with gradcheck
+- **Rationale:** torch.compile creates donated buffers that break gradient computation during numerical gradient checks
+- **Implementation:** Test files set `os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"` at module level (before torch import); simulator respects the flag and skips compilation when set
+- **Validation:** Phase M2 verification (2025-10-11T172830Z) confirmed 10/10 gradcheck tests pass with the guard enabled
+- **Canonical command:** `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck"`
+- **Reference:** `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md` for validation artifacts and rationale
+
 ### Common Pitfalls and Solutions
 
 | Pitfall | Symptom | Solution |

@@ -25,6 +25,7 @@ All tests will be implemented using the PyTest framework.
 - **CI gate:** If CI offers GPU runners, add a fast smoke job that runs the `gpu_smoke` marker (or agreed command) so regressions like CPU↔GPU tensor mixing fail quickly.
 - **Vectorization check:** Confirm `_compute_physics_for_position` and related helpers remain batched across sources/phi/mosaic/oversample; extend broadcast dimensions instead of adding Python loops.
 - **Runtime checklist:** Consult `docs/development/pytorch_runtime_checklist.md` during development and cite it in fix-plan notes for PyTorch changes.
+- **Gradient test guard:** All gradient tests require `NANOBRAGG_DISABLE_COMPILE=1` environment variable to prevent torch.compile interference with gradcheck. See §4.1 for execution requirements and canonical commands.
 
 ### 1.5 Loop Execution Notes (Do Now + Validation Scripts)
 
@@ -508,6 +509,18 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
     *   **Detector:** `distance_mm`, `Fbeam_mm`
     *   **Beam:** `lambda_A`
     *   **Model:** `mosaic_spread_rad`, `fluence`
+
+**Execution Requirements (MANDATORY):**
+*   **All gradient tests MUST set `NANOBRAGG_DISABLE_COMPILE=1`** environment variable before importing torch to prevent torch.compile interference
+*   **Rationale:** torch.compile creates donated buffers that break gradient computation during numerical gradient checks
+*   **Implementation:** Test files set `os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"` at module level (before torch import)
+*   **Canonical command:**
+    ```bash
+    env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+      pytest -v tests/test_gradients.py -k "gradcheck" --tb=short
+    ```
+*   **Validation:** Phase M2 (2025-10-11T172830Z) confirmed 10/10 gradcheck tests pass with guard enabled
+*   **Reference:** `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md` for validation artifacts
 
 ### 4.2 Multi-Tier Gradient Testing
 

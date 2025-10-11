@@ -1,0 +1,62 @@
+# Phase M2d — Documentation Updates Commands Log
+
+## Workspace Setup
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)  # Result: 20251011T174707Z
+mkdir -p reports/2026-01-test-suite-triage/phase_m2/$STAMP/docs_diff
+
+## Documentation Edits (manual via Edit tool)
+
+### 1. arch.md §15 — Differentiability Guidelines
+File: /home/ollie/Documents/tmp/nanoBragg/arch.md
+Section: Lines 359-373 (Testing Requirements)
+Edit: Added "Gradient Test Execution Requirement" subsection
+Content: Mandatory NANOBRAGG_DISABLE_COMPILE=1 guard, rationale, implementation, validation reference
+
+### 2. testing_strategy.md §1.4 — Device & Dtype Discipline
+File: /home/ollie/Documents/tmp/nanoBragg/docs/development/testing_strategy.md
+Section: Line 28
+Edit: Added gradient test guard cross-reference bullet
+Content: Forward pointer to §4.1 for guard requirements
+
+### 3. testing_strategy.md §4.1 — Gradient Checks
+File: /home/ollie/Documents/tmp/nanoBragg/docs/development/testing_strategy.md
+Section: Lines 513-523
+Edit: Added "Execution Requirements (MANDATORY)" subsection after parameter list
+Content: Full guard documentation with canonical command and Phase M2 validation reference
+
+### 4. pytorch_runtime_checklist.md §3 — torch.compile Hygiene
+File: /home/ollie/Documents/tmp/nanoBragg/docs/development/pytorch_runtime_checklist.md
+Section: Line 29
+Edit: Added gradient test compile guard bullet
+Content: Requirement, implementation pattern, cross-reference to testing_strategy.md §4.1
+
+## Summary Documentation
+File created: reports/2026-01-test-suite-triage/phase_m2/20251011T174707Z/summary.md
+Purpose: Consolidate Phase M2d outcomes, metrics, and next actions
+
+## No Pytest Execution
+Per input.md directive: Docs-only loop, no test suite runs required
+
+## Validation Reference
+All documentation updates cite Phase M2 Attempt #29 validation:
+- Artifact: reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md
+- Result: 10/10 gradcheck tests passed with NANOBRAGG_DISABLE_COMPILE=1
+- Runtime: 491.54s (8m 11s)
+- Environment: Python 3.13.5, PyTorch 2.7.1+cu126, CPU-only
+
+## Canonical Command (defined consistently across all docs)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -v tests/test_gradients.py -k "gradcheck" --tb=short
+
+## Exit Criteria Verification
+✅ All Phase M2d tasks complete:
+- [x] arch.md §15 updated
+- [x] testing_strategy.md §1.4 updated
+- [x] testing_strategy.md §4.1 updated
+- [x] pytorch_runtime_checklist.md updated
+- [x] Summary document authored
+- [x] Artifacts archived under phase_m2/20251011T174707Z/
+
+## Next: Update Fix Plan & Triage Plan
+Update docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Attempts History with Attempt #30
+Mark Phase M2d as [D] in plans/active/test-suite-triage.md

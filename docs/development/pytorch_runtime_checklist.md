@@ -24,8 +24,9 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
      Omitting `dtype=` causes `RuntimeError` when dtype switches occur (e.g., `detector.to(dtype=torch.float64)`).
 
 3. **torch.compile Hygiene**
-   - Watch the console for Dynamo “graph break” warnings; treat them as blockers.
+   - Watch the console for Dynamo "graph break" warnings; treat them as blockers.
    - Benchmarks should reuse compiled functions; avoid changing shapes every call unless batching logic handles it.
+   - **Gradient tests MUST disable compile:** Set `NANOBRAGG_DISABLE_COMPILE=1` environment variable before running gradient tests to prevent torch.compile interference with `torch.autograd.gradcheck`. See `docs/development/testing_strategy.md` §4.1 for canonical command. Test files set `os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"` before importing torch.
 
 4. **Source Handling & Equal Weighting (C-Parity)**
    - **Do not apply source weights as multiplicative factors.** The weight column in sourcefiles is parsed but ignored per `specs/spec-a-core.md:151-153`.
