@@ -61,7 +61,8 @@ class TestAT_SRC_001_SourcefileAndWeighting:
 
             # Check directions are normalized (unit vectors)
             norms = torch.linalg.norm(directions, dim=1)
-            torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float32))
+            # Use dtype from parser output (defaults to torch.get_default_dtype())
+            torch.testing.assert_close(norms, torch.ones(2, dtype=directions.dtype))
 
             # Per spec-a-core.md:151-153, wavelength column is read but IGNORED.
             # CLI -lambda (default_wavelength_m) is the sole authoritative source.
@@ -146,7 +147,8 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             )
 
             # Position [-15, 0, 0] normalized to unit vector: [-1, 0, 0]
-            expected_direction = torch.tensor([[-1.0, 0.0, 0.0]], dtype=torch.float32)
+            # Use dtype from parser output (respects beam_direction dtype, which is float64 here)
+            expected_direction = torch.tensor([[-1.0, 0.0, 0.0]], dtype=directions.dtype)
             torch.testing.assert_close(directions, expected_direction)
 
             # Per spec-a-core.md:151-153, wavelength uses CLI -lambda (default_wavelength_m)
@@ -179,7 +181,8 @@ class TestAT_SRC_001_SourcefileAndWeighting:
             torch.testing.assert_close(directions[0], -directions[1])
 
             # Both sources have weight 1.0 specified in the file
-            torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float32))
+            # Use dtype from parser output (defaults to torch.get_default_dtype())
+            torch.testing.assert_close(weights, torch.ones(2, dtype=weights.dtype))
 
     def test_empty_sourcefile(self):
         """Test that empty sourcefile raises appropriate error."""
