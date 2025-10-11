@@ -20,7 +20,7 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 
 **Blocker Notes:**
 - ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
-- ✅ Sprint 1 **AUTHORIZED** — Determinism work (C2/C15) is UNBLOCKED
+- ✅ Determinism clusters (C2/C15) CLOSED — Attempt #10 (20251011T060454Z) logged passing selectors + documentation updates
 - [VECTOR-PARITY-001] Tap 5 instrumentation paused pending Phase J sequencing
 
 ---
@@ -30,7 +30,7 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 | Cluster ID | Category | Count | Owner | Fix Plan ID | Priority | Status | Blocker | Dependencies |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | C1 | CLI Defaults | 0 | ralph | [CLI-DEFAULTS-001] | ✅ RESOLVED | done | - | - |
-| C2 | Determinism - Mosaic RNG | 2 | ralph | [DETERMINISM-001] | P1.1 | in_progress | ✅ CLEARED | Pre-Sprint gate passed |
+| C2 | Determinism - Mosaic RNG | 0 | ralph | [DETERMINISM-001] | P1.1 | ✅ RESOLVED | - | Closure logged (Attempt #10) |
 | C3 | Source Weighting | 6 | ralph | [SOURCE-WEIGHT-002] | P1.2 | in_planning | - | None |
 | C4 | Lattice Shape Models | 2 | ralph | [LATTICE-SHAPE-001] | P1.4 | in_planning | - | None |
 | C5 | Dual Runner Tooling | 1 | ralph | [TOOLING-DUAL-RUNNER-001] | P2.1 | in_planning | - | None |
@@ -43,7 +43,7 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 | C12 | Legacy Test Suite | 5 | ralph | [LEGACY-SUITE-001] | P4.1 | in_planning | - | Spec review for deprecation |
 | C13 | Tricubic Vectorization | 2 | galph | [VECTOR-TRICUBIC-002] | P2.4 | in_progress | - | Vectorization specialist |
 | C14 | Mixed Units | 1 | ralph | [UNIT-CONV-001] | P3.2 | in_planning | - | None |
-| C15 | Mosaic Determinism | 1 | ralph | [DETERMINISM-001] | P1.1 | in_progress | ✅ CLEARED | Same as C2 |
+| C15 | Mosaic Determinism | 0 | ralph | [DETERMINISM-001] | P1.1 | ✅ RESOLVED | - | Closure logged (Attempt #10) |
 | C16 | Gradient Flow | 1 | ralph | [GRADIENT-FLOW-001] | P1.6 | in_planning | - | None |
 | C18 | Triclinic C Parity | 1 | ralph | [TRICLINIC-PARITY-001] | P1.7 | in_planning | - | None |
 
@@ -59,36 +59,22 @@ This tracker maps all 36 active test failures across 16 clusters to their owning
 
 ---
 
-### C2: Determinism - Mosaic RNG (2 failures)
+### ✅ C2: Determinism - Mosaic RNG (RESOLVED)
 
-**Fix Plan:** [DETERMINISM-001] (in_progress)
+**Fix Plan:** [DETERMINISM-001] (done)
 **Owner:** ralph
-**Priority:** P1.1 (Critical — spec reproducibility requirement)
+**Resolution:** Attempt #10 (`reports/determinism-callchain/phase_e/20251011T060454Z/validation/pytest.log`) delivered 10 passed / 2 skipped determinism selectors with env guards.
 
-**Reproduction:**
-```bash
-KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::test_pytorch_determinism_same_seed tests/test_at_parallel_013.py::test_pytorch_determinism_different_seeds
-```
+**Validation Snapshot:**
+- Same-seed + different-seed tests now pass with bitwise equality and documented divergence thresholds.
+- Documentation updates landed in `arch.md` ADR-05 and `docs/development/testing_strategy.md` §2.7 (see Phase D bundle).
 
-**Blocker:** ✅ CLEARED — Pre-Sprint gate passed (20251011T044530Z)
-**Dependencies:** None — dtype neutrality verified, Sprint 1.1 ready to proceed
+**Artifacts:**
+- `reports/determinism-callchain/phase_e/20251011T060454Z/validation/`
+- `docs/fix_plan.md:99-113` (Attempt #10 summary)
+- `plans/active/determinism.md:1-19` (status snapshot)
 
-**Exit Criteria:**
-- Same-seed runs produce bitwise-identical output
-- Different-seed runs produce documented divergence
-- Seed propagation contract documented in code + docs
-
-**Spec Reference:** spec-a-core.md §5.3 (RNG & Determinism)
-
-**Next Actions:**
-1. ✅ [DTYPE-NEUTRAL-001] verified complete — Pre-Sprint gate confirmed no dtype crashes
-2. ✅ CPU-only smoke test passed — RNG failure only (expected), no device/dtype errors
-3. Implement RNG seeding fix to achieve correlation ≥0.9999999 (currently 0.9999875)
-4. Address remaining 2 failures per Sprint 1.1 sequence
-
-**Artifacts Expected:**
-- Pytest log showing bitwise equality for same-seed runs
-- Documentation update: seed semantics in `docs/development/testing_strategy.md`
+**Follow-up:** Keep optional README vignette deferred (Phase D5 todo). No further execution required for Sprint 1 gating.
 
 ---
 
@@ -483,37 +469,17 @@ KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_015.py::test_mixed_un
 
 ---
 
-### C15: Mosaic Determinism (1 failure)
+### ✅ C15: Mosaic Determinism (RESOLVED)
 
-**Fix Plan:** [DETERMINISM-001] (in_progress)
+**Fix Plan:** [DETERMINISM-001] (done)
 **Owner:** ralph
-**Priority:** P1.1 (High — same cluster as C2)
+**Resolution:** Covered by Attempt #10 determinism rerun — `tests/test_at_parallel_024.py::test_mosaic_rotation_umat_determinism` now passes with float64 parity.
 
-**Reproduction:**
-```bash
-KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py::test_mosaic_rotation_umat_determinism
-```
+**Artifacts:**
+- `reports/determinism-callchain/phase_e/20251011T060454Z/validation/pytest.log`
+- `reports/determinism-callchain/phase_d/20251011T055456Z/docs_integration/` (c_random.py docstring updates)
 
-**Blocker:** ✅ CLEARED (same as C2) — Pre-Sprint gate passed
-**Dependencies:** Shared with C2 determinism work — blocker resolution applies to both
-
-**Exit Criteria:**
-- Mosaic rotation matrices deterministic for same seed
-- umat → misset roundtrip preserves values
-- Test passes with bitwise equality
-
-**Spec Reference:** spec-a-core.md §5.3 (RNG determinism)
-
-**Note:** Other AT-024 tests now passing per Phase H; this is last remaining failure
-
-**Next Actions:**
-1. ✅ Blocker verified clear — same as C2 Pre-Sprint gate result
-2. Fix mosaic rotation matrix generation for determinism
-3. Validate umat calculation preserves seed determinism
-
-**Artifacts Expected:**
-- Passing AT-024 mosaic determinism test
-- Documentation update for mosaic RNG contract
+**Follow-up:** No additional work required; cluster remains closed unless determinism regressions surface in future suite runs.
 
 ---
 

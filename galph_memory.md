@@ -2286,3 +2286,11 @@
 - Synced docs/fix_plan.md header to move Sprint 1 into ACTIVE status and mark `[DETERMINISM-001]` Phase D2 complete; refreshed Next Actions to target D3–D4 doc edits and downstream validation.
 - Rewrote input.md (Mode: Docs) instructing Ralph to update `arch.md` ADR-05 + testing_strategy determinism workflow, capture new Phase D/Phase E bundles, and run the guarded determinism pytest command.
 - Action State: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - Phase J alignment prep)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase J remediation tracker sync
+- Action type: Review/housekeeping
+- Mode: Docs
+- Summary: Determinism closure verified and logged — updated docs/fix_plan.md header + Next Actions to pivot Sprint 1 toward `[SOURCE-WEIGHT-002]`, refreshed `[DETERMINISM-001]` checklist as complete, synced remediation tracker (C2/C15 counts→0 with resolution notes), and rewrote input.md instructing Ralph to author the source-weighting plan + capture baseline logs.
+- Open Questions: none; expect Attempt #14 delivering plan + failing baseline before moving to Detector Config.
+- <Action State>: [ready_for_implementation]

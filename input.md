@@ -1,36 +1,34 @@
-Summary: Finish determinism documentation edits and validate the workflow so Sprint 1 can advance.
-Mode: Docs
-Focus: [DETERMINISM-001] PyTorch RNG determinism
+Summary: Kick off Sprint 1.2 by documenting source weighting scope and capturing the failing baseline.
+Mode: Parity
+Focus: [SOURCE-WEIGHT-002] Simulator source weighting
 Branch: feature/spec-based-2
-Mapped tests: CUDA_VISIBLE_DEVICES='' TORCHDYNAMO_DISABLE=1 NANOBRAGG_DISABLE_COMPILE=1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py tests/test_at_parallel_024.py
-Artifacts: reports/determinism-callchain/phase_d/<STAMP>/docs_integration/, reports/determinism-callchain/phase_e/<STAMP>/validation/
-Do Now: Execute [DETERMINISM-001] Phase D3–D4 doc integration, then Phase E validation using the mapped pytest command above; log commands/env in the new Phase D/Phase E artifact folders.
-If Blocked: Capture the failure (command + stderr) under reports/determinism-callchain/blockers/<STAMP>/ and note it in docs/fix_plan.md Attempts before stopping.
+Mapped tests: KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py
+Artifacts: plans/active/source-weighting.md, reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/
+Do Now: Execute [SOURCE-WEIGHT-002] Phase A baseline — author the plan scaffold under plans/active/source-weighting.md, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py` and archive commands/logs/env in reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/.
+If Blocked: Capture the failure output and env snapshot in reports/2026-01-test-suite-triage/phase_j/blockers/<STAMP>/, note the blocker in docs/fix_plan.md Attempts, and stop for supervisor review.
 Priorities & Rationale:
-- docs/fix_plan.md:103 — Next Actions call for finishing Phase D3–D4, then validating.
-- plans/active/determinism.md:56 — Phase D guidance spells out ADR/testing_strategy updates.
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md:47 — Sprint 1.1 hinges on determinism closure.
-- reports/determinism-callchain/phase_d/20251011T055456Z/docs_integration/commands.txt — latest docstring attempt; reuse the timestamp pattern.
+- docs/fix_plan.md:5-7 — Active focus now targets Sprint 1.2 `[SOURCE-WEIGHT-002]`.
+- docs/fix_plan.md:54-55 — Next Actions call for plan creation + baseline capture before moving to Detector Config.
+- plans/active/test-suite-triage.md:85-108 — Sprint 1.2 sequence defines the required tests and exit criteria.
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md:32-47,95-119 — C3 remains open with six failures; tracker expects plan + regression evidence.
 How-To Map:
-- Create fresh UTC stamp (e.g., 20260117THHMMSSZ) under reports/determinism-callchain/phase_d/ and copy template commands.txt + sha256.txt from the 20251011 attempt before editing.
-- Edit arch.md ADR-05 to add the pointer-side-effect + LCGRandom parity note (cite docs_updates.md §1.2); keep changes confined to the ADR-05 subsection.
-- Update docs/development/testing_strategy.md with a new determinism workflow section (env guards, selectors, artifact expectations) sourced from testing_strategy_notes.md.
-- Run git diff to ensure only documentation files changed; stage them, then capture collect-only sanity via `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` (log output in the Phase D folder alongside commands).
-- After docs are staged, execute the mapped determinism pytest command with the env guards; store logs, commands, and env snapshot under reports/determinism-callchain/phase_e/<STAMP>/validation/.
-- Update docs/fix_plan.md Attempts + Next Actions and plans/active/determinism.md Phase D/E tables with the new stamp before wrapping.
+- Create a fresh UTC stamp (e.g., 20260117THHMMSSZ) and `mkdir -p reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/` before running commands.
+- Draft plans/active/source-weighting.md using the phased template (Context + Phase A/B sections); cite specs/spec-a-core.md §§3.4–3.5 and remediation_sequence Sprint 1.2 guidance.
+- Log the exact pytest command, env vars, and git status into `commands.txt`; capture stdout/stderr in `pytest.log`; record `python -m nanobrag_torch --version` (or equivalent) plus `torch.__version__` in `env.json`.
+- After the run, summarise failure counts + key stack traces in `summary.md` and update docs/fix_plan.md Attempts with the stamp/location.
+- Finish by running `pytest --collect-only -q` if you modify tests/plan files, and note results in the artifact bundle.
 Pitfalls To Avoid:
-- Do not touch production code or tests when editing docs.
-- Keep Protected Assets (`docs/index.md` references) unchanged.
-- Maintain ASCII encoding; avoid fancy punctuation when updating docs.
-- Preserve existing ADR numbering and headings in arch.md.
-- Ensure env guards in documentation exactly match the command you run.
-- Avoid running full pytest suite; only the mapped selectors and collect-only probe are allowed.
-- Capture sha256 manifests for each artifact bundle like prior attempts.
-- Record Attempt updates in docs/fix_plan.md without dropping existing history.
+- Do not edit simulator physics yet; this loop is evidence-only.
+- Keep ASCII formatting in the new plan/documentation.
+- Always set `KMP_DUPLICATE_LIB_OK=TRUE`; no other env tweaks unless documented.
+- No full `pytest tests/` runs; stay on the two mapped selectors.
+- Preserve Protected Assets referenced in docs/index.md (e.g., loop.sh, input.md).
+- Avoid removing existing remediation tracker history; append new notes instead.
+- Capture timestamps consistently; include sha256 manifest if you add binaries/logs.
+- Maintain device/dtype neutrality—do not hard-code `.cpu()`/`.cuda()` in any scratch scripts.
 Pointers:
-- docs/fix_plan.md:103
-- plans/active/determinism.md:56
-- reports/determinism-callchain/phase_c/20251011T052920Z/testing_strategy_notes.md
-- reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration/summary.md
-- arch.md:85
-Next Up: Prep Phase A evidence for [SOURCE-WEIGHT-002] once determinism is closed.
+- docs/fix_plan.md:5-8,54-55
+- plans/active/test-suite-triage.md:85-108
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md:85-109
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md:32-47,95-119
+Next Up: Stage Detector Config plan refresh for Sprint 1.3 once source weighting baseline is logged.

@@ -14,8 +14,9 @@
 - Phase A ✅ complete (Attempts #1–#3) — determinism reproductions, environment baselines, and controls captured under `reports/2026-01-test-suite-triage/phase_d/20251011T050024Z/determinism/phase_a/`.
 - Phase B ✅ complete (Attempts #4–#5) — PyTorch callchain bundle captured; C seed contract documented at `reports/determinism-callchain/phase_b3/20251011T051737Z/`.
 - Phase C ✅ complete (Attempt #7) — Remediation summary, documentation checklist, and testing strategy notes published at `reports/determinism-callchain/phase_c/20251011T052920Z/`.
-- Phase D underway — D1 ✅ (architecture reference updated per `reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration/`); D2–D4 pending (docstrings, ADR, testing strategy integration).
-- **Phase E (pending)** — Final validation + ledger closure once documentation is merged and determinism selectors re-run.
+- Phase D ✅ complete — Attempts #8–#10 delivered D1–D4 (`reports/determinism-callchain/phase_d/20251011T054542Z/`, `.../20251011T055456Z/`, `.../20251011T060454Z/`).
+- Phase E ✅ complete — Attempt #10 executed determinism selectors (10 passed, 2 skipped) with env guards and archived closure bundle under `reports/determinism-callchain/phase_e/20251011T060454Z/`.
+- Optional Phase D5 vignette deferred; plan ready for archive after Sprint 1.2 stabilises.
 
 ### Phase A — Reproduce & Baseline Seed Drift
 Goal: Capture authoritative reproductions of the determinism failures, plus working controls, so later fixes have comparable baselines.
