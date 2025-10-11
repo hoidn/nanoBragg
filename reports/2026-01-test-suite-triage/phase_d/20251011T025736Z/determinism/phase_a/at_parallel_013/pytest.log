@@ -1,0 +1,499 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 6 items
+
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed FAILED [ 16%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds FAILED [ 33%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs FAILED [ 50%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_c_pytorch_equivalence SKIPPED [ 66%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_platform_fingerprint PASSED [ 83%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 FAILED [100%]
+
+=================================== FAILURES ===================================
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_determinism_same_seed _
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1110: in _compile
+    raise InternalTorchDynamoError(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1059: in _compile
+    guarded_code = compile_inner(code, one_graph, hooks, transform)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_utils_internal.py:97: in wrapper_function
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:761: in compile_inner
+    return _compile_inner(code, one_graph, hooks, transform)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:797: in _compile_inner
+    out_code = transform_code_object(code, transform)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/bytecode_transformation.py:1422: in transform_code_object
+    transformations(instructions, code_options)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:257: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:715: in transform
+    tracer.run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:3498: in run
+    super().run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1337: in run
+    while self.step():
+          ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1246: in step
+    self.dispatch_table[inst.opcode](self, inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2328: in LOAD_ATTR
+    self.LOAD_METHOD(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2294: in LOAD_METHOD
+    self._load_attr(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2318: in _load_attr
+    result = BuiltinVariable(getattr).call_function(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:1111: in call_function
+    return handler(tx, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:790: in <lambda>
+    tx, [v.realize() for v in args], kwargs
+         ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:67: in realize
+    self._cache.realize()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:33: in realize
+    self.vt = VariableTracker.build(tx, self.value, source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/base.py:540: in build
+    return builder.VariableBuilder(tx, source)(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:417: in __call__
+    vt = self._wrap(value)
+         ^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:573: in _wrap
+    if has_triton():
+       ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   torch._dynamo.exc.InternalTorchDynamoError: IndexError: list index out of range
+E   
+E   from user code:
+E      File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 100, in compute_physics_for_position
+E       is_multi_source = incident_beam_direction.dim() == 2
+E   
+E   Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+During handling of the above exception, another exception occurred:
+tests/test_at_parallel_013.py:146: in test_pytorch_determinism_same_seed
+    result1 = run_simulation_deterministic(seed=42)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_at_parallel_013.py:134: in run_simulation_deterministic
+    result = simulator.run()
+             ^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:976: in run
+    physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:676: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/eval_frame.py:655: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1432: in __call__
+    return self._torchdynamo_orig_callable(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1213: in __call__
+    result = self._inner_convert(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:598: in __call__
+    return _compile(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:939: in _compile
+    metrics_context,
+    ^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/metrics_context.py:88: in __exit__
+    self._on_exit(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/utils.py:1493: in record_compilation_metrics
+    "triton_version": triton.__version__ if has_triton() else "",
+                                            ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_determinism_different_seeds _
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1110: in _compile
+    raise InternalTorchDynamoError(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1059: in _compile
+    guarded_code = compile_inner(code, one_graph, hooks, transform)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_utils_internal.py:97: in wrapper_function
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:761: in compile_inner
+    return _compile_inner(code, one_graph, hooks, transform)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:797: in _compile_inner
+    out_code = transform_code_object(code, transform)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/bytecode_transformation.py:1422: in transform_code_object
+    transformations(instructions, code_options)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:257: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:715: in transform
+    tracer.run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:3498: in run
+    super().run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1337: in run
+    while self.step():
+          ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1246: in step
+    self.dispatch_table[inst.opcode](self, inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2328: in LOAD_ATTR
+    self.LOAD_METHOD(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2294: in LOAD_METHOD
+    self._load_attr(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2318: in _load_attr
+    result = BuiltinVariable(getattr).call_function(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:1111: in call_function
+    return handler(tx, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:790: in <lambda>
+    tx, [v.realize() for v in args], kwargs
+         ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:67: in realize
+    self._cache.realize()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:33: in realize
+    self.vt = VariableTracker.build(tx, self.value, source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/base.py:540: in build
+    return builder.VariableBuilder(tx, source)(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:417: in __call__
+    vt = self._wrap(value)
+         ^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:573: in _wrap
+    if has_triton():
+       ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   torch._dynamo.exc.InternalTorchDynamoError: IndexError: list index out of range
+E   
+E   from user code:
+E      File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 100, in compute_physics_for_position
+E       is_multi_source = incident_beam_direction.dim() == 2
+E   
+E   Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+During handling of the above exception, another exception occurred:
+tests/test_at_parallel_013.py:177: in test_pytorch_determinism_different_seeds
+    result1 = run_simulation_deterministic(seed=42)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_at_parallel_013.py:134: in run_simulation_deterministic
+    result = simulator.run()
+             ^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:976: in run
+    physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:676: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/eval_frame.py:655: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1432: in __call__
+    return self._torchdynamo_orig_callable(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1213: in __call__
+    result = self._inner_convert(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:598: in __call__
+    return _compile(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:939: in _compile
+    metrics_context,
+    ^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/metrics_context.py:88: in __exit__
+    self._on_exit(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/utils.py:1493: in record_compilation_metrics
+    "triton_version": triton.__version__ if has_triton() else "",
+                                            ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_consistency_across_runs _
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1110: in _compile
+    raise InternalTorchDynamoError(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1059: in _compile
+    guarded_code = compile_inner(code, one_graph, hooks, transform)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_utils_internal.py:97: in wrapper_function
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:761: in compile_inner
+    return _compile_inner(code, one_graph, hooks, transform)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:797: in _compile_inner
+    out_code = transform_code_object(code, transform)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/bytecode_transformation.py:1422: in transform_code_object
+    transformations(instructions, code_options)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:257: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:715: in transform
+    tracer.run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:3498: in run
+    super().run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1337: in run
+    while self.step():
+          ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1246: in step
+    self.dispatch_table[inst.opcode](self, inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2328: in LOAD_ATTR
+    self.LOAD_METHOD(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2294: in LOAD_METHOD
+    self._load_attr(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2318: in _load_attr
+    result = BuiltinVariable(getattr).call_function(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:1111: in call_function
+    return handler(tx, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:790: in <lambda>
+    tx, [v.realize() for v in args], kwargs
+         ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:67: in realize
+    self._cache.realize()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:33: in realize
+    self.vt = VariableTracker.build(tx, self.value, source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/base.py:540: in build
+    return builder.VariableBuilder(tx, source)(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:417: in __call__
+    vt = self._wrap(value)
+         ^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:573: in _wrap
+    if has_triton():
+       ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   torch._dynamo.exc.InternalTorchDynamoError: IndexError: list index out of range
+E   
+E   from user code:
+E      File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 100, in compute_physics_for_position
+E       is_multi_source = incident_beam_direction.dim() == 2
+E   
+E   Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+During handling of the above exception, another exception occurred:
+tests/test_at_parallel_013.py:201: in test_pytorch_consistency_across_runs
+    result = run_simulation_deterministic(seed=42)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_at_parallel_013.py:134: in run_simulation_deterministic
+    result = simulator.run()
+             ^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:976: in run
+    physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:676: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/eval_frame.py:655: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1432: in __call__
+    return self._torchdynamo_orig_callable(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1213: in __call__
+    result = self._inner_convert(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:598: in __call__
+    return _compile(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:939: in _compile
+    metrics_context,
+    ^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/metrics_context.py:88: in __exit__
+    self._on_exit(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/utils.py:1493: in record_compilation_metrics
+    "triton_version": triton.__version__ if has_triton() else "",
+                                            ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+__ TestATParallel013CrossPlatformConsistency.test_numerical_precision_float64 __
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1110: in _compile
+    raise InternalTorchDynamoError(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1059: in _compile
+    guarded_code = compile_inner(code, one_graph, hooks, transform)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_utils_internal.py:97: in wrapper_function
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:761: in compile_inner
+    return _compile_inner(code, one_graph, hooks, transform)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:797: in _compile_inner
+    out_code = transform_code_object(code, transform)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/bytecode_transformation.py:1422: in transform_code_object
+    transformations(instructions, code_options)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:257: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:715: in transform
+    tracer.run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:3498: in run
+    super().run()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1337: in run
+    while self.step():
+          ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:1246: in step
+    self.dispatch_table[inst.opcode](self, inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2330: in LOAD_ATTR
+    self._load_attr(inst)
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/symbolic_convert.py:2318: in _load_attr
+    result = BuiltinVariable(getattr).call_function(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:1111: in call_function
+    return handler(tx, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builtin.py:790: in <lambda>
+    tx, [v.realize() for v in args], kwargs
+         ^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:67: in realize
+    self._cache.realize()
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/lazy.py:33: in realize
+    self.vt = VariableTracker.build(tx, self.value, source)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/base.py:540: in build
+    return builder.VariableBuilder(tx, source)(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:417: in __call__
+    vt = self._wrap(value)
+         ^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/variables/builder.py:573: in _wrap
+    if has_triton():
+       ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   torch._dynamo.exc.InternalTorchDynamoError: IndexError: list index out of range
+E   
+E   from user code:
+E      File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/utils/physics.py", line 48, in sincg
+E       if N.device != u.device:
+E   
+E   Set TORCHDYNAMO_VERBOSE=1 for the internal stack trace (please do this especially if you're reporting a bug to PyTorch). For even more developer context, set TORCH_LOGS="+dynamo"
+
+During handling of the above exception, another exception occurred:
+tests/test_at_parallel_013.py:338: in test_numerical_precision_float64
+    result = simulator.run()
+             ^^^^^^^^^^^^^^^
+src/nanobrag_torch/simulator.py:976: in run
+    physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+src/nanobrag_torch/simulator.py:676: in _compute_physics_for_position
+    return self._compiled_compute_physics(
+src/nanobrag_torch/simulator.py:252: in compute_physics_for_position
+    F_latt_a = sincg(torch.pi * h, Na)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/eval_frame.py:655: in _fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1432: in __call__
+    return self._torchdynamo_orig_callable(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:1213: in __call__
+    result = self._inner_convert(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:598: in __call__
+    return _compile(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/convert_frame.py:939: in _compile
+    metrics_context,
+    ^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/metrics_context.py:88: in __exit__
+    self._on_exit(
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/utils.py:1493: in record_compilation_metrics
+    "triton_version": triton.__version__ if has_triton() else "",
+                                            ^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:95: in has_triton
+    return is_device_compatible_with_triton()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:91: in is_device_compatible_with_triton
+    if device_interface.is_available() and extra_check(device_interface):
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/utils/_triton.py:72: in cuda_extra_check
+    return device_interface.Worker.get_device_properties().major >= 7
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../miniconda3/lib/python3.13/site-packages/torch/_dynamo/device_interface.py:218: in get_device_properties
+    return caching_worker_device_properties["cuda"][device]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   IndexError: list index out of range
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+============================= slowest 10 durations =============================
+0.05s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+0.03s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds
+0.03s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs
+0.01s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64
+
+(6 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64
+==================== 4 failed, 1 passed, 1 skipped in 3.72s ====================

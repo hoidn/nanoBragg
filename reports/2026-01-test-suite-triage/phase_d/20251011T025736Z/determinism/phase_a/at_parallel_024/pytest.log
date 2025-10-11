@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 6 items
+
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism PASSED [ 16%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_c_pytorch_equivalence SKIPPED [ 50%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_lcg_compatibility PASSED [ 66%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism FAILED [ 83%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip PASSED [100%]
+
+=================================== FAILURES ===================================
+__________ TestAT_PARALLEL_024.test_mosaic_rotation_umat_determinism ___________
+tests/test_at_parallel_024.py:356: in test_mosaic_rotation_umat_determinism
+    assert torch.allclose(identity, expected_identity, rtol=1e-10, atol=1e-12), \
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   RuntimeError: Float did not match Double
+============================= slowest 10 durations =============================
+5.28s call     tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism
+0.02s call     tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence
+
+(8 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism
+==================== 1 failed, 4 passed, 1 skipped in 7.35s ====================

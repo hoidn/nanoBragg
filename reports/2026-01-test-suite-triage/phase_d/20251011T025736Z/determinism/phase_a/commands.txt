@@ -1,0 +1,15 @@
+# Phase A Evidence Commands: [DETERMINISM-001]
+# Timestamp: 20251011T025736Z
+# Context: Post dtype-cache fix rerun per plans/active/determinism.md
+
+# A1: Test collection
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+
+# A2: AT-PARALLEL-013 reproduction
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10 --tb=short
+
+# A3: AT-PARALLEL-024 reproduction
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10 --tb=short
+
+# Environment check (optional)
+# python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA device count: {torch.cuda.device_count()}')"
