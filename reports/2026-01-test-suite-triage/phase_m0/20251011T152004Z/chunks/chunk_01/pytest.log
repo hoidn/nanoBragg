@@ -1,0 +1,247 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 71 items
+
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cpu] PASSED [  1%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[False-cpu] PASSED [  2%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[True-cpu] PASSED [  4%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cpu] PASSED [  5%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cpu] PASSED [  7%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cpu] PASSED [  8%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cpu] PASSED [  9%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cpu] PASSED [ 11%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_and_fdump_with_default_f_zero PASSED [ 12%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_but_has_default_f PASSED [ 14%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_cell_parameters PASSED [ 15%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_fdump_fallback PASSED [ 16%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_help_message PASSED [ 18%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_dispstep PASSED [ 19%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_hdiv PASSED [ 21%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_vdiv PASSED [ 22%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_header_format PASSED    [ 23%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_pixel_scaling PASSED    [ 25%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_with_default_scale PASSED [ 26%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_torch_tensor_input PASSED [ 28%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_clipping_behavior PASSED [ 29%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_peak_positions_with_rotations SKIPPED [ 30%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_peak_intensity_ordering SKIPPED [ 32%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_rotation_effect_on_pattern SKIPPED [ 33%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts FAILED [ 35%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_twotheta PASSED [ 36%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_combined_extreme_angles PASSED [ 38%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_near_90_degree_incidence PASSED [ 39%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_solid_angle_obliquity_corrections PASSED [ 40%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_extreme_rotation_stability PASSED [ 42%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_cpu_performance_parity SKIPPED [ 43%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_gpu_performance_superiority SKIPPED [ 45%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_performance_measurement_validity PASSED [ 46%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_calculation PASSED [ 47%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_nopolar_toggle PASSED [ 49%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics PASSED [ 50%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector PASSED [ 52%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_range PASSED [ 53%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_no_parameters_provided PASSED [ 54%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_step_provided PASSED [ 56%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_range_provided PASSED [ 57%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_count_provided_angles PASSED [ 59%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_count_provided_thickness PASSED [ 60%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_range_and_step_provided PASSED [ 61%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_count_and_range_provided PASSED [ 63%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_divergence_auto_selection PASSED [ 64%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_dispersion_auto_selection PASSED [ 66%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_thickness_auto_selection PASSED [ 67%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_all_parameters_provided PASSED [ 69%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_conflicting_parameters PASSED [ 70%]
+tests/test_cli_scaling.py::TestMOSFLMCellVectors::test_mosflm_cell_vectors PASSED [ 71%]
+tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c SKIPPED [ 73%]
+tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec PASSED [ 74%]
+tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile PASSED [ 76%]
+tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored PASSED [ 77%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted PASSED [ 78%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted PASSED [ 80%]
+tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback PASSED [ 81%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference SKIPPED [ 83%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning FAILED [ 84%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float32] PASSED [ 85%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float64] PASSED [ 87%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cuda-float32] SKIPPED [ 88%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cuda-float64] SKIPPED [ 90%]
+tests/test_detector_pivots.py::test_beam_pivot_keeps_beam_indices_and_alignment PASSED [ 91%]
+tests/test_detector_pivots.py::test_sample_pivot_moves_beam_indices_with_twotheta PASSED [ 92%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_against_c_value PASSED [ 94%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_fractional_miller_index PASSED [ 95%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_at_zero PASSED   [ 97%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_vectorized PASSED [ 98%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_broadcast_N PASSED [100%]
+
+=================================== FAILURES ===================================
+_________ TestATParallel017GrazingIncidence.test_large_detector_tilts __________
+
+self = <tests.test_at_parallel_017.TestATParallel017GrazingIncidence object at 0x7d7ef274c7d0>
+
+    def test_large_detector_tilts(self):
+        """
+        Test with large detector tilts (>45°) in all rotation axes
+        """
+        # Configuration with large tilts
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=256,
+            fpixels=256,
+            detector_rotx_deg=50.0,  # Large rotation around X
+            detector_roty_deg=45.0,  # Large rotation around Y
+            detector_rotz_deg=40.0,  # Large rotation around Z
+            detector_convention=DetectorConvention.MOSFLM
+        )
+    
+        crystal_config = CrystalConfig(
+            cell_a=100.0,
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=1.54,
+            fluence=1e12
+        )
+    
+        # Create simulator
+        detector = Detector(detector_config, dtype=torch.float64)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    
+        # Run simulation
+        image = simulator.run()
+    
+        # Verify no NaNs or infinities
+        assert not torch.isnan(image).any(), "Image contains NaN values with large tilts"
+        assert not torch.isinf(image).any(), "Image contains infinite values with large tilts"
+    
+        # Verify rotation matrices are valid (determinant should be 1)
+        # Check detector basis vectors are orthonormal after rotation
+        fdet = detector.fdet_vec
+        sdet = detector.sdet_vec
+        odet = detector.odet_vec
+    
+        # Check orthogonality
+>       assert torch.abs(torch.dot(fdet, sdet)) < 1e-10, "fdet and sdet not orthogonal"
+E       AssertionError: fdet and sdet not orthogonal
+E       assert tensor(1.4901e-08) < 1e-10
+E        +  where tensor(1.4901e-08) = <built-in method abs of type object at 0x7d8074180fc0>(tensor(1.4901e-08))
+E        +    where <built-in method abs of type object at 0x7d8074180fc0> = torch.abs
+E        +    and   tensor(1.4901e-08) = <built-in method dot of type object at 0x7d8074180fc0>(tensor([ 0.8406, -0.2947,  0.4545]), tensor([-0.0018, -0.8406, -0.5417]))
+E        +      where <built-in method dot of type object at 0x7d8074180fc0> = torch.dot
+
+tests/test_at_parallel_017.py:95: AssertionError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 1-fold oversampling
+________ TestSourceWeightsDivergence.test_sourcefile_divergence_warning ________
+
+self = <tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x7d7ef274dbd0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d7edea4c8a0>
+
+    def test_sourcefile_divergence_warning(self, monkeypatch):
+        """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""
+        # This test validates the CLI warning guard at argument parsing level
+        # Per SOURCE-WEIGHT-001 Phase E Option B: warn when sourcefile + divergence params coexist
+        # Updated to use in-process pytest.warns instead of subprocess stderr parsing
+    
+        # Check fixture availability
+        fixture_paths = [
+            Path('reports/2025-11-source-weights/fixtures/two_sources.txt'),
+            Path('reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt')
+        ]
+        sourcefile = None
+        for path in fixture_paths:
+            if path.exists():
+                sourcefile = path
+                break
+    
+        if sourcefile is None:
+            pytest.skip("two_sources.txt fixture not found in expected locations")
+    
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            py_out = tmpdir / 'py_tc_d2.bin'
+    
+            # Command that should emit warning: sourcefile + hdivrange
+            args_with_warning = [
+                'nanoBragg',  # Program name
+                '-mat', str(mat_file.resolve()),
+                '-sourcefile', str(sourcefile.resolve()),
+                '-hdivrange', '0.5',  # This should trigger the warning
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate',
+                '-floatfile', str(py_out)
+            ]
+    
+            # Use monkeypatch to set sys.argv for in-process execution
+            monkeypatch.setattr(sys, 'argv', args_with_warning)
+    
+            # Import main function (local import to avoid side effects)
+            from nanobrag_torch.__main__ import main
+    
+            # Execute main() under pytest.warns context
+            # The warning should be emitted from __main__.py:736-741
+            with pytest.warns(UserWarning, match="Divergence/dispersion parameters ignored") as record:
+>               main()
+
+tests/test_cli_scaling.py:751: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/__main__.py:844: in main
+    config = parse_and_validate_args(args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat='/home/ollie/Documents/tmp/nanoBragg/A.mat', cell=None, img=None, mask=None, sourcefile='/home...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_m0/20251011T152004Z/chunks/chunk_01/pytest.xml -
+============================= slowest 5 durations ==============================
+11.58s call     tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec
+6.81s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_but_has_default_f
+6.58s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_fdump_fallback
+5.26s call     tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile
+5.03s call     tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts
+FAILED tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning
+============== 2 failed, 60 passed, 9 skipped in 84.58s (0:01:24) ==============

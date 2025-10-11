@@ -1,0 +1,86 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 51 items
+
+tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_calculation PASSED [  1%]
+tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_zero PASSED [  3%]
+tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_additive PASSED [  5%]
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_triclinic_absolute_positions PASSED [  7%]
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_cubic_vs_triclinic_systematic_difference PASSED [  9%]
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_known_reflection_d_spacings PASSED [ 11%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_write_and_read PASSED [ 13%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_cache_behavior PASSED [ 15%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_no_files_with_default_F PASSED [ 17%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_no_files_zero_default PASSED [ 19%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_preserves_default_F PASSED [ 21%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_header_structure PASSED [ 23%]
+tests/test_at_parallel_008.py::TestAT_PARALLEL_008::test_triclinic_multi_peak_pattern SKIPPED [ 25%]
+tests/test_at_parallel_008.py::TestAT_PARALLEL_008::test_peak_intensity_ordering SKIPPED [ 27%]
+tests/test_at_parallel_008.py::TestAT_PARALLEL_008::test_non_max_suppression SKIPPED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_cubic_crystal_aligned_axes PASSED [ 31%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_zero_angle_rotations PASSED [ 33%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_near_singular_cell_angles PASSED [ 35%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_aligned_spindle_and_beam PASSED [ 37%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_very_small_unit_cell PASSED [ 39%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_very_large_unit_cell PASSED [ 41%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_continuity_near_90_degrees PASSED [ 43%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_identity_misset_matrix PASSED [ 45%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_pytorch_aliasing_reduction PASSED [ 47%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_pytorch_peak_stability PASSED [ 49%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_pytorch_fwhm_convergence PASSED [ 50%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_c_pytorch_oversample_equivalence SKIPPED [ 52%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_issue_subpixel_aliasing SKIPPED [ 54%]
+tests/test_at_pre_001.py::test_header_precedence_img_then_mask PASSED    [ 56%]
+tests/test_at_pre_001.py::test_mask_beam_center_y_flip PASSED            [ 58%]
+tests/test_at_pre_001.py::test_img_only_no_mask PASSED                   [ 60%]
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_single_source PASSED [ 62%]
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_multiple_sources PASSED [ 64%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_warning_emitted_on_mismatch PASSED [ 66%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_matching PASSED [ 68%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_column_missing PASSED [ 70%]
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_steps_count_includes_zero_weight_sources PASSED [ 72%]
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_equal_weighting_preserved PASSED [ 74%]
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c PASSED [ 76%]
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c PASSED [ 78%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_round_div_applies_elliptical_trimming PASSED [ 80%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_square_div_uses_full_grid PASSED [ 82%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_round_vs_square_source_count_difference PASSED [ 84%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_single_divergence_point_unaffected PASSED [ 86%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_elliptical_trimming_threshold PASSED [ 88%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_combined_divergence_and_dispersion PASSED [ 90%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_twotheta_zero_uses_config_pivot PASSED [ 92%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_twotheta_nonzero_forces_sample_pivot PASSED [ 94%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_small_twotheta_values PASSED [ 96%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_negative_twotheta_forces_sample_pivot PASSED [ 98%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_pivot_fix_integration PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_triclinic_absolute_positions
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_crystal_absolute.py:205: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    triclinic_error = np.sqrt(
+
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_triclinic_absolute_positions
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_crystal_absolute.py:228: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    cubic_dist_from_center = np.sqrt(
+
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_cubic_vs_triclinic_systematic_difference
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_crystal_absolute.py:292: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    position_diff = np.sqrt(
+
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_single_source
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_003.py:37: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 9.768000e-11 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_m0/20251011T152004Z/chunks/chunk_02/pytest.xml -
+============================= slowest 5 durations ==============================
+10.69s call     tests/test_at_pre_001.py::test_img_only_no_mask
+7.88s call     tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_calculation
+7.09s call     tests/test_at_pre_001.py::test_mask_beam_center_y_flip
+6.87s call     tests/test_at_pre_001.py::test_header_precedence_img_then_mask
+4.06s call     tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_aligned_spindle_and_beam
+================== 46 passed, 5 skipped, 4 warnings in 44.99s ==================

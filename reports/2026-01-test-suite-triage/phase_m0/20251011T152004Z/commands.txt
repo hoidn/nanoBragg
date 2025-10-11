@@ -1,0 +1,11 @@
+M0a collect_only: 687 tests collected, exit=0
+Chunk 01: 2 failed, 60 passed, 9 skipped, time=84.58s, exit=1
+Chunk 02: 0 failed, 46 passed, 5 skipped, time=44.99s, exit=0
+Chunk 03: 10 failed, 42 passed, 10 skipped, 1 xfailed, time=89.72s, exit=1
+Chunk 04: 6 failed, 67 passed, 12 skipped, time=76.61s, exit=1
+Chunk 05: 0 failed, 38 passed, 6 skipped, time=134.96s, exit=0
+Chunk 06: 9 failed, 50 passed, 13 skipped, time=136.65s, exit=1
+Chunk 07: 1 failed, 59 passed, 3 skipped, time=23.96s, exit=1
+Chunk 08: 0 failed, 58 passed, 59 skipped, time=79.80s, exit=0
+Chunk 09: 4 failed, 32 passed, 9 skipped, time=123.45s, exit=1
+Chunk 10: 16 failed, 50 passed, 10 skipped, time=102.74s, exit=1

@@ -1,0 +1,1005 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="10" skipped="11" tests="63" time="89.714" timestamp="2025-10-11T08:24:02.998976-07:00" hostname="ollie-System-Product-Name"><testcase classname="" name="tests.test_at_parallel_009" time="0.000"><skipped message="collection skipped">('/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_009.py', 24, 'Skipped: Skipping parallel validation tests. Set NB_RUN_PARALLEL=1 to run.')</skipped></testcase><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_short_flag" time="1.075" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_long_flag" time="0.996" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_invocable" time="0.002" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_examples" time="0.995" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_wavelength_synonyms" time="1.007" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_output_synonyms" time="0.999" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_fluence_calculation_from_flux_exposure_beamsize" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_fluence_calculation_when_flux_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_fluence_calculation_when_exposure_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_fluence_calculation_with_beamsize_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_flux_recomputation_from_fluence_and_exposure" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_sample_clipping_warning" time="0.001" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_clipping_when_beamsize_larger" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_clipping_when_beamsize_zero" time="0.000" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_minimal_hkl_format" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_five_column_with_phase" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_six_column_with_sigma_and_phase" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_negative_indices_handling" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_all_formats_produce_same_pattern" time="3.004" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_fdump_caching_for_all_formats" time="0.003" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_comment_and_blank_line_handling" time="0.001" /><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_integration" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:280: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_without_absorption" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:332: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_phi_rotation_only" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:364: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_minimal_features" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:399: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_vectorization_scaling" time="2.001" /><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_performance_parity_with_c" time="0.020"><skipped type="pytest.skip" message="C binary not found at ./nanoBragg">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_001.py:99: C binary not found at ./nanoBragg</skipped></testcase><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_memory_scaling" time="0.108" /><testcase classname="tests.test_at_pre_002" name="test_xbeam_ybeam_forces_beam_pivot" time="1.010" /><testcase classname="tests.test_at_pre_002" name="test_xclose_yclose_forces_sample_pivot" time="1.017" /><testcase classname="tests.test_at_pre_002" name="test_orgx_orgy_forces_sample_pivot" time="1.008" /><testcase classname="tests.test_at_pre_002" name="test_explicit_pivot_override" time="2.012" /><testcase classname="tests.test_at_pre_002" name="test_distance_vs_close_distance_pivot_defaults" time="1.989" /><testcase classname="tests.test_at_pre_002" name="test_convention_default_pivots" time="2.019" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_basic" time="0.014" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_with_roi" time="0.012" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_with_mask" time="0.001" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_empty_roi" time="0.012" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_last_max_location" time="0.012" /><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_explicit_defaults_equal_implicit" time="0.001"><skipped type="pytest.xfail" message="C nanoBragg has known bug: passing default twotheta_axis switches to CUSTOM mode" /></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_configuration_echo_present" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output that doesn't exist in standard build">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:113: Requires special nanoBragg_config binary with diagnostic output that doesn't exist in standard build</skipped></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_mode_detection_accuracy" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:147: Requires special nanoBragg_config binary with diagnostic output</skipped></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_trigger_tracking" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:162: Requires special nanoBragg_config binary with diagnostic output</skipped></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_all_vector_parameters_trigger_custom" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:177: Requires special nanoBragg_config binary with diagnostic output</skipped></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_a" time="6.243"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestCellParameterGradients object at 0x73dadeca1310&gt;
+
+    def test_gradcheck_cell_a(self):
+        """Verify cell_a parameter is fully differentiable."""
+        # Create test input with requires_grad
+        cell_a = torch.tensor(100.0, dtype=torch.float64, requires_grad=True)
+    
+        # Get loss function for cell_a
+        loss_fn = GradientTestHelper.create_loss_function("cell_a")
+    
+        # Run gradcheck with strict settings
+&gt;       assert gradcheck(
+            loss_fn, (cell_a,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:99: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc3e14e0&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_b" time="2.837"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestCellParameterGradients object at 0x73dadeca1450&gt;
+
+    def test_gradcheck_cell_b(self):
+        """Verify cell_b parameter is fully differentiable."""
+        # Create test input with requires_grad
+        cell_b = torch.tensor(100.0, dtype=torch.float64, requires_grad=True)
+    
+        # Get loss function for cell_b
+        loss_fn = GradientTestHelper.create_loss_function("cell_b")
+    
+        # Run gradcheck with strict settings
+&gt;       assert gradcheck(
+            loss_fn, (cell_b,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc157060&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_c" time="2.863"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestCellParameterGradients object at 0x73dadec4f230&gt;
+
+    def test_gradcheck_cell_c(self):
+        """Verify cell_c parameter is fully differentiable."""
+        # Create test input with requires_grad
+        cell_c = torch.tensor(100.0, dtype=torch.float64, requires_grad=True)
+    
+        # Get loss function for cell_c
+        loss_fn = GradientTestHelper.create_loss_function("cell_c")
+    
+        # Run gradcheck with strict settings
+&gt;       assert gradcheck(
+            loss_fn, (cell_c,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:153: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc155940&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_alpha" time="2.858"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestCellParameterGradients object at 0x73dadec4f360&gt;
+
+    def test_gradcheck_cell_alpha(self):
+        """Verify cell_alpha angle parameter is fully differentiable."""
+        # Note: Testing at exactly 90° is problematic because it's a stationary point
+        # for cubic crystals, where numerical differentiation becomes unstable.
+        # We test at 89° instead, which is close but avoids the stationary point.
+    
+        # Create test input with requires_grad (avoid exact 90° stationary point)
+        cell_alpha = torch.tensor(89.0, dtype=torch.float64, requires_grad=True)
+    
+        # Get loss function for cell_alpha
+        loss_fn = GradientTestHelper.create_loss_function("cell_alpha")
+    
+        # Run gradcheck with practical numerical tolerances
+        # Note: ~2% relative error observed due to complex simulation chain
+&gt;       assert gradcheck(
+            loss_fn, (cell_alpha,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:185: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc576200&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_beta" time="2.805"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestCellParameterGradients object at 0x73dadecdc5f0&gt;
+
+    def test_gradcheck_cell_beta(self):
+        """Verify cell_beta angle parameter is fully differentiable."""
+        # Create test input with requires_grad (avoid exact 90° stationary point)
+        cell_beta = torch.tensor(89.0, dtype=torch.float64, requires_grad=True)
+    
+        # Get loss function for cell_beta
+        loss_fn = GradientTestHelper.create_loss_function("cell_beta")
+    
+        # Run gradcheck with strict settings
+&gt;       assert gradcheck(
+            loss_fn, (cell_beta,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:212: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc1468e0&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_gamma" time="2.806"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestCellParameterGradients object at 0x73db331c9ae0&gt;
+
+    def test_gradcheck_cell_gamma(self):
+        """Verify cell_gamma angle parameter is fully differentiable."""
+        # Create test input with requires_grad (avoid exact 90° stationary point)
+        cell_gamma = torch.tensor(89.0, dtype=torch.float64, requires_grad=True)
+    
+        # Get loss function for cell_gamma
+        loss_fn = GradientTestHelper.create_loss_function("cell_gamma")
+    
+        # Run gradcheck with strict settings
+&gt;       assert gradcheck(
+            loss_fn, (cell_gamma,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:239: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc4aea20&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_joint_gradcheck" time="12.169"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestAdvancedGradients object at 0x73dadeca1590&gt;
+
+    def test_joint_gradcheck(self):
+        """Verify gradients flow correctly when all cell parameters vary together."""
+        # Create all six cell parameters as a single tensor
+        # Use non-90-degree angles to avoid stationary points that cause numerical issues
+        cell_params = torch.tensor(
+            [100.0, 100.0, 100.0, 89.0, 89.0, 89.0],  # a, b, c, alpha, beta, gamma
+            dtype=torch.float64,
+            requires_grad=True,
+        )
+    
+        def joint_loss_fn(params):
+            """Loss function that uses all six cell parameters."""
+            device = torch.device("cpu")
+            dtype = torch.float64
+    
+            # Unpack parameters
+            cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma = params
+    
+            # Create config with all parameters
+            config = CrystalConfig(
+                cell_a=cell_a,
+                cell_b=cell_b,
+                cell_c=cell_c,
+                cell_alpha=cell_alpha,
+                cell_beta=cell_beta,
+                cell_gamma=cell_gamma,
+                mosaic_spread_deg=0.0,
+                mosaic_domains=1,
+                N_cells=(5, 5, 5),
+            )
+    
+            # Create objects
+            crystal = Crystal(config=config, device=device, dtype=dtype)
+            detector = Detector(device=device, dtype=dtype)
+    
+            # Run simulation
+            simulator = Simulator(
+                crystal, detector, crystal_config=config, device=device, dtype=dtype
+            )
+            image = simulator.run()
+    
+            # Return scalar loss
+            return image.sum()
+    
+        # Run gradcheck on joint function
+&gt;       assert gradcheck(
+            joint_loss_fn,
+            (cell_params,),
+            eps=1e-6,
+            atol=1e-5,
+            rtol=0.05,
+            raise_exception=True,
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:307: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc4af420&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_gradgradcheck_cell_params" time="1.894"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestAdvancedGradients object at 0x73dadeca16d0&gt;
+
+    def test_gradgradcheck_cell_params(self):
+        """Verify second-order gradients are stable for optimization algorithms."""
+        # Use smaller parameter set for second-order testing (computationally expensive)
+        # Use non-90-degree angles to avoid stationary points that cause numerical issues
+        cell_params = torch.tensor(
+            [100.0, 100.0, 100.0, 89.0, 89.0, 89.0],
+            dtype=torch.float64,
+            requires_grad=True,
+        )
+    
+        def joint_loss_fn(params):
+            """Loss function for second-order gradient testing."""
+            device = torch.device("cpu")
+            dtype = torch.float64
+    
+            # Unpack parameters
+            cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma = params
+    
+            # Create config with all parameters
+            config = CrystalConfig(
+                cell_a=cell_a,
+                cell_b=cell_b,
+                cell_c=cell_c,
+                cell_alpha=cell_alpha,
+                cell_beta=cell_beta,
+                cell_gamma=cell_gamma,
+                mosaic_spread_deg=0.0,
+                mosaic_domains=1,
+                N_cells=(5, 5, 5),
+            )
+    
+            # Create objects
+            crystal = Crystal(config=config, device=device, dtype=dtype)
+            detector = Detector(device=device, dtype=dtype)
+    
+            # Run simulation
+            simulator = Simulator(
+                crystal, detector, crystal_config=config, device=device, dtype=dtype
+            )
+            image = simulator.run()
+    
+            # Return scalar loss
+            return image.sum()
+    
+        # Run second-order gradient check
+&gt;       assert gradgradcheck(
+            joint_loss_fn,
+            (cell_params,),
+            eps=1e-4,  # Larger eps for second-order
+            atol=1e-4,
+            rtol=0.05,
+            raise_exception=True,
+        )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:376: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2258: in gradgradcheck
+    return gradcheck(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2078: in _gradcheck_helper
+    func_out = func(*tupled_inputs)
+               ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2252: in new_func
+    grad_inputs = torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2109: in backward
+    return CompiledFunction._double_backward(ctx, impl_fn, all_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2136: in _double_backward
+    return CompiledFunctionBackward.apply(*all_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:575: in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2124: in forward
+    return impl_fn(double_ctx)
+           ^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc4adc60&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_gradient_flow_simulation" time="1.193"><failure message="AssertionError: At least one gradient should be non-zero&#10;assert False&#10; +  where False = any(&lt;generator object TestAdvancedGradients.test_gradient_flow_simulation.&lt;locals&gt;.&lt;genexpr&gt; at 0x73dade815a40&gt;)">self = &lt;tests.test_gradients.TestAdvancedGradients object at 0x73dadec4f490&gt;
+
+    def test_gradient_flow_simulation(self):
+        """Verify end-to-end gradient flow through full simulation pipeline."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        # Create differentiable cell parameters
+        cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_b = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_c = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_alpha = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+        cell_beta = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+        cell_gamma = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+    
+        # Create config with tensor parameters
+        config = CrystalConfig(
+            cell_a=cell_a,
+            cell_b=cell_b,
+            cell_c=cell_c,
+            cell_alpha=cell_alpha,
+            cell_beta=cell_beta,
+            cell_gamma=cell_gamma,
+            mosaic_spread_deg=0.0,
+            mosaic_domains=1,
+            N_cells=(5, 5, 5),
+        )
+    
+        # Create objects
+        crystal = Crystal(config=config, device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+    
+        # Run simulation
+        simulator = Simulator(
+            crystal, detector, crystal_config=config, device=device, dtype=dtype
+        )
+        image = simulator.run()
+    
+        # Compute loss
+        loss = image.sum()
+    
+        # Verify image requires grad
+        assert image.requires_grad, "Output image should require gradients"
+    
+        # Backward pass
+        loss.backward()
+    
+        # Verify all parameters have gradients
+        assert cell_a.grad is not None, "cell_a should have gradient"
+        assert cell_b.grad is not None, "cell_b should have gradient"
+        assert cell_c.grad is not None, "cell_c should have gradient"
+        assert cell_alpha.grad is not None, "cell_alpha should have gradient"
+        assert cell_beta.grad is not None, "cell_beta should have gradient"
+        assert cell_gamma.grad is not None, "cell_gamma should have gradient"
+    
+        # Verify gradients are non-zero (at least one should be)
+        grad_magnitudes = [
+            cell_a.grad.abs().item(),
+            cell_b.grad.abs().item(),
+            cell_c.grad.abs().item(),
+            cell_alpha.grad.abs().item(),
+            cell_beta.grad.abs().item(),
+            cell_gamma.grad.abs().item(),
+        ]
+&gt;       assert any(
+            mag &gt; 1e-10 for mag in grad_magnitudes
+        ), "At least one gradient should be non-zero"
+E       AssertionError: At least one gradient should be non-zero
+E       assert False
+E        +  where False = any(&lt;generator object TestAdvancedGradients.test_gradient_flow_simulation.&lt;locals&gt;.&lt;genexpr&gt; at 0x73dade815a40&gt;)
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:447: AssertionError</failure></testcase><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_metric_duality" time="0.069" /><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_volume_consistency" time="0.044" /><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_gradient_stability" time="26.669"><failure message="RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.">self = &lt;tests.test_gradients.TestPropertyBasedGradients object at 0x73dadec4f5c0&gt;
+
+    def test_property_gradient_stability(self):
+        """Ensure gradients remain stable across parameter space."""
+        torch.manual_seed(44)  # For reproducibility
+    
+        for i in range(25):  # Fewer tests as gradcheck is expensive
+            # Generate random cell
+            cell_params = self.generate_random_cell()
+    
+            # Create tensor parameters
+            cell_params_tensor = torch.tensor(
+                [
+                    cell_params["cell_a"],
+                    cell_params["cell_b"],
+                    cell_params["cell_c"],
+                    cell_params["cell_alpha"],
+                    cell_params["cell_beta"],
+                    cell_params["cell_gamma"],
+                ],
+                dtype=torch.float64,
+                requires_grad=True,
+            )
+    
+            def loss_fn(params):
+                device = torch.device("cpu")
+                dtype = torch.float64
+    
+                # Unpack parameters
+                cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma = params
+    
+                # Create config
+                config = CrystalConfig(
+                    cell_a=cell_a,
+                    cell_b=cell_b,
+                    cell_c=cell_c,
+                    cell_alpha=cell_alpha,
+                    cell_beta=cell_beta,
+                    cell_gamma=cell_gamma,
+                    mosaic_spread_deg=0.0,
+                    mosaic_domains=1,
+                    N_cells=(5, 5, 5),
+                )
+    
+                # Create objects
+                crystal = Crystal(config=config, device=device, dtype=dtype)
+                detector = Detector(device=device, dtype=dtype)
+    
+                # Run simulation
+                simulator = Simulator(
+                    crystal, detector, crystal_config=config, device=device, dtype=dtype
+                )
+                image = simulator.run()
+    
+                return image.sum()
+    
+            # Verify gradcheck passes for this random geometry
+            try:
+&gt;               assert gradcheck(
+                    loss_fn,
+                    (cell_params_tensor,),
+                    eps=1e-6,
+                    atol=1e-5,  # Slightly relaxed for stability
+                    rtol=0.05,
+                    raise_exception=True,
+                )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:622: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/function.py:307: in apply
+    return user_fn(self, *args)
+           ^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2111: in backward
+    return impl_fn()
+           ^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2097: in impl_fn
+    out = CompiledFunction._backward_impl(ctx, all_args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/_functorch/_aot_autograd/runtime_wrappers.py:2205: in _backward_impl
+    torch._check(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1660: in _check
+    _check_with(RuntimeError, cond, message)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+error_type = &lt;class 'RuntimeError'&gt;, cond = False
+message = &lt;function AOTDispatchAutograd.post_compile.&lt;locals&gt;.CompiledFunction._backward_impl.&lt;locals&gt;.&lt;lambda&gt; at 0x73dadc4ac040&gt;
+
+    def _check_with(
+        error_type,
+        cond: _Union[builtins.bool, SymBool],
+        message: _Callable[[], str],
+    ):  # noqa: F811
+        if not isinstance(cond, (builtins.bool, SymBool)):
+            raise TypeError(f"cond must be a bool, but got {type(cond)}")
+    
+        from torch.fx.experimental.symbolic_shapes import expect_true
+    
+        if expect_true(cond):
+            return
+    
+        # error_type must be a subclass of Exception and not subclass of Warning
+        assert issubclass(error_type, Exception) and not issubclass(error_type, Warning)
+    
+        if message is None:
+            message_evaluated = (
+                "Expected cond to be True, but got False. (Could this error "
+                "message be improved? If so, please report an enhancement request "
+                "to PyTorch.)"
+            )
+    
+        else:
+            if not callable(message):
+                raise TypeError("message must be a callable")
+    
+            message_evaluated = str(message())
+    
+&gt;       raise error_type(message_evaluated)
+E       RuntimeError: This backward function was compiled with non-empty donated buffers which requires create_graph=False and retain_graph=False. Please keep backward(create_graph=False, retain_graph=False) across all backward() function calls, or set torch._functorch.config.donated_buffer=False to disable donated buffer.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/__init__.py:1642: RuntimeError</failure></testcase><testcase classname="tests.test_gradients.TestOptimizationRecovery" name="test_optimization_recovers_cell" time="0.064" /><testcase classname="tests.test_gradients.TestOptimizationRecovery" name="test_multiple_optimization_scenarios" time="0.276" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_show_config_basic" time="0.991" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_show_config_with_divergence" time="1.002" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_show_config_with_rotations" time="1.010" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_echo_config_alias" time="1.004" /></testsuite></testsuites>

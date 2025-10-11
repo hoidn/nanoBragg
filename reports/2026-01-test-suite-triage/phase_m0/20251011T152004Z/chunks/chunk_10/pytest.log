@@ -1,0 +1,882 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 76 items
+
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_filtering_reduces_intensity PASSED [  1%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_very_strict_removes_most_intensity PASSED [  2%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_zero_has_no_effect PASSED [  3%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_header_required_keys PASSED [  5%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_data_ordering PASSED    [  6%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_convention_specific_headers PASSED [  7%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_torch_tensor_input PASSED [  9%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_byte_order PASSED       [ 10%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance PASSED [ 11%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling PASSED [ 13%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_combined_wavelength_and_distance PASSED [ 14%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_tiny_scale PASSED [ 15%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_large_cell PASSED [ 17%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_long_distance PASSED [ 18%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_extreme_scale_c_comparison SKIPPED [ 19%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_combined_extremes PASSED [ 21%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_numerical_stability_metrics PASSED [ 22%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_structure_factor_loading PASSED [ 23%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_intensity_ratios PASSED [ 25%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_pattern_structure PASSED [ 26%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_c_pytorch_equivalence SKIPPED [ 27%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_f_squared_scaling PASSED [ 28%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_large_tensor_gpu_residency SKIPPED [ 30%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_auto_device_selection_uses_cuda SKIPPED [ 31%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_skip_when_cuda_unavailable PASSED [ 32%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_memory_efficient_gpu_usage SKIPPED [ 34%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype0] PASSED [ 35%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype1] PASSED [ 36%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[None] PASSED [ 38%]
+tests/test_at_src_001_simple.py::test_sourcefile_parsing PASSED          [ 39%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias FAILED [ 40%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_millimeter_alias FAILED [ 42%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence FAILED [ 43%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_dual_pix0_flag_rejection FAILED [ 44%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0] FAILED [ 46%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1] FAILED [ 47%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2] FAILED [ 48%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cpu PASSED [ 50%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cuda SKIPPED [ 51%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_dtype_preservation PASSED [ 52%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_suppresses_noise_output FAILED [ 53%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_noisefile_without_nonoise FAILED [ 55%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_preserves_seed FAILED [ 56%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_without_noisefile FAILED [ 57%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_does_not_alter_beam_vector FAILED [ 59%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_triggers_custom_convention FAILED [ 60%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_roi_unaffected_by_new_flags FAILED [ 61%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_convention_preserved_without_pix0 FAILED [ 63%]
+tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates PASSED [ 64%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cpu-dtype0] PASSED [ 65%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cuda-dtype1] SKIPPED [ 67%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] FAILED [ 68%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda] SKIPPED [ 69%]
+tests/test_cli_flags.py::TestCLIPolarization::test_default_polarization_parity PASSED [ 71%]
+tests/test_cli_flags.py::TestCLIPolarization::test_nopolar_flag PASSED   [ 72%]
+tests/test_cli_flags.py::TestCLIPolarization::test_polar_override PASSED [ 73%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cpu] PASSED [ 75%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cuda] SKIPPED [ 76%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cpu] PASSED [ 77%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cuda] SKIPPED [ 78%]
+tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip PASSED [ 80%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_rotated_basis_vectors_match_c_reference PASSED [ 81%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_pix0_vector_matches_c_reference_in_beam_pivot PASSED [ 82%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_mosflm_axis_mapping_correctness PASSED [ 84%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 85%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 86%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 88%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 89%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 90%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 92%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 93%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 94%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [ 96%]
+tests/test_perf_pytorch_006.py::test_dtype_support[dtype0] PASSED        [ 97%]
+tests/test_perf_pytorch_006.py::test_dtype_support[dtype1] PASSED        [ 98%]
+tests/test_perf_pytorch_006.py::test_float32_float64_correlation PASSED  [100%]
+
+=================================== FAILURES ===================================
+__________________ TestPix0VectorAlias.test_pix0_meters_alias __________________
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c5d590>
+
+    def test_pix0_meters_alias(self):
+        """Verify -pix0_vector accepts meters and stores correctly."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', '0.1', '-0.2', '0.3'
+        ])
+
+tests/test_cli_flags.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+________________ TestPix0VectorAlias.test_pix0_millimeter_alias ________________
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c5dbd0>
+
+    def test_pix0_millimeter_alias(self):
+        """Verify -pix0_vector_mm accepts millimeters and converts to meters."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector_mm', '100', '-200', '300'
+        ])
+
+tests/test_cli_flags.py:49: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+___________ TestPix0VectorAlias.test_pix0_meters_and_mm_equivalence ____________
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c36190>
+
+    def test_pix0_meters_and_mm_equivalence(self):
+        """Meters and millimeters flags should produce identical config."""
+>       config_m = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', '0.1', '-0.2', '0.3'
+        ])
+
+tests/test_cli_flags.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+______________ TestPix0VectorAlias.test_dual_pix0_flag_rejection _______________
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c362c0>
+
+    def test_dual_pix0_flag_rejection(self):
+        """Using both -pix0_vector and -pix0_vector_mm should raise ValueError."""
+        with pytest.raises(ValueError, match="Cannot specify both -pix0_vector and -pix0_vector_mm"):
+>           run_parse([
+                '-cell', '100', '100', '100', '90', '90', '90',
+                '-pixel', '0.1',
+                '-pix0_vector', '0', '0', '0',
+                '-pix0_vector_mm', '0', '0', '0'
+            ])
+
+tests/test_cli_flags.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+_____ TestPix0VectorAlias.test_pix0_signed_combinations[pix0_m0-pix0_mm0] ______
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c7e9f0>
+pix0_m = (0.1, -0.2, 0.3), pix0_mm = (100, -200, 300)
+
+    @pytest.mark.parametrize("pix0_m,pix0_mm", [
+        ((0.1, -0.2, 0.3), (100, -200, 300)),
+        ((-0.1, 0.0, 0.0), (-100, 0, 0)),
+        ((0.001, 0.002, 0.003), (1, 2, 3)),
+    ])
+    def test_pix0_signed_combinations(self, pix0_m, pix0_mm):
+        """Test various signed pix0 combinations to catch sign bugs."""
+>       config_m = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', str(pix0_m[0]), str(pix0_m[1]), str(pix0_m[2])
+        ])
+
+tests/test_cli_flags.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+_____ TestPix0VectorAlias.test_pix0_signed_combinations[pix0_m1-pix0_mm1] ______
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c1d8c0>
+pix0_m = (-0.1, 0.0, 0.0), pix0_mm = (-100, 0, 0)
+
+    @pytest.mark.parametrize("pix0_m,pix0_mm", [
+        ((0.1, -0.2, 0.3), (100, -200, 300)),
+        ((-0.1, 0.0, 0.0), (-100, 0, 0)),
+        ((0.001, 0.002, 0.003), (1, 2, 3)),
+    ])
+    def test_pix0_signed_combinations(self, pix0_m, pix0_mm):
+        """Test various signed pix0 combinations to catch sign bugs."""
+>       config_m = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', str(pix0_m[0]), str(pix0_m[1]), str(pix0_m[2])
+        ])
+
+tests/test_cli_flags.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+_____ TestPix0VectorAlias.test_pix0_signed_combinations[pix0_m2-pix0_mm2] ______
+
+self = <tests.test_cli_flags.TestPix0VectorAlias object at 0x7e5632c1d9d0>
+pix0_m = (0.001, 0.002, 0.003), pix0_mm = (1, 2, 3)
+
+    @pytest.mark.parametrize("pix0_m,pix0_mm", [
+        ((0.1, -0.2, 0.3), (100, -200, 300)),
+        ((-0.1, 0.0, 0.0), (-100, 0, 0)),
+        ((0.001, 0.002, 0.003), (1, 2, 3)),
+    ])
+    def test_pix0_signed_combinations(self, pix0_m, pix0_mm):
+        """Test various signed pix0 combinations to catch sign bugs."""
+>       config_m = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', str(pix0_m[0]), str(pix0_m[1]), str(pix0_m[2])
+        ])
+
+tests/test_cli_flags.py:92: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+________ TestNoiseSuppressionFlag.test_nonoise_suppresses_noise_output _________
+
+self = <tests.test_cli_flags.TestNoiseSuppressionFlag object at 0x7e5632c5e0d0>
+
+    def test_nonoise_suppresses_noise_output(self):
+        """Verify -nonoise sets suppress_noise flag."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-floatfile', 'out.bin',
+            '-noisefile', 'noise.img',
+            '-nonoise'
+        ])
+
+tests/test_cli_flags.py:208: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+___________ TestNoiseSuppressionFlag.test_noisefile_without_nonoise ____________
+
+self = <tests.test_cli_flags.TestNoiseSuppressionFlag object at 0x7e5632c5e210>
+
+    def test_noisefile_without_nonoise(self):
+        """Verify -noisefile without -nonoise enables noise generation."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-floatfile', 'out.bin',
+            '-noisefile', 'noise.img'
+        ])
+
+tests/test_cli_flags.py:223: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+_____________ TestNoiseSuppressionFlag.test_nonoise_preserves_seed _____________
+
+self = <tests.test_cli_flags.TestNoiseSuppressionFlag object at 0x7e5632c36520>
+
+    def test_nonoise_preserves_seed(self):
+        """Verify -nonoise doesn't mutate seed handling."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-floatfile', 'out.bin',
+            '-noisefile', 'noise.img',
+            '-seed', '1234',
+            '-nonoise'
+        ])
+
+tests/test_cli_flags.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+___________ TestNoiseSuppressionFlag.test_nonoise_without_noisefile ____________
+
+self = <tests.test_cli_flags.TestNoiseSuppressionFlag object at 0x7e5632c36650>
+
+    def test_nonoise_without_noisefile(self):
+        """Verify -nonoise can be used without -noisefile (no-op but valid)."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-floatfile', 'out.bin',
+            '-nonoise'
+        ])
+
+tests/test_cli_flags.py:249: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+________ TestCLIIntegrationSanity.test_pix0_does_not_alter_beam_vector _________
+
+self = <tests.test_cli_flags.TestCLIIntegrationSanity object at 0x7e5632c5e350>
+
+    def test_pix0_does_not_alter_beam_vector(self):
+        """Verify -pix0_vector doesn't mutate beam_vector."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', '0.1', '0.2', '0.3'
+        ])
+
+tests/test_cli_flags.py:265: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+________ TestCLIIntegrationSanity.test_pix0_triggers_custom_convention _________
+
+self = <tests.test_cli_flags.TestCLIIntegrationSanity object at 0x7e5632c5e490>
+
+    def test_pix0_triggers_custom_convention(self):
+        """Verify pix0 vectors trigger CUSTOM convention."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector_mm', '100', '200', '300'
+        ])
+
+tests/test_cli_flags.py:276: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+__________ TestCLIIntegrationSanity.test_roi_unaffected_by_new_flags ___________
+
+self = <tests.test_cli_flags.TestCLIIntegrationSanity object at 0x7e5632c36780>
+
+    def test_roi_unaffected_by_new_flags(self):
+        """Verify ROI defaults remain unchanged."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-pix0_vector', '0', '0', '0',
+            '-nonoise'
+        ])
+
+tests/test_cli_flags.py:287: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+_______ TestCLIIntegrationSanity.test_convention_preserved_without_pix0 ________
+
+self = <tests.test_cli_flags.TestCLIIntegrationSanity object at 0x7e5632c368b0>
+
+    def test_convention_preserved_without_pix0(self):
+        """Verify MOSFLM convention remains when pix0 not specified."""
+>       config = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-pixel', '0.1',
+            '-mosflm'  # Use the flag form, not -convention
+        ])
+
+tests/test_cli_flags.py:298: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+___________ TestCLIPix0Override.test_pix0_vector_mm_beam_pivot[cpu] ____________
+
+self = <tests.test_cli_flags.TestCLIPix0Override object at 0x7e5632c369e0>
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_pix0_vector_mm_beam_pivot(self, device):
+        """
+        Regression test for CLI-FLAGS-003 Phase H3b.
+    
+        CRITICAL FINDING from Phase H3b1:
+        When custom detector vectors are provided, C code IGNORES -pix0_vector_mm entirely.
+        The custom vectors already define the detector geometry completely.
+    
+        This test verifies BOTH scenarios:
+        1. WITH custom vectors: pix0_override has NO EFFECT (matches C behavior)
+        2. WITHOUT custom vectors: pix0_override IS applied
+    
+        Expected pix0 vector from C trace (phase_h) WITH custom vectors:
+        -0.216336514802265, 0.215206668836451, -0.230198010448577 meters
+    
+        Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+        Evidence: reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md
+        """
+        import json
+        from pathlib import Path
+    
+        # Load expected C pix0 vector
+        expected_json_path = Path("reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json")
+        with open(expected_json_path) as f:
+            expected_data = json.load(f)
+    
+        expected_pix0_with_custom_vectors = torch.tensor([
+            expected_data["pix0_vector_m"]["x"],
+            expected_data["pix0_vector_m"]["y"],
+            expected_data["pix0_vector_m"]["z"]
+        ], device=device, dtype=torch.float32)
+    
+        # Custom detector vectors from supervisor command
+        custom_odet = (-0.000088, 0.004914, -0.999988)
+        custom_sdet = (-0.005998, -0.999970, -0.004913)
+        custom_fdet = (0.999982, -0.005998, -0.000118)
+    
+        # -pix0_vector_mm from supervisor command
+        pix0_override_mm = (-216.336293, 215.205512, -230.200866)
+    
+        # ==========================================
+        # CASE 1: WITH custom vectors → override should be IGNORED
+        # ==========================================
+        # From C trace: Xbeam=0.217742 m, Ybeam=0.213907 m, Fbeam=0.217742 m, Sbeam=0.213907 m
+        # For CUSTOM convention with these specific custom vectors: Fbeam=Xbeam, Sbeam=Ybeam (no +0.5 offset)
+        # Note: This is OPPOSITE of MOSFLM mapping (Fbeam=Ybeam, Sbeam=Xbeam)
+        # DetectorConfig expects beam_center_f/s in mm
+        Xbeam_m = 0.217742  # From C trace (meters)
+        Ybeam_m = 0.213907  # From C trace (meters)
+        beam_center_f_mm = Xbeam_m * 1000.0  # Convert to mm - For these custom vectors: Fbeam=Xbeam
+        beam_center_s_mm = Ybeam_m * 1000.0  # Convert to mm - For these custom vectors: Sbeam=Ybeam
+    
+        # Build detector from parsed config (with custom vectors)
+        from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+    
+        det_with_custom = Detector(
+            DetectorConfig(
+                distance_mm=231.27466,
+                pixel_size_mm=0.172,
+                spixels=1024,
+                fpixels=1024,
+                beam_center_f=beam_center_f_mm,  # mm
+                beam_center_s=beam_center_s_mm,  # mm
+                detector_convention=DetectorConvention.CUSTOM,
+                detector_pivot=DetectorPivot.BEAM,  # CLI-FLAGS-003 Phase H6f: Will be OVERRIDDEN to SAMPLE by custom vectors
+                pix0_override_m=(-0.216336293, 0.215205512, -0.230200866),  # Should be IGNORED
+                custom_beam_vector=(0.00051387949, 0.0, -0.99999986),
+                custom_odet_vector=custom_odet,
+                custom_sdet_vector=custom_sdet,
+                custom_fdet_vector=custom_fdet
+            ),
+            device=device,
+            dtype=torch.float32
+        )
+    
+        # Verify pix0 matches C expectation (override should be IGNORED)
+        pix0_delta = torch.abs(det_with_custom.pix0_vector - expected_pix0_with_custom_vectors)
+        max_error = torch.max(pix0_delta).item()
+    
+        # CLI-FLAGS-003 Phase H4c: Tolerance tightened to 5e-5 m (50 μm) after H4a beam-centre
+        # recomputation implementation. Expected values updated to fresh C trace from phase_h.
+        # The post-rotation newvector logic now correctly updates Fbeam/Sbeam and distance_corrected.
+        assert max_error <= 5e-5, \
+            f"CASE 1 FAILED: With custom vectors, pix0_override should be IGNORED\n" \
+            f"pix0 delta exceeds 5e-5 m threshold: max_error={max_error:.6e} m\n" \
+            f"Expected (C trace): {expected_pix0_with_custom_vectors.cpu().numpy()}\n" \
+            f"Actual (PyTorch):   {det_with_custom.pix0_vector.cpu().numpy()}\n" \
+            f"Delta (per component): {pix0_delta.cpu().numpy()}"
+    
+        # ==========================================
+        # CASE 2: WITHOUT custom vectors → override should be applied
+        # ==========================================
+        # Note: This case is harder to verify against C because we don't have a C trace
+        # for this scenario. We'll just verify that the override is actually used.
+>       config_without_custom = run_parse([
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-distance', '100',  # mm
+            '-pixel', '0.1',      # mm
+            '-detpixels', '512',
+            '-pix0_vector_mm', str(pix0_override_mm[0]), str(pix0_override_mm[1]), str(pix0_override_mm[2])
+        ])
+
+tests/test_cli_flags.py:533: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_cli_flags.py:28: in run_parse
+    return parse_and_validate_args(parsed_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat=None, cell=[100.0, 100.0, 100.0, 90.0, 90.0, 90.0], img=None, mask=None, sourcefile=None, stol...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F > 0")
+            print("Usage: nanoBragg -hkl <file> -mat <file> [options...]")
+>           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit
+----------------------------- Captured stdout call -----------------------------
+Error: Need -hkl file, Fdump.bin, or -default_F > 0
+Usage: nanoBragg -hkl <file> -mat <file> [options...]
+=============================== warnings summary ===============================
+tests/test_at_src_001_simple.py::test_sourcefile_parsing
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001_simple.py:71: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 6.200000e-10 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_m0/20251011T152004Z/chunks/chunk_10/pytest.xml -
+============================= slowest 5 durations ==============================
+24.16s call     tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_filtering_reduces_intensity
+18.81s call     tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_zero_has_no_effect
+18.35s call     tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_very_strict_removes_most_intensity
+8.36s call     tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling
+8.35s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients
+=========================== short test summary info ============================
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_millimeter_alias
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_dual_pix0_flag_rejection
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0]
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1]
+FAILED tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2]
+FAILED tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_suppresses_noise_output
+FAILED tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_noisefile_without_nonoise
+FAILED tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_preserves_seed
+FAILED tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_without_noisefile
+FAILED tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_does_not_alter_beam_vector
+FAILED tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_triggers_custom_convention
+FAILED tests/test_cli_flags.py::TestCLIIntegrationSanity::test_roi_unaffected_by_new_flags
+FAILED tests/test_cli_flags.py::TestCLIIntegrationSanity::test_convention_preserved_without_pix0
+FAILED tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu]
+======= 16 failed, 50 passed, 10 skipped, 1 warning in 102.74s (0:01:42) =======

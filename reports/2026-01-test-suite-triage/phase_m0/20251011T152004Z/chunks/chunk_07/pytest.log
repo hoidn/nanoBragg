@@ -1,0 +1,144 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 63 items
+
+tests/test_at_cli_005.py::test_cli_roi_basic PASSED                      [  1%]
+tests/test_at_cli_005.py::test_cli_roi_with_noise PASSED                 [  3%]
+tests/test_at_cli_005.py::test_cli_roi_edge_cases PASSED                 [  4%]
+tests/test_at_cli_005.py::test_cli_roi_different_conventions PASSED      [  6%]
+tests/test_at_geo_004.py::test_twotheta_axis_defaults PASSED             [  7%]
+tests/test_at_geo_004.py::test_twotheta_axis_override PASSED             [  9%]
+tests/test_at_geo_004.py::test_twotheta_rotation_applied PASSED          [ 11%]
+tests/test_at_geo_004.py::test_twotheta_value_preserved PASSED           [ 12%]
+tests/test_at_geo_004.py::test_mosflm_twotheta_rotation PASSED           [ 14%]
+tests/test_at_geo_004.py::test_dials_twotheta_rotation PASSED            [ 15%]
+tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation FAILED [ 17%]
+tests/test_at_parallel_003.py::TestATParallel003::test_peak_position_at_offset_beam_centers PASSED [ 19%]
+tests/test_at_parallel_003.py::TestATParallel003::test_offset_ratio_preservation PASSED [ 20%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed PASSED [ 22%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds PASSED [ 23%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs PASSED [ 25%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_c_pytorch_equivalence SKIPPED [ 26%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_platform_fingerprint PASSED [ 28%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 PASSED [ 30%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism PASSED [ 31%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_c_pytorch_equivalence SKIPPED [ 34%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_lcg_compatibility PASSED [ 36%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism PASSED [ 38%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip PASSED [ 39%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_torch_compile_speedup PASSED [ 41%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_hot_function_compilation PASSED [ 42%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_compilation_amortization PASSED [ 44%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_gpu_kernel_compilation SKIPPED [ 46%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_dtype_optimization_impact PASSED [ 47%]
+tests/test_at_sam_003.py::test_dmin_culling_basic PASSED                 [ 49%]
+tests/test_at_sam_003.py::test_dmin_culling_exact_threshold PASSED       [ 50%]
+tests/test_at_sam_003.py::test_dmin_zero_no_culling PASSED               [ 52%]
+tests/test_at_str_004.py::TestAT_STR_004::test_sparse_hkl_loading PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_missing_reflection_uses_default_f PASSED [ 55%]
+tests/test_at_str_004.py::TestAT_STR_004::test_intensity_ratios_with_sparse_hkl PASSED [ 57%]
+tests/test_at_str_004.py::TestAT_STR_004::test_fallback_with_no_hkl_uses_default_f PASSED [ 58%]
+tests/test_at_str_004.py::TestAT_STR_004::test_fdump_preserves_sparse_behavior PASSED [ 60%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_mosflm_convention PASSED [ 61%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_xds_convention PASSED [ 63%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_single_axis_rotations PASSED [ 65%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_combined_rotations PASSED [ 66%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_twotheta_rotation PASSED [ 68%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_all_rotations_combined PASSED [ 69%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_tensor_rotation_parameters PASSED [ 71%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_finds_repo_root PASSED [ 73%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_loads_yaml PASSED [ 74%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_yaml_structure_validation PASSED [ 76%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_missing_yaml_file PASSED [ 77%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_invalid_yaml PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_real_repo_linting PASSED [ 80%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_spec_ats PASSED [ 82%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_yaml_ats PASSED [ 84%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_scalar PASSED [ 85%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_tensor PASSED [ 87%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_gradient PASSED [ 88%]
+tests/test_units.py::TestUnitConversions::test_meters_to_angstroms_scalar PASSED [ 90%]
+tests/test_units.py::TestUnitConversions::test_meters_to_angstroms_tensor PASSED [ 92%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_scalar PASSED [ 93%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_tensor PASSED [ 95%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_gradient PASSED [ 96%]
+tests/test_units.py::TestUnitConversions::test_inverse_conversions PASSED [ 98%]
+tests/test_units.py::TestUnitConversions::test_batch_tensor_conversions PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestATParallel003.test_detector_offset_preservation ______________
+
+self = <tests.test_at_parallel_003.TestATParallel003 object at 0x729c57ccc2d0>
+
+    def test_detector_offset_preservation(self):
+        """Test that beam centers preserve offset ratios across detector sizes.
+    
+        AT-PARALLEL-003: Test beam centers (20,20), (30,40), (45,25), (60,60)mm
+        with 256x256, 512x512, 1024x1024 detectors.
+        Peak SHALL appear at beam_center_mm / pixel_size_mm ±1 pixel.
+        Offset ratios preserved ±2%.
+        """
+        # Test configurations
+        beam_centers_mm = [
+            (20.0, 20.0),
+            (30.0, 40.0),
+            (45.0, 25.0),
+            (60.0, 60.0)
+        ]
+        detector_sizes = [256, 512, 1024]
+        pixel_size_mm = 0.1
+    
+        for beam_s_mm, beam_f_mm in beam_centers_mm:
+            for detector_size in detector_sizes:
+                # Create detector config with specified beam center
+                detector_config = DetectorConfig(
+                    detector_convention=DetectorConvention.MOSFLM,
+                    distance_mm=100.0,
+                    pixel_size_mm=pixel_size_mm,
+                    spixels=detector_size,
+                    fpixels=detector_size,
+                    beam_center_s=beam_s_mm,
+                    beam_center_f=beam_f_mm,
+                )
+    
+                # Verify beam centers are preserved in mm
+                assert abs(detector_config.beam_center_s - beam_s_mm) < 0.001, \
+                    f"Beam center S not preserved: {detector_config.beam_center_s} vs {beam_s_mm}"
+                assert abs(detector_config.beam_center_f - beam_f_mm) < 0.001, \
+                    f"Beam center F not preserved: {detector_config.beam_center_f} vs {beam_f_mm}"
+    
+                # Create detector and check pixel coordinates
+                detector = Detector(detector_config)
+    
+                # Expected beam center in pixels
+                # When beam centers are explicitly provided, they are used as-is (no +0.5 offset)
+                # The MOSFLM +0.5 offset is ONLY for auto-calculated defaults
+                expected_s_pixels = beam_s_mm / pixel_size_mm
+                expected_f_pixels = beam_f_mm / pixel_size_mm
+    
+                # Verify beam centers in pixels
+>               assert abs(detector.beam_center_s.item() - expected_s_pixels) < 0.01, \
+                    f"Beam center S pixels incorrect for {detector_size}x{detector_size}"
+E               AssertionError: Beam center S pixels incorrect for 256x256
+E               assert 0.5 < 0.01
+E                +  where 0.5 = abs((200.5 - 200.0))
+E                +    where 200.5 = <built-in method item of Tensor object at 0x729c038f30c0>()
+E                +      where <built-in method item of Tensor object at 0x729c038f30c0> = tensor(200.5000).item
+E                +        where tensor(200.5000) = <src.nanobrag_torch.models.detector.Detector object at 0x729c0374e690>.beam_center_s
+
+tests/test_at_parallel_003.py:70: AssertionError
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_m0/20251011T152004Z/chunks/chunk_07/pytest.xml -
+============================= slowest 5 durations ==============================
+5.93s call     tests/test_at_parallel_003.py::TestATParallel003::test_peak_position_at_offset_beam_centers
+2.58s call     tests/test_at_cli_005.py::test_cli_roi_edge_cases
+2.51s call     tests/test_at_cli_005.py::test_cli_roi_different_conventions
+2.48s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs
+1.57s call     tests/test_at_cli_005.py::test_cli_roi_basic
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+=================== 1 failed, 59 passed, 3 skipped in 23.96s ===================

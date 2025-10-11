@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="9" skipped="13" tests="72" time="136.647" timestamp="2025-10-11T08:26:29.436354-07:00" hostname="ollie-System-Product-Name"><testcase classname="tests.test_at_cli_004" name="test_header_precedence_img_then_mask" time="20.236" /><testcase classname="tests.test_at_cli_004" name="test_mask_zeros_are_skipped" time="14.153" /><testcase classname="tests.test_at_cli_004" name="test_mask_beam_center_y_flip" time="20.709" /><testcase classname="tests.test_at_cli_004" name="test_conflicting_detector_size" time="8.795" /><testcase classname="tests.test_at_cli_004" name="test_img_only_no_mask" time="14.377" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_r_factor_calculation" time="0.002" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_distance_update_with_close_distance" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_preservation_beam_pivot" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_preservation_sample_pivot" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_no_rotations_r_factor_equals_one" time="0.001" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_with_various_rotations[DetectorPivot.BEAM]" time="0.003" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_beam_center_with_various_rotations[DetectorPivot.SAMPLE]" time="0.005" /><testcase classname="tests.test_at_geo_003.TestATGEO003RFactorAndBeamCenter" name="test_gradients_flow_through_r_factor" time="0.002" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_beam_center_scales_with_pixel_size" time="0.002"><failure message="AssertionError: Beam center S (pixels) mismatch for pixel_size=0.05mm: 128.5 vs 128.0&#10;assert 0.5 &lt; 0.1&#10; +  where 0.5 = abs((128.5 - 128.0))&#10; +    where 128.5 = &lt;built-in method item of Tensor object at 0x73a8ce1ba800&gt;()&#10; +      where &lt;built-in method item of Tensor object at 0x73a8ce1ba800&gt; = tensor(128.5000).item&#10; +        where tensor(128.5000) = &lt;src.nanobrag_torch.models.detector.Detector object at 0x73a8ce389450&gt;.beam_center_s">self = &lt;tests.test_at_parallel_002.TestATParallel002 object at 0x73a926884910&gt;
+
+    def test_beam_center_scales_with_pixel_size(self):
+        """Test that beam center in pixels scales inversely with pixel size.
+    
+        AT-PARALLEL-002: With fixed 256x256 detector and beam center at 25.6mm,
+        the beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels.
+        """
+        pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
+    
+        for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+    
+            # Create detector config with fixed size and varying pixel size
+            detector_config = DetectorConfig(
+                detector_convention=DetectorConvention.MOSFLM,
+                distance_mm=100.0,
+                pixel_size_mm=pixel_size,
+                spixels=256,
+                fpixels=256,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
+            )
+    
+            # Verify that the beam center in mm is preserved
+            assert abs(detector_config.beam_center_s - beam_center_mm) &lt; 0.001, \
+                f"Beam center S (mm) not preserved for pixel_size={pixel_size}mm"
+            assert abs(detector_config.beam_center_f - beam_center_mm) &lt; 0.001, \
+                f"Beam center F (mm) not preserved for pixel_size={pixel_size}mm"
+    
+            # Create detector to verify pixel coordinates
+            detector = Detector(detector_config)
+    
+            # Calculate expected beam center in pixels
+            # When user explicitly provides beam_center in mm, it's converted directly to pixels
+            # (MOSFLM +0.5 offset is only applied when beam_center is auto-calculated in DetectorConfig)
+            expected_beam_pixel = beam_center_mm / pixel_size
+    
+            # The detector internally stores beam centers in pixels
+            # Verify the beam center in pixels scales inversely with pixel size
+&gt;           assert abs(detector.beam_center_s.item() - expected_beam_pixel) &lt; 0.1, \
+                f"Beam center S (pixels) mismatch for pixel_size={pixel_size}mm: {detector.beam_center_s.item()} vs {expected_beam_pixel}"
+E           AssertionError: Beam center S (pixels) mismatch for pixel_size=0.05mm: 128.5 vs 128.0
+E           assert 0.5 &lt; 0.1
+E            +  where 0.5 = abs((128.5 - 128.0))
+E            +    where 128.5 = &lt;built-in method item of Tensor object at 0x73a8ce1ba800&gt;()
+E            +      where &lt;built-in method item of Tensor object at 0x73a8ce1ba800&gt; = tensor(128.5000).item
+E            +        where tensor(128.5000) = &lt;src.nanobrag_torch.models.detector.Detector object at 0x73a8ce389450&gt;.beam_center_s
+
+tests/test_at_parallel_002.py:71: AssertionError</failure></testcase><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_peak_position_scales_inversely_with_pixel_size" time="2.234" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_pattern_correlation_across_pixel_sizes" time="0.929" /><testcase classname="tests.test_at_parallel_002.TestATParallel002" name="test_beam_center_parameter_consistency" time="0.002"><failure message="AssertionError: Detector beam_center_s incorrect for pixel_size=0.05mm&#10;assert 0.5 &lt; 0.01&#10; +  where 0.5 = abs((128.5 - 128.0))&#10; +    where 128.5 = &lt;built-in method item of Tensor object at 0x73a8c55f7660&gt;()&#10; +      where &lt;built-in method item of Tensor object at 0x73a8c55f7660&gt; = tensor(128.5000).item&#10; +        where tensor(128.5000) = &lt;src.nanobrag_torch.models.detector.Detector object at 0x73a8c61d7c50&gt;.beam_center_s">self = &lt;tests.test_at_parallel_002.TestATParallel002 object at 0x73a92685ce90&gt;
+
+    def test_beam_center_parameter_consistency(self):
+        """Test that beam center parameters are handled consistently across pixel sizes.
+    
+        Additional test to verify parameter handling.
+        """
+        pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
+    
+        for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+    
+            # Test that setting beam center in mm is properly converted
+            detector_config = DetectorConfig(
+                detector_convention=DetectorConvention.MOSFLM,
+                distance_mm=100.0,
+                pixel_size_mm=pixel_size,
+                spixels=256,
+                fpixels=256,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
+            )
+    
+            detector = Detector(detector_config)
+    
+            # Verify the detector stores beam centers correctly in pixels
+            # When user explicitly provides beam_center, it's converted directly without offset
+            expected_beam_pixel = beam_center_mm / pixel_size
+    
+&gt;           assert abs(detector.beam_center_s.item() - expected_beam_pixel) &lt; 0.01, \
+                f"Detector beam_center_s incorrect for pixel_size={pixel_size}mm"
+E           AssertionError: Detector beam_center_s incorrect for pixel_size=0.05mm
+E           assert 0.5 &lt; 0.01
+E            +  where 0.5 = abs((128.5 - 128.0))
+E            +    where 128.5 = &lt;built-in method item of Tensor object at 0x73a8c55f7660&gt;()
+E            +      where &lt;built-in method item of Tensor object at 0x73a8c55f7660&gt; = tensor(128.5000).item
+E            +        where tensor(128.5000) = &lt;src.nanobrag_torch.models.detector.Detector object at 0x73a8c61d7c50&gt;.beam_center_s
+
+tests/test_at_parallel_002.py:269: AssertionError</failure></testcase><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_simple_cubic_correlation" time="0.931" /><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_triclinic_P1_correlation" time="0.645" /><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_cubic_tilted_detector_correlation" time="0.235" /><testcase classname="tests.test_at_parallel_012.TestATParallel012ReferencePatternCorrelation" name="test_high_resolution_variant" time="2.612" /><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles0-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles0-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles1-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles1-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles2-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles2-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles3-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles3-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles4-cubic-cell_params0]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_explicit_misset_equivalence[misset_angles4-triclinic-cell_params1]" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:194: C binary not available</skipped></testcase><testcase classname="tests.test_at_parallel_023.TestAT_PARALLEL_023_MissetAnglesEquivalence" name="test_misset_changes_pattern" time="0.000"><skipped type="pytest.skip" message="C binary not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_023.py:293: C binary not available</skipped></testcase><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_sincg_throughput" time="3.703"><failure message="AssertionError: sincg throughput 5.8 M/s below 10 M/s threshold&#10;assert 5.790896317621796 &gt;= 10.0">self = &lt;tests.test_at_perf_004.TestATPERF004HotPathOptimization object at 0x73a8ce38c7d0&gt;
+
+    def test_sincg_throughput(self):
+        """Test sincg function throughput."""
+        print("\n" + "="*60)
+        print("AT-PERF-004: sincg Function Throughput Test")
+        print("="*60)
+    
+        # Generate test data
+        n_points = 10_000_000  # 10M points
+        x_vals = torch.linspace(-10, 10, n_points)
+    
+        # Warm-up
+        N = torch.tensor(5)
+        _ = sincg(x_vals[:1000], N)
+    
+        # Measure sincg performance
+        start = time.perf_counter()
+        result = sincg(x_vals, N)
+        end = time.perf_counter()
+    
+        elapsed = end - start
+        throughput = n_points / elapsed / 1e6  # Million evaluations per second
+    
+        print(f"\nsincg performance:")
+        print(f"  Points evaluated: {n_points:,}")
+        print(f"  Time taken:       {elapsed:.3f}s")
+        print(f"  Throughput:       {throughput:.1f} M evals/s")
+    
+        # Spec requires ≥ 100M evals/s
+        # This is very aggressive for Python, so we'll use a more realistic target
+&gt;       assert throughput &gt;= 10.0, \
+            f"sincg throughput {throughput:.1f} M/s below 10 M/s threshold"
+E       AssertionError: sincg throughput 5.8 M/s below 10 M/s threshold
+E       assert 5.790896317621796 &gt;= 10.0
+
+tests/test_at_perf_004.py:99: AssertionError</failure></testcase><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_dot_product_throughput" time="0.024" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_profile_hot_paths" time="1.303" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_vectorization_efficiency" time="0.018" /><testcase classname="tests.test_at_perf_004.TestATPERF004HotPathOptimization" name="test_critical_operations_performance" time="0.131" /><testcase classname="tests.test_at_sam_002.TestAT_SAM_002_OversampleLastValue" name="test_oversample_omega_last_value_semantics" time="5.414" /><testcase classname="tests.test_at_sam_002.TestAT_SAM_002_OversampleLastValue" name="test_oversample_without_subpixel_flags" time="0.833" /><testcase classname="tests.test_at_sam_002.TestAT_SAM_002_OversampleLastValue" name="test_oversample_flag_precedence" time="4.423" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_square_shape_model" time="0.239" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_round_shape_model" time="1.481" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_gauss_shape_model" time="0.001"><failure message="AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'">self = &lt;tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels object at 0x73a8ce30aea0&gt;
+
+    def test_gauss_shape_model(self):
+        """Test GAUSS (Gaussian in reciprocal space) lattice shape model."""
+        # Configure for GAUSS shape
+        self.crystal_config.shape = CrystalShape.GAUSS
+        self.crystal_config.fudge = 1.0
+    
+        # Create simulator to test the full implementation
+&gt;       simulator = Simulator(
+            crystal=Crystal(self.crystal_config),
+            detector=None,  # Not needed for this test
+            crystal_config=self.crystal_config,
+            beam_config=self.beam_config,
+        )
+
+tests/test_at_str_003.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;nanobrag_torch.simulator.Simulator object at 0x73a8cb22d250&gt;
+crystal = &lt;nanobrag_torch.models.crystal.Crystal object at 0x73a8cc6abbd0&gt;
+detector = None
+crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0, cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0, misset_deg=(...'gauss'&gt;, fudge=1.0, sample_x=1.0000000000000001e-07, sample_y=1.0000000000000001e-07, sample_z=1.0000000000000001e-07)
+beam_config = BeamConfig(wavelength_A=1.0, N_source_points=1, source_distance_mm=10000.0, source_size_mm=0.0, source_directions=None...=(0.0, 0.0, 1.0), flux=0.0, exposure=0.0, beamsize_mm=0.0, fluence=1.2593201528622709e+29, dmin=0.0, water_size_um=0.0)
+device = None, dtype = torch.float32, debug_config = None
+
+    def __init__(
+        self,
+        crystal: Crystal,
+        detector: Detector,
+        crystal_config: Optional[CrystalConfig] = None,
+        beam_config: Optional[BeamConfig] = None,
+        device=None,
+        dtype=torch.float32,
+        debug_config: Optional[dict] = None,
+    ):
+        """
+        Initialize simulator with crystal, detector, and configurations.
+    
+        Args:
+            crystal: Crystal object containing unit cell and structure factors
+            detector: Detector object with geometry parameters
+            crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
+            beam_config: Beam configuration (optional, for future use)
+            device: PyTorch device (cpu/cuda)
+            dtype: PyTorch data type
+            debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
+        """
+        self.crystal = crystal
+        self.detector = detector
+        # If crystal_config is provided, update only the rotation-related parameters
+        # This preserves essential parameters like cell dimensions and default_F
+        if crystal_config is not None:
+            # Update only the rotation-related fields that are explicitly set
+            # This preserves the crystal's essential parameters while allowing rotation updates
+            if hasattr(crystal_config, 'phi_start_deg'):
+                self.crystal.config.phi_start_deg = crystal_config.phi_start_deg
+            if hasattr(crystal_config, 'osc_range_deg'):
+                self.crystal.config.osc_range_deg = crystal_config.osc_range_deg
+            if hasattr(crystal_config, 'phi_steps'):
+                self.crystal.config.phi_steps = crystal_config.phi_steps
+            if hasattr(crystal_config, 'mosaic_spread_deg'):
+                self.crystal.config.mosaic_spread_deg = crystal_config.mosaic_spread_deg
+            if hasattr(crystal_config, 'mosaic_domains'):
+                self.crystal.config.mosaic_domains = crystal_config.mosaic_domains
+            if hasattr(crystal_config, 'mosaic_seed'):
+                self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
+            if hasattr(crystal_config, 'spindle_axis'):
+                self.crystal.config.spindle_axis = crystal_config.spindle_axis
+        # Use the provided beam_config, or Crystal's beam_config, or default
+        if beam_config is not None:
+            self.beam_config = beam_config
+        elif hasattr(crystal, 'beam_config') and crystal.beam_config is not None:
+            self.beam_config = crystal.beam_config
+        else:
+            self.beam_config = BeamConfig()
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
+        self.dtype = dtype
+    
+        # PERF-PYTORCH-004 Attempt #14: Ensure detector is on the same device/dtype as simulator
+        # This prevents device mismatch errors when detector tensors (beam_vector, pixel_coords)
+        # interact with simulator tensors (wavelength, incident_beam_direction) during compilation
+        if self.detector is not None:
+            self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+    
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
+    
+        # Phase CLI-FLAGS-003 M0a: Enable trace instrumentation on Crystal when trace_pixel is active
+        # This guards _last_tricubic_neighborhood population to prevent unconditional debug payload retention
+        if self.trace_pixel is not None:
+            self.crystal._enable_trace = True
+    
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
+        else:
+            # If no detector provided, default to MOSFLM beam direction
+            self.incident_beam_direction = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
+        # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+    
+        # Physical constants (from nanoBragg.c ~line 240)
+        # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
+        self.r_e_sqr = torch.tensor(
+            7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
+        )
+        # Use fluence from beam config (AT-FLU-001)
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Polarization setup from beam config
+        # PERF-PYTORCH-006: Store as tensor with correct dtype
+        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.kahn_factor = torch.tensor(kahn_value, device=self.device, dtype=self.dtype)
+        self.polarization_axis = torch.tensor(
+            self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
+        )
+    
+        # PERF-PYTORCH-004 P1.2 + P3.0: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        # P3.0: Seed fallback tensors (equal weights, primary wavelength) when omitted before device cast
+        _has_sources = (self.beam_config.source_directions is not None and
+                       len(self.beam_config.source_directions) &gt; 0)
+        if _has_sources:
+            self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+    
+            # P3.0: Default source_wavelengths to primary wavelength if not provided (AT-SRC-001)
+            if self.beam_config.source_wavelengths is not None:
+                self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            else:
+                # Use primary wavelength for all sources
+                primary_wavelength_m = self.beam_config.wavelength_A * 1e-10
+                n_sources = len(self.beam_config.source_directions)
+                self._source_wavelengths = torch.full((n_sources,), primary_wavelength_m, device=self.device, dtype=self.dtype)
+    
+            self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+    
+            # P3.0: Default source_weights to equal weights if not provided
+            if self.beam_config.source_weights is not None:
+                self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
+            else:
+                # Default to equal weights if not provided
+                self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+        else:
+            self._source_directions = None
+            self._source_wavelengths_A = None
+            self._source_weights = None
+    
+        # PERF-PYTORCH-004 P3.4: Cache frequently-accessed tensors to reduce per-run allocations
+        # Pre-convert pixel coordinates to correct device/dtype once
+&gt;       self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'
+
+src/nanobrag_torch/simulator.py:569: AttributeError</failure></testcase><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_tophat_shape_model" time="0.001" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_shape_model_comparison" time="0.001"><failure message="AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'">self = &lt;tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels object at 0x73a8ce39f0b0&gt;
+
+    def test_shape_model_comparison(self):
+        """Compare all four shape models at the same reflection."""
+        # Test point slightly off a Bragg peak
+        h_frac = 0.1  # Fractional Miller index offset
+        k_frac = 0.1
+        l_frac = 0.1
+    
+        results = {}
+    
+        for shape in [CrystalShape.SQUARE, CrystalShape.ROUND,
+                     CrystalShape.GAUSS, CrystalShape.TOPHAT]:
+            self.crystal_config.shape = shape
+    
+            # Create simulator with this shape
+&gt;           simulator = Simulator(
+                crystal=Crystal(self.crystal_config),
+                detector=None,
+                crystal_config=self.crystal_config,
+                beam_config=self.beam_config,
+            )
+
+tests/test_at_str_003.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;nanobrag_torch.simulator.Simulator object at 0x73a8ca4db0b0&gt;
+crystal = &lt;nanobrag_torch.models.crystal.Crystal object at 0x73a8cb27f750&gt;
+detector = None
+crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0, cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0, misset_deg=(...square'&gt;, fudge=1.0, sample_x=1.0000000000000001e-07, sample_y=1.0000000000000001e-07, sample_z=1.0000000000000001e-07)
+beam_config = BeamConfig(wavelength_A=1.0, N_source_points=1, source_distance_mm=10000.0, source_size_mm=0.0, source_directions=None...=(0.0, 0.0, 1.0), flux=0.0, exposure=0.0, beamsize_mm=0.0, fluence=1.2593201528622709e+29, dmin=0.0, water_size_um=0.0)
+device = None, dtype = torch.float32, debug_config = None
+
+    def __init__(
+        self,
+        crystal: Crystal,
+        detector: Detector,
+        crystal_config: Optional[CrystalConfig] = None,
+        beam_config: Optional[BeamConfig] = None,
+        device=None,
+        dtype=torch.float32,
+        debug_config: Optional[dict] = None,
+    ):
+        """
+        Initialize simulator with crystal, detector, and configurations.
+    
+        Args:
+            crystal: Crystal object containing unit cell and structure factors
+            detector: Detector object with geometry parameters
+            crystal_config: Configuration for crystal rotation parameters (phi, mosaic)
+            beam_config: Beam configuration (optional, for future use)
+            device: PyTorch device (cpu/cuda)
+            dtype: PyTorch data type
+            debug_config: Debug configuration with printout, printout_pixel, trace_pixel options
+        """
+        self.crystal = crystal
+        self.detector = detector
+        # If crystal_config is provided, update only the rotation-related parameters
+        # This preserves essential parameters like cell dimensions and default_F
+        if crystal_config is not None:
+            # Update only the rotation-related fields that are explicitly set
+            # This preserves the crystal's essential parameters while allowing rotation updates
+            if hasattr(crystal_config, 'phi_start_deg'):
+                self.crystal.config.phi_start_deg = crystal_config.phi_start_deg
+            if hasattr(crystal_config, 'osc_range_deg'):
+                self.crystal.config.osc_range_deg = crystal_config.osc_range_deg
+            if hasattr(crystal_config, 'phi_steps'):
+                self.crystal.config.phi_steps = crystal_config.phi_steps
+            if hasattr(crystal_config, 'mosaic_spread_deg'):
+                self.crystal.config.mosaic_spread_deg = crystal_config.mosaic_spread_deg
+            if hasattr(crystal_config, 'mosaic_domains'):
+                self.crystal.config.mosaic_domains = crystal_config.mosaic_domains
+            if hasattr(crystal_config, 'mosaic_seed'):
+                self.crystal.config.mosaic_seed = crystal_config.mosaic_seed
+            if hasattr(crystal_config, 'spindle_axis'):
+                self.crystal.config.spindle_axis = crystal_config.spindle_axis
+        # Use the provided beam_config, or Crystal's beam_config, or default
+        if beam_config is not None:
+            self.beam_config = beam_config
+        elif hasattr(crystal, 'beam_config') and crystal.beam_config is not None:
+            self.beam_config = crystal.beam_config
+        else:
+            self.beam_config = BeamConfig()
+        # Normalize device to ensure consistency
+        if device is not None:
+            # Create a dummy tensor on the device to get the actual device with index
+            temp = torch.zeros(1, device=device)
+            self.device = temp.device
+        else:
+            self.device = torch.device("cpu")
+        self.dtype = dtype
+    
+        # PERF-PYTORCH-004 Attempt #14: Ensure detector is on the same device/dtype as simulator
+        # This prevents device mismatch errors when detector tensors (beam_vector, pixel_coords)
+        # interact with simulator tensors (wavelength, incident_beam_direction) during compilation
+        if self.detector is not None:
+            self.detector = self.detector.to(device=self.device, dtype=self.dtype)
+    
+        # Store debug configuration
+        self.debug_config = debug_config if debug_config is not None else {}
+        self.printout = self.debug_config.get('printout', False)
+        self.printout_pixel = self.debug_config.get('printout_pixel', None)  # [fast, slow]
+        self.trace_pixel = self.debug_config.get('trace_pixel', None)  # [slow, fast]
+    
+        # Phase CLI-FLAGS-003 M0a: Enable trace instrumentation on Crystal when trace_pixel is active
+        # This guards _last_tricubic_neighborhood population to prevent unconditional debug payload retention
+        if self.trace_pixel is not None:
+            self.crystal._enable_trace = True
+    
+        # Set incident beam direction from detector.beam_vector
+        # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
+        # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        if self.detector is not None:
+            # Use detector's beam_vector property which handles:
+            # - CUSTOM convention with user-supplied custom_beam_vector
+            # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
+            # The detector normalizes and returns the vector with correct device/dtype
+            self.incident_beam_direction = self.detector.beam_vector.clone()
+        else:
+            # If no detector provided, default to MOSFLM beam direction
+            self.incident_beam_direction = torch.tensor(
+                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+            )
+        # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
+        self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
+    
+        # Physical constants (from nanoBragg.c ~line 240)
+        # PERF-PYTORCH-006: Store as tensors with correct dtype to avoid implicit float64 upcasting
+        self.r_e_sqr = torch.tensor(
+            7.94079248018965e-30, device=self.device, dtype=self.dtype  # classical electron radius squared (meters squared)
+        )
+        # Use fluence from beam config (AT-FLU-001)
+        self.fluence = torch.tensor(self.beam_config.fluence, device=self.device, dtype=self.dtype)
+        # Polarization setup from beam config
+        # PERF-PYTORCH-006: Store as tensor with correct dtype
+        kahn_value = self.beam_config.polarization_factor if not self.beam_config.nopolar else 0.0
+        self.kahn_factor = torch.tensor(kahn_value, device=self.device, dtype=self.dtype)
+        self.polarization_axis = torch.tensor(
+            self.beam_config.polarization_axis, device=self.device, dtype=self.dtype
+        )
+    
+        # PERF-PYTORCH-004 P1.2 + P3.0: Pre-normalize source tensors to avoid repeated .to() calls in run()
+        # Move source direction/wavelength/weight tensors to correct device/dtype once during init
+        # P3.0: Seed fallback tensors (equal weights, primary wavelength) when omitted before device cast
+        _has_sources = (self.beam_config.source_directions is not None and
+                       len(self.beam_config.source_directions) &gt; 0)
+        if _has_sources:
+            self._source_directions = self.beam_config.source_directions.to(device=self.device, dtype=self.dtype)
+    
+            # P3.0: Default source_wavelengths to primary wavelength if not provided (AT-SRC-001)
+            if self.beam_config.source_wavelengths is not None:
+                self._source_wavelengths = self.beam_config.source_wavelengths.to(device=self.device, dtype=self.dtype)  # meters
+            else:
+                # Use primary wavelength for all sources
+                primary_wavelength_m = self.beam_config.wavelength_A * 1e-10
+                n_sources = len(self.beam_config.source_directions)
+                self._source_wavelengths = torch.full((n_sources,), primary_wavelength_m, device=self.device, dtype=self.dtype)
+    
+            self._source_wavelengths_A = self._source_wavelengths * 1e10  # Convert to Angstroms once
+    
+            # P3.0: Default source_weights to equal weights if not provided
+            if self.beam_config.source_weights is not None:
+                self._source_weights = self.beam_config.source_weights.to(device=self.device, dtype=self.dtype)
+            else:
+                # Default to equal weights if not provided
+                self._source_weights = torch.ones(len(self.beam_config.source_directions), device=self.device, dtype=self.dtype)
+        else:
+            self._source_directions = None
+            self._source_wavelengths_A = None
+            self._source_weights = None
+    
+        # PERF-PYTORCH-004 P3.4: Cache frequently-accessed tensors to reduce per-run allocations
+        # Pre-convert pixel coordinates to correct device/dtype once
+&gt;       self._cached_pixel_coords_meters = self.detector.get_pixel_coords().to(device=self.device, dtype=self.dtype)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'get_pixel_coords'
+
+src/nanobrag_torch/simulator.py:569: AttributeError</failure></testcase><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_fudge_parameter_scaling" time="0.081" /><testcase classname="tests.test_at_str_003.TestAT_STR_003_LatticeShapeModels" name="test_shape_models_at_bragg_peak" time="0.001" /><testcase classname="tests.test_debug_trace.TestDebugTraceFeatures" name="test_printout_flag" time="5.650"><failure message="AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'&#10;  Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  Traceback (most recent call last):&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main&#10;      intensity = simulator.run()&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run&#10;      I_before_normalization_pre_polar  # Pre-polar accumulated intensity&#10;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;  UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmplprw2qdc.bin', '-printout'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n\nDebug output enabled for simulation\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main\n    intensity = simulator.run()\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode">self = &lt;tests.test_debug_trace.TestDebugTraceFeatures object at 0x73a8ce38ce10&gt;
+minimal_args = ['-cell', '100', '100', '100', '90', '90', ...]
+
+    def test_printout_flag(self, minimal_args):
+        """Test that -printout produces verbose debug output."""
+        with tempfile.NamedTemporaryFile(suffix='.bin', delete=False) as f:
+            output_file = f.name
+    
+        try:
+            # Run with -printout flag
+            cmd = ['python', '-m', 'nanobrag_torch'] + minimal_args + [
+                '-floatfile', output_file,
+                '-printout'
+            ]
+    
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'KMP_DUPLICATE_LIB_OK': 'TRUE'}
+            )
+    
+            # Check that the command succeeded
+&gt;           assert result.returncode == 0, f"Command failed: {result.stderr}"
+E           AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'
+E             Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             Traceback (most recent call last):
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main
+E                 intensity = simulator.run()
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run
+E                 I_before_normalization_pre_polar  # Pre-polar accumulated intensity
+E                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E             UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmplprw2qdc.bin', '-printout'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n\nDebug output enabled for simulation\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main\n    intensity = simulator.run()\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode
+
+tests/test_debug_trace.py:50: AssertionError</failure></testcase><testcase classname="tests.test_debug_trace.TestDebugTraceFeatures" name="test_printout_pixel_flag" time="5.588" /><testcase classname="tests.test_debug_trace.TestDebugTraceFeatures" name="test_trace_pixel_flag" time="6.841"><failure message="AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'&#10;  Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  Traceback (most recent call last):&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main&#10;      intensity = simulator.run()&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run&#10;      I_before_normalization_pre_polar  # Pre-polar accumulated intensity&#10;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;  UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmpjdfvs6bq.bin', '-trace_pixel', '32', '32'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n  Tracing pixel (slow=32, fast=32)\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main\n    intensity = simulator.run()\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode">self = &lt;tests.test_debug_trace.TestDebugTraceFeatures object at 0x73a8ce30afd0&gt;
+minimal_args = ['-cell', '100', '100', '100', '90', '90', ...]
+
+    def test_trace_pixel_flag(self, minimal_args):
+        """Test that -trace_pixel produces detailed trace for specific pixel."""
+        with tempfile.NamedTemporaryFile(suffix='.bin', delete=False) as f:
+            output_file = f.name
+    
+        try:
+            # Run with -trace_pixel flag for pixel (32, 32) [slow, fast]
+            cmd = ['python', '-m', 'nanobrag_torch'] + minimal_args + [
+                '-floatfile', output_file,
+                '-trace_pixel', '32', '32'
+            ]
+    
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'KMP_DUPLICATE_LIB_OK': 'TRUE'}
+            )
+    
+            # Check that the command succeeded
+&gt;           assert result.returncode == 0, f"Command failed: {result.stderr}"
+E           AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'
+E             Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             Traceback (most recent call last):
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main
+E                 intensity = simulator.run()
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run
+E                 I_before_normalization_pre_polar  # Pre-polar accumulated intensity
+E                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E             UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmpjdfvs6bq.bin', '-trace_pixel', '32', '32'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n  Tracing pixel (slow=32, fast=32)\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main\n    intensity = simulator.run()\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode
+
+tests/test_debug_trace.py:121: AssertionError</failure></testcase><testcase classname="tests.test_debug_trace.TestDebugTraceFeatures" name="test_combined_debug_flags" time="5.114"><failure message="AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'&#10;  Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  Traceback (most recent call last):&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main&#10;      intensity = simulator.run()&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run&#10;      I_before_normalization_pre_polar  # Pre-polar accumulated intensity&#10;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;  UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmpkusjlcpp.bin', '-printout', '-trace_pixel', '30', '30'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n\nDebug output enabled for simulation\n  Tracing pixel (slow=30, fast=30)\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main\n    intensity = simulator.run()\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode">self = &lt;tests.test_debug_trace.TestDebugTraceFeatures object at 0x73a8ce30b100&gt;
+minimal_args = ['-cell', '100', '100', '100', '90', '90', ...]
+
+    def test_combined_debug_flags(self, minimal_args):
+        """Test that multiple debug flags can be used together."""
+        with tempfile.NamedTemporaryFile(suffix='.bin', delete=False) as f:
+            output_file = f.name
+    
+        try:
+            # Run with both -printout and -trace_pixel
+            cmd = ['python', '-m', 'nanobrag_torch'] + minimal_args + [
+                '-floatfile', output_file,
+                '-printout',
+                '-trace_pixel', '30', '30'
+            ]
+    
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'KMP_DUPLICATE_LIB_OK': 'TRUE'}
+            )
+    
+            # Check that the command succeeded
+&gt;           assert result.returncode == 0, f"Command failed: {result.stderr}"
+E           AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'
+E             Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             Traceback (most recent call last):
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main
+E                 intensity = simulator.run()
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run
+E                 I_before_normalization_pre_polar  # Pre-polar accumulated intensity
+E                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E             UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmpkusjlcpp.bin', '-printout', '-trace_pixel', '30', '30'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n\nDebug output enabled for simulation\n  Tracing pixel (slow=30, fast=30)\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main\n    intensity = simulator.run()\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode
+
+tests/test_debug_trace.py:160: AssertionError</failure></testcase><testcase classname="tests.test_debug_trace.TestDebugTraceFeatures" name="test_out_of_bounds_pixel" time="4.979"><failure message="AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'&#10;  Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  Traceback (most recent call last):&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main&#10;      intensity = simulator.run()&#10;    File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run&#10;      I_before_normalization_pre_polar  # Pre-polar accumulated intensity&#10;      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^&#10;  UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value&#10;  &#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmp75tjlngg.bin', '-trace_pixel', '100', '100'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n  Tracing pixel (slow=100, fast=100)\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py&quot;, line 1136, in main\n    intensity = simulator.run()\n  File &quot;/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py&quot;, line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode">self = &lt;tests.test_debug_trace.TestDebugTraceFeatures object at 0x73a8ce1cc3b0&gt;
+minimal_args = ['-cell', '100', '100', '100', '90', '90', ...]
+
+    def test_out_of_bounds_pixel(self, minimal_args):
+        """Test that out-of-bounds pixel indices are handled gracefully."""
+        with tempfile.NamedTemporaryFile(suffix='.bin', delete=False) as f:
+            output_file = f.name
+    
+        try:
+            # Run with out-of-bounds pixel (detector is 64x64)
+            cmd = ['python', '-m', 'nanobrag_torch'] + minimal_args + [
+                '-floatfile', output_file,
+                '-trace_pixel', '100', '100'  # Out of bounds
+            ]
+    
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env={**os.environ, 'KMP_DUPLICATE_LIB_OK': 'TRUE'}
+            )
+    
+            # Should still succeed (gracefully handle out of bounds)
+&gt;           assert result.returncode == 0, f"Command failed: {result.stderr}"
+E           AssertionError: Command failed: No CUDA runtime is found, using CUDA_HOME='/usr'
+E             Error: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             Traceback (most recent call last):
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main
+E                 intensity = simulator.run()
+E               File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run
+E                 I_before_normalization_pre_polar  # Pre-polar accumulated intensity
+E                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E             UnboundLocalError: cannot access local variable 'I_before_normalization_pre_polar' where it is not associated with a value
+E             
+E           assert 1 == 0
+E            +  where 1 = CompletedProcess(args=['python', '-m', 'nanobrag_torch', '-cell', '100', '100', '100', '90', '90', '90', '-default_F', '100', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-pixel', '0.1', '-floatfile', '/tmp/tmp75tjlngg.bin', '-trace_pixel', '100', '100'], returncode=1, stdout='Running simulation...\n  Detector: 64x64 pixels\n  Crystal: 100.0x100.0x100.0 Å\n  Wavelength: 1.00 Å\n  Device: cpu, Dtype: torch.float32\n  Tracing pixel (slow=100, fast=100)\nauto-selected 2-fold oversampling\n', stderr='No CUDA runtime is found, using CUDA_HOME=\'/usr\'\nError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\nTraceback (most recent call last):\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/__main__.py", line 1136, in main\n    intensity = simulator.run()\n  File "/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py", line 1254, in run\n    I_before_normalization_pre_polar  # Pre-polar accumulated intensity\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnboundLocalError: cannot access local variable \'I_before_normalization_pre_polar\' where it is not associated with a value\n').returncode
+
+tests/test_debug_trace.py:198: AssertionError</failure></testcase><testcase classname="tests.test_oversample_autoselect.TestOversampleAutoSelect" name="test_auto_select_formula" time="1.444" /><testcase classname="tests.test_oversample_autoselect.TestOversampleAutoSelect" name="test_different_crystal_sizes" time="0.034" /><testcase classname="tests.test_oversample_autoselect.TestOversampleAutoSelect" name="test_explicit_oversample_overrides_auto" time="0.016" /><testcase classname="tests.test_oversample_autoselect.TestOversampleAutoSelect" name="test_different_wavelengths" time="0.030" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicGather" name="test_vectorized_matches_scalar" time="0.010" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicGather" name="test_neighborhood_gathering_internals" time="0.005" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicGather" name="test_oob_warning_single_fire" time="0.002" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicGather" name="test_device_neutrality[cpu]" time="0.002" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicGather" name="test_device_neutrality[cuda]" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_tricubic_vectorized.py:316: CUDA not available</skipped></testcase><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polint_matches_scalar_batched" time="0.001" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polint_gradient_flow" time="0.004" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polin2_matches_scalar_batched" time="0.002" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polin2_gradient_flow" time="0.004" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polin3_matches_scalar_batched" time="0.005" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polin3_gradient_flow" time="0.015" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polin3_batch_shape_preserved" time="0.003" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polynomials_support_float64[dtype0]" time="0.001" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polynomials_support_float64[dtype1]" time="0.001" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polynomials_device_neutral[cpu]" time="0.003" /><testcase classname="tests.test_tricubic_vectorized.TestTricubicPoly" name="test_polynomials_device_neutral[cuda]" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_tricubic_vectorized.py:726: CUDA not available</skipped></testcase></testsuite></testsuites>

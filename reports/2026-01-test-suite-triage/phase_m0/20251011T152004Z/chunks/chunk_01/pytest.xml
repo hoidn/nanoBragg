@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="9" tests="71" time="84.583" timestamp="2025-10-11T08:21:18.496788-07:00" hostname="ollie-System-Product-Name"><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_absorption_disabled_when_zero[cpu]" time="3.668" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_capture_fraction_calculation[False-cpu]" time="0.003" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_capture_fraction_calculation[True-cpu]" time="0.002" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_last_value_vs_accumulation_semantics[cpu]" time="2.895" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_parallax_dependence[False-cpu]" time="2.434" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_parallax_dependence[True-cpu]" time="0.006" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_absorption_with_tilted_detector[False-cpu]" time="0.010" /><testcase classname="tests.test_at_abs_001.TestAT_ABS_001" name="test_absorption_with_tilted_detector[True-cpu]" time="0.010" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_missing_hkl_and_fdump_with_default_f_zero" time="3.969" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_missing_hkl_but_has_default_f" time="6.808" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_missing_cell_parameters" time="3.983" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_fdump_fallback" time="6.578" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_help_message" time="3.971" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_unsupported_flag_dispstep" time="3.960" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_unsupported_flag_hdiv" time="3.963" /><testcase classname="tests.test_at_cli_009.TestATCLI009ErrorHandling" name="test_unsupported_flag_vdiv" time="4.033" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_header_format" time="0.001" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_pixel_scaling" time="0.000" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_with_default_scale" time="0.000" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_torch_tensor_input" time="0.001" /><testcase classname="tests.test_at_io_002.TestAT_IO_002" name="test_pgm_clipping_behavior" time="0.000" /><testcase classname="tests.test_at_parallel_007.TestATParallel007PeakPositionWithRotations" name="test_peak_positions_with_rotations" time="0.000"><skipped type="pytest.skip" message="Parallel C-PyTorch tests disabled (set NB_RUN_PARALLEL=1)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_007.py:244: Parallel C-PyTorch tests disabled (set NB_RUN_PARALLEL=1)</skipped></testcase><testcase classname="tests.test_at_parallel_007.TestATParallel007PeakPositionWithRotations" name="test_peak_intensity_ordering" time="0.000"><skipped type="pytest.skip" message="Parallel C-PyTorch tests disabled">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_007.py:303: Parallel C-PyTorch tests disabled</skipped></testcase><testcase classname="tests.test_at_parallel_007.TestATParallel007PeakPositionWithRotations" name="test_rotation_effect_on_pattern" time="0.000"><skipped type="pytest.skip" message="Parallel C-PyTorch tests disabled">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_007.py:335: Parallel C-PyTorch tests disabled</skipped></testcase><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_large_detector_tilts" time="5.027"><failure message="AssertionError: fdet and sdet not orthogonal&#10;assert tensor(1.4901e-08) &lt; 1e-10&#10; +  where tensor(1.4901e-08) = &lt;built-in method abs of type object at 0x7d8074180fc0&gt;(tensor(1.4901e-08))&#10; +    where &lt;built-in method abs of type object at 0x7d8074180fc0&gt; = torch.abs&#10; +    and   tensor(1.4901e-08) = &lt;built-in method dot of type object at 0x7d8074180fc0&gt;(tensor([ 0.8406, -0.2947,  0.4545]), tensor([-0.0018, -0.8406, -0.5417]))&#10; +      where &lt;built-in method dot of type object at 0x7d8074180fc0&gt; = torch.dot">self = &lt;tests.test_at_parallel_017.TestATParallel017GrazingIncidence object at 0x7d7ef274c7d0&gt;
+
+    def test_large_detector_tilts(self):
+        """
+        Test with large detector tilts (&gt;45°) in all rotation axes
+        """
+        # Configuration with large tilts
+        detector_config = DetectorConfig(
+            distance_mm=100.0,
+            pixel_size_mm=0.1,
+            spixels=256,
+            fpixels=256,
+            detector_rotx_deg=50.0,  # Large rotation around X
+            detector_roty_deg=45.0,  # Large rotation around Y
+            detector_rotz_deg=40.0,  # Large rotation around Z
+            detector_convention=DetectorConvention.MOSFLM
+        )
+    
+        crystal_config = CrystalConfig(
+            cell_a=100.0,
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=1.54,
+            fluence=1e12
+        )
+    
+        # Create simulator
+        detector = Detector(detector_config, dtype=torch.float64)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    
+        # Run simulation
+        image = simulator.run()
+    
+        # Verify no NaNs or infinities
+        assert not torch.isnan(image).any(), "Image contains NaN values with large tilts"
+        assert not torch.isinf(image).any(), "Image contains infinite values with large tilts"
+    
+        # Verify rotation matrices are valid (determinant should be 1)
+        # Check detector basis vectors are orthonormal after rotation
+        fdet = detector.fdet_vec
+        sdet = detector.sdet_vec
+        odet = detector.odet_vec
+    
+        # Check orthogonality
+&gt;       assert torch.abs(torch.dot(fdet, sdet)) &lt; 1e-10, "fdet and sdet not orthogonal"
+E       AssertionError: fdet and sdet not orthogonal
+E       assert tensor(1.4901e-08) &lt; 1e-10
+E        +  where tensor(1.4901e-08) = &lt;built-in method abs of type object at 0x7d8074180fc0&gt;(tensor(1.4901e-08))
+E        +    where &lt;built-in method abs of type object at 0x7d8074180fc0&gt; = torch.abs
+E        +    and   tensor(1.4901e-08) = &lt;built-in method dot of type object at 0x7d8074180fc0&gt;(tensor([ 0.8406, -0.2947,  0.4545]), tensor([-0.0018, -0.8406, -0.5417]))
+E        +      where &lt;built-in method dot of type object at 0x7d8074180fc0&gt; = torch.dot
+
+tests/test_at_parallel_017.py:95: AssertionError</failure></testcase><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_large_twotheta" time="0.006" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_combined_extreme_angles" time="0.005" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_near_90_degree_incidence" time="0.005" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_solid_angle_obliquity_corrections" time="0.002" /><testcase classname="tests.test_at_parallel_017.TestATParallel017GrazingIncidence" name="test_extreme_rotation_stability" time="0.003" /><testcase classname="tests.test_at_parallel_028.TestATParallel028PerformanceParity" name="test_cpu_performance_parity" time="0.000"><skipped type="pytest.skip" message="Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_028.py:171: Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.</skipped></testcase><testcase classname="tests.test_at_parallel_028.TestATParallel028PerformanceParity" name="test_gpu_performance_superiority" time="0.000"><skipped type="pytest.skip" message="Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_028.py:204: Performance tests disabled by default. Set NB_RUN_PERFORMANCE=1 to run.</skipped></testcase><testcase classname="tests.test_at_parallel_028.TestATParallel028PerformanceParity" name="test_performance_measurement_validity" time="0.957" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_polarization_factor_calculation" time="3.864" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_nopolar_toggle" time="2.298" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_oversample_polar_last_value_semantics" time="3.502" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_polarization_with_tilted_detector" time="0.008" /><testcase classname="tests.test_at_pol_001.TestATPOL001KahnModel" name="test_polarization_factor_range" time="1.923" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_no_parameters_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_step_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_range_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_count_provided_angles" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_only_count_provided_thickness" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_range_and_step_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_count_and_range_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_divergence_auto_selection" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_dispersion_auto_selection" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_thickness_auto_selection" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_all_parameters_provided" time="0.000" /><testcase classname="tests.test_at_src_002.TestAT_SRC_002" name="test_conflicting_parameters" time="0.000" /><testcase classname="tests.test_cli_scaling.TestMOSFLMCellVectors" name="test_mosflm_cell_vectors" time="0.001" /><testcase classname="tests.test_cli_scaling.TestFlattSquareMatchesC" name="test_f_latt_square_matches_c" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 required for C↔PyTorch parity">/home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling.py:144: NB_RUN_PARALLEL=1 required for C↔PyTorch parity</skipped></testcase><testcase classname="tests.test_cli_scaling.TestSourceWeights" name="test_source_weights_ignored_per_spec" time="11.577" /><testcase classname="tests.test_cli_scaling.TestSourceWeights" name="test_cli_lambda_overrides_sourcefile" time="5.258" /><testcase classname="tests.test_cli_scaling.TestSourceWeights" name="test_uniform_weights_ignored" time="0.000" /><testcase classname="tests.test_cli_scaling.TestSourceWeights" name="test_edge_case_zero_sum_accepted" time="0.000" /><testcase classname="tests.test_cli_scaling.TestSourceWeights" name="test_edge_case_negative_weights_accepted" time="0.000" /><testcase classname="tests.test_cli_scaling.TestSourceWeights" name="test_single_source_fallback" time="0.005" /><testcase classname="tests.test_cli_scaling.TestSourceWeightsDivergence" name="test_c_divergence_reference" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 required">/home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling.py:585: NB_RUN_PARALLEL=1 required</skipped></testcase><testcase classname="tests.test_cli_scaling.TestSourceWeightsDivergence" name="test_sourcefile_divergence_warning" time="0.002"><failure message="SystemExit: 1">self = &lt;tests.test_cli_scaling.TestSourceWeightsDivergence object at 0x7d7ef274dbd0&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7d7edea4c8a0&gt;
+
+    def test_sourcefile_divergence_warning(self, monkeypatch):
+        """TC-D2: Verify UserWarning when sourcefile + divergence parameters both present."""
+        # This test validates the CLI warning guard at argument parsing level
+        # Per SOURCE-WEIGHT-001 Phase E Option B: warn when sourcefile + divergence params coexist
+        # Updated to use in-process pytest.warns instead of subprocess stderr parsing
+    
+        # Check fixture availability
+        fixture_paths = [
+            Path('reports/2025-11-source-weights/fixtures/two_sources.txt'),
+            Path('reports/2025-11-source-weights/phase_a/20251009T071821Z/fixtures/two_sources.txt')
+        ]
+        sourcefile = None
+        for path in fixture_paths:
+            if path.exists():
+                sourcefile = path
+                break
+    
+        if sourcefile is None:
+            pytest.skip("two_sources.txt fixture not found in expected locations")
+    
+        mat_file = Path('A.mat')
+        if not mat_file.exists():
+            pytest.skip("A.mat not found in repository root")
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            py_out = tmpdir / 'py_tc_d2.bin'
+    
+            # Command that should emit warning: sourcefile + hdivrange
+            args_with_warning = [
+                'nanoBragg',  # Program name
+                '-mat', str(mat_file.resolve()),
+                '-sourcefile', str(sourcefile.resolve()),
+                '-hdivrange', '0.5',  # This should trigger the warning
+                '-distance', '231.274660',
+                '-lambda', '0.9768',
+                '-pixel', '0.172',
+                '-detpixels_x', '256',
+                '-detpixels_y', '256',
+                '-oversample', '1',
+                '-nonoise',
+                '-nointerpolate',
+                '-floatfile', str(py_out)
+            ]
+    
+            # Use monkeypatch to set sys.argv for in-process execution
+            monkeypatch.setattr(sys, 'argv', args_with_warning)
+    
+            # Import main function (local import to avoid side effects)
+            from nanobrag_torch.__main__ import main
+    
+            # Execute main() under pytest.warns context
+            # The warning should be emitted from __main__.py:736-741
+            with pytest.warns(UserWarning, match="Divergence/dispersion parameters ignored") as record:
+&gt;               main()
+
+tests/test_cli_scaling.py:751: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/nanobrag_torch/__main__.py:844: in main
+    config = parse_and_validate_args(args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = Namespace(hkl=None, mat='/home/ollie/Documents/tmp/nanoBragg/A.mat', cell=None, img=None, mask=None, sourcefile='/home...onfig=False, dtype='float32', device='cpu', _unsupported_dispstep=None, _unsupported_hdiv=None, _unsupported_vdiv=None)
+
+    def parse_and_validate_args(args: argparse.Namespace) -&gt; Dict[str, Any]:
+        """Parse and validate command-line arguments into configuration."""
+    
+        config = {}
+    
+        # Check required inputs
+        has_hkl = args.hkl is not None or Path('Fdump.bin').exists()
+        has_cell = args.mat is not None or args.cell is not None
+    
+        if not has_hkl and args.default_F == 0:
+            print("Error: Need -hkl file, Fdump.bin, or -default_F &gt; 0")
+            print("Usage: nanoBragg -hkl &lt;file&gt; -mat &lt;file&gt; [options...]")
+&gt;           sys.exit(1)
+E           SystemExit: 1
+
+src/nanobrag_torch/__main__.py:405: SystemExit</failure></testcase><testcase classname="tests.test_cli_scaling.TestHKLDevice" name="test_hkl_tensor_respects_device[cpu-float32]" time="0.253" /><testcase classname="tests.test_cli_scaling.TestHKLDevice" name="test_hkl_tensor_respects_device[cpu-float64]" time="0.252" /><testcase classname="tests.test_cli_scaling.TestHKLDevice" name="test_hkl_tensor_respects_device[cuda-float32]" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling.py:775: CUDA not available</skipped></testcase><testcase classname="tests.test_cli_scaling.TestHKLDevice" name="test_hkl_tensor_respects_device[cuda-float64]" time="0.000"><skipped type="pytest.skip" message="CUDA not available">/home/ollie/Documents/tmp/nanoBragg/tests/test_cli_scaling.py:775: CUDA not available</skipped></testcase><testcase classname="tests.test_detector_pivots" name="test_beam_pivot_keeps_beam_indices_and_alignment" time="0.019" /><testcase classname="tests.test_detector_pivots" name="test_sample_pivot_moves_beam_indices_with_twotheta" time="0.020" /><testcase classname="tests.test_physics.TestPhysicsFunctions" name="test_sincg_against_c_value" time="0.171" /><testcase classname="tests.test_physics.TestPhysicsFunctions" name="test_sincg_fractional_miller_index" time="0.000" /><testcase classname="tests.test_physics.TestPhysicsFunctions" name="test_sincg_at_zero" time="0.000" /><testcase classname="tests.test_physics.TestPhysicsFunctions" name="test_sincg_vectorized" time="0.194" /><testcase classname="tests.test_physics.TestPhysicsFunctions" name="test_sincg_broadcast_N" time="0.245" /></testsuite></testsuites>
