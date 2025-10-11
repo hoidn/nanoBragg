@@ -2272,3 +2272,11 @@
 - No code changes; planning only.
 - <Action State>: [ready_for_implementation]
 
+
+### 2026-01-17 (galph loop - Determinism Phase D docstring prep)
+- Focus issue: [DETERMINISM-001] Phase D doc integration (Action: Review/housekeeping, Mode: Docs).
+- Recorded D1 completion: updated `plans/active/determinism.md` status snapshot + Phase D table (D1→[D]) using Attempt #8 artifacts (`reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration/`).
+- Refreshed `[DETERMINISM-001]` ledger entry with Next Actions ladder (D2–D4 pending) and logged Attempt #8 details so provenance stays traceable.
+- Rewrote input.md to direct Ralph toward Phase D2 docstring updates with collect-only verification and mirrored artifact layout.
+- Heads review: inspected Ralph’s latest commits (a4322195, c114c86a); documentation work looks solid, no regressions spotted.
+- <Action State>: [ready_for_implementation]

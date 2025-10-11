@@ -11,11 +11,10 @@
   - `src/nanobrag_torch/models/crystal.py`, `src/nanobrag_torch/utils/c_random.py`, and `src/nanobrag_torch/simulator.py` — seed handling surfaces.
 - Artifact Policy: All new work lands under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/` with subfolders per phase (`phase_a`, `phase_b`, …). Each attempt captures `commands.txt`, `env.json`, raw logs, and `summary.md`; docs-only work uses `reports/determinism-callchain/<phase>/` as established in Phases B–C.
 
-### Status Snapshot (2026-01-17)
 - Phase A ✅ complete (Attempts #1–#3) — determinism reproductions, environment baselines, and controls captured under `reports/2026-01-test-suite-triage/phase_d/20251011T050024Z/determinism/phase_a/`.
 - Phase B ✅ complete (Attempts #4–#5) — PyTorch callchain bundle captured; C seed contract documented at `reports/determinism-callchain/phase_b3/20251011T051737Z/`.
 - Phase C ✅ complete (Attempt #7) — Remediation summary, documentation checklist, and testing strategy notes published at `reports/determinism-callchain/phase_c/20251011T052920Z/`.
-- **Phase D (new)** — Documentation integration pending. Priority 1+2 edits (architecture + testing strategy) must land before closure.
+- Phase D underway — D1 ✅ (architecture reference updated per `reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration/`); D2–D4 pending (docstrings, ADR, testing strategy integration).
 - **Phase E (pending)** — Final validation + ledger closure once documentation is merged and determinism selectors re-run.
 
 ### Phase A — Reproduce & Baseline Seed Drift
@@ -61,10 +60,10 @@ Exit Criteria: Architecture docs, source docstrings, and testing strategy update
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Update `docs/architecture/c_function_reference.md` RNG section | [ ] | Add Minimal Standard LCG overview, seed domain table, pointer side-effect warning, and invocation site table per `docs_updates.md` §1.1. Capture edited excerpt and command log in `reports/determinism-callchain/phase_d/<STAMP>/docs_integration/c_function_reference/`. |
-| D2 | Expand `src/nanobrag_torch/utils/c_random.py` docstrings | [ ] | Refresh module-level docstring + `mosaic_rotation_umat()` notes to match Priority 1 checklist. Preserve ASCII, cite C line numbers, and store diff summary. |
-| D3 | Enhance `arch.md` ADR-05 with pointer-side-effect note | [ ] | Append implementation note describing `ran1(&seed)` parity and LCGRandom equivalence. Reference Attempt #6 fix artifacts. |
-| D4 | Integrate determinism workflow into `docs/development/testing_strategy.md` | [ ] | Fold `testing_strategy_notes.md` into a new §2.6 (or agreed section), including env vars, selectors, metrics, and artifact expectations. |
+| D1 | Update `docs/architecture/c_function_reference.md` RNG section | [D] | Attempt #8 → `reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration/` captures the merged overview, seed domain table, pointer warning, and invocation site audit. |
+| D2 | Expand `src/nanobrag_torch/utils/c_random.py` docstrings | [ ] | Refresh module-level docstring + `mosaic_rotation_umat()` notes to match Priority 1 checklist. Preserve ASCII, cite C line numbers, and store diff summary under `reports/determinism-callchain/phase_d/<STAMP>/docs_integration/c_random.py/`. |
+| D3 | Enhance `arch.md` ADR-05 with pointer-side-effect note | [ ] | Append implementation note describing `ran1(&seed)` parity and LCGRandom equivalence (reference Attempt #6 + docs_updates §1.2). Archive edits alongside commands log under Phase D docs integration. |
+| D4 | Integrate determinism workflow into `docs/development/testing_strategy.md` | [ ] | Fold `testing_strategy_notes.md` into a new §2.6 (or agreed section), including env vars, selectors, metrics, and artifact expectations. Capture pytest selector table + env guard rationale in the same Phase D bundle. |
 | D5 | Optional: add deterministic workflow vignette to `README_PYTORCH.md` | [ ] | Only execute if time permits; highlight CLI invocation plus pytest selectors. Mark `[P]` or leave `[ ]` and note optional in guidance. |
 
 ### Phase E — Validation & Closure
