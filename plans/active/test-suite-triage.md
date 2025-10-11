@@ -22,7 +22,7 @@
 - Phase K ✅ complete — Attempt #15 (rerun) + Attempt #16 (analysis + tracker) delivered the 512/31/143 baseline; Attempt #19 Phase D closure now recorded in `analysis/summary.md`, yielding the current 516 passed / 27 failed / 143 skipped snapshot.
 - Phase L ✅ complete (Attempt #17 — `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/`); targeted detector-config rerun captured, failure brief authored, ledger pending tracker sync with `[DETECTOR-CONFIG-001]` remediation.
 - Phase M0 ✅ complete — Attempt #21 (20251011T153931Z) executed the chunked rerun: 504 passed / 46 failed / 136 skipped, triage_summary.md refreshed with nine active clusters (C1–C9) and new quick-win priorities.
-- Phase M1 ✅ complete — Sprint 0 clusters C1/C3/C4/C5/C7 closed (Attempts #21/#22/#25/#26/#27) with Attempt #28 capturing the M1f ledger/tracker refresh and Phase M2 brief; Attempt #29 verified the existing compile guard (10/10 gradchecks pass) and logged CPU artifacts, leaving Phase M2d documentation updates as the remaining gate before Phase M3.
+- Phase M1 ✅ complete — Sprint 0 clusters C1/C3/C4/C5/C7 closed (Attempts #21/#22/#25/#26/#27) with Attempt #28 capturing the M1f ledger/tracker refresh and Phase M2 brief; Attempt #29 verified the existing compile guard (10/10 gradchecks pass) and logged CPU artifacts, and Attempt #30 documented the compile-guard updates closing Phase M2 so Phase M3 prep can proceed.
 - Phase M ⏳ pending — retains post-remediation validation gate once MOSFLM offset fix lands (dependent on `[DETECTOR-CONFIG-001]` Phase C1–C3 completion and targeted retest).
 
 ### Phase A — Preflight & Inventory
@@ -223,7 +223,7 @@ Exit Criteria: Gradient selectors pass with `NANOBRAGG_DISABLE_COMPILE=1`, docum
 | M2a | Draft guardrail strategy | [D] | Attempt #28 (`reports/2026-01-test-suite-triage/phase_m2/20251011T171454Z/strategy.md`) documents the `NANOBRAGG_DISABLE_COMPILE=1` guard with links to `arch.md` §15 and `testing_strategy.md` §1.4; ready for delegation. |
 | M2b | Implement/diff guard | [D] | Attempt #29 (`reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/gradient_guard/`) confirmed the guard was already wired; gradcheck selector `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck"` now passes 10/10 without code edits. |
 | M2c | Cross-device sanity (if CUDA available) | [P] | Optional: repeat gradcheck on CUDA when hardware is available; Attempt #29 documented a deliberate skip (CPU-only precision) in `phase_m2/20251011T172830Z/summary.md`. |
-| M2d | Documentation + ledger sync | [ ] | Author compile-guard notes in `arch.md` §15, `docs/development/testing_strategy.md` §1.4/§4.1, and `docs/development/pytorch_runtime_checklist.md`; update `[TEST-SUITE-TRIAGE-001]` Attempt log + `remediation_tracker.md`; capture `phase_m2/$STAMP/summary.md` consolidating the doc updates and reproduction commands. |
+| M2d | Documentation + ledger sync | [D] | Attempt #30 (`reports/2026-01-test-suite-triage/phase_m2/20251011T174707Z/summary.md`) landed compile-guard updates across `arch.md`, `docs/development/testing_strategy.md` §§1.4/4.1, and `docs/development/pytorch_runtime_checklist.md`; ledger + tracker references captured in the summary. |
 
 ### Phase M3 — Specialist Follow-Through (C6, C8, C9)
 Goal: Stage remaining clusters for their owning initiatives so Phase M (post-fix validation) unblocks once MOSFLM and physics investigations complete.

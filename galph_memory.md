@@ -2586,3 +2586,14 @@
 - Updated `[TEST-SUITE-TRIAGE-001]` Next Actions in `docs/fix_plan.md` (around lines 44-50) to focus on Phase M2d documentation, optional GPU validation, and pivot prep for Phase M3 once docs land.
 - Rewrote `input.md` to steer Ralph toward the Phase M2d documentation bundle and tracker refresh; Mode=Docs with artifacts under `phase_m2/$STAMP/{docs_diff,summary.md}`.
 - Action State: [ready_for_implementation]
+
+### 2026-01-21 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M2d documentation closure
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2026-01-21 (galph loop - Phase M3a prep recap)
+- Updated `plans/active/test-suite-triage.md` Status Snapshot + M2d row to record Attempt #30 completion; M3a now queued for execution.
+- Refreshed `docs/fix_plan.md` Next Actions to pivot from M2d docs to Phase M3 staging (MOSFLM sync, detector orthogonality notes, mixed-units handoff).
+- Reissued `input.md` (Mode=Docs) directing Ralph to author the Phase M3a MOSFLM remediation sync bundle under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/`.
+- <Action State>: [ready_for_implementation]

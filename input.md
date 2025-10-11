@@ -1,47 +1,44 @@
-Summary: Finish Phase M2d by documenting the compile guard and syncing ledgers so we can advance to Phase M3 triage.
+Summary: Scope Phase M3a by producing the MOSFLM remediation sync so C6 handoff is ready.
 Mode: Docs
-Focus: [TEST-SUITE-TRIAGE-001] Phase M2 — Gradient Infrastructure Gate
+Focus: [TEST-SUITE-TRIAGE-001] Phase M3 staging
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_m2/$STAMP/{summary.md,docs_diff/}; reports/2026-01-test-suite-triage/phase_m2/$STAMP/gradients_gpu/ (only if optional CUDA proof is run)
-Do Now: Execute docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Next Actions #1 — author the Phase M2d documentation + ledger updates before touching any new code paths.
-If Blocked: Capture a short report under reports/2026-01-test-suite-triage/phase_m2/$STAMP/blocked.md explaining the obstacle (include git status + pending edits) and halt for supervisor guidance.
+Artifacts: reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_sync/summary.md
+Do Now: Execute docs/fix_plan.md [TEST-SUITE-TRIAGE-001] Next Actions #1 — draft the Phase M3a MOSFLM remediation sync bundle.
+If Blocked: Capture reports/2026-01-test-suite-triage/phase_m3/$STAMP/blocked.md summarising the obstacle (include git status) and stop.
 
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:223 — M2d remains open; doc updates are the gate to Phase M3 handoff.
-- docs/fix_plan.md:44 — Next Actions now target documentation + tracker refresh using Attempt #29 evidence.
-- reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md:1 — Source log describing the successful gradcheck run to cite in the doc updates.
-- arch.md:322 — Differentiability section needs a compile-guard callout aligned with the gradient workflow.
-- docs/development/testing_strategy.md:18 — Device/dtype discipline must now mention the guard requirement for gradcheck.
-- docs/development/pytorch_runtime_checklist.md:1 — Runtime checklist needs a compile-guard bullet so future edits keep the flag in mind.
+- docs/fix_plan.md:48-51 — Next Actions now require the MOSFLM sync before other Phase M3 work.
+- plans/active/test-suite-triage.md:235-237 — Plan keeps M3a open; needs concrete scope + artifact path to advance.
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:186 — Cluster C6 findings and reproduction commands must be restated in the sync.
+- plans/active/detector-config.md:30-44 — Detector remediation blueprint depends on owning the MOSFLM offset tasks that the sync should feed.
+- docs/development/testing_strategy.md:14 — Guardrails demand we track detector fixes with authoritative selectors captured in the new summary.
 
 How-To Map:
-1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_m2/$STAMP/{docs_diff}` to stage the summary + diff notes.
-2. Update `arch.md` §15 (line ~322) with a concise paragraph documenting the `NANOBRAGG_DISABLE_COMPILE=1` guard, its rationale, and reference to the Phase M2 artifacts.
-3. In `docs/development/testing_strategy.md` (§1.4 and §4.1) add guidance that gradient tests must set the guard before importing torch and include the authoritative selector already logged in Attempt #29.
-4. Append a checklist item to `docs/development/pytorch_runtime_checklist.md` covering the compile guard for gradcheck suites, linking back to the testing strategy section.
-5. Refresh `remediation_tracker.md` and this ledger entry’s Attempts list with the new STAMP, citing Attempt #29 evidence and the doc updates; capture a short `summary.md` noting what was edited and where the artifacts live.
-6. If CUDA hardware is available and you choose to run the optional GPU selector, archive logs under `phase_m2/$STAMP/gradients_gpu/`; otherwise state “GPU skipped” in summary.md.
+- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`
+- `mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_sync`
+- Review `reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md` Cluster C6; cross-check `plans/active/detector-config.md` Phase B tasks and `docs/fix_plan.md` attempts.
+- Draft `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_sync/summary.md` covering: current failure count, reproduction commands, blocking dependencies, required plan updates, and expected exit criteria for `[DETECTOR-CONFIG-001]`.
+- Update `plans/active/detector-config.md` (Phase B rows) and `docs/fix_plan.md` attempts if new decisions emerge; note file + line anchors inside summary.
+- Append the new Attempt to `docs/fix_plan.md` and refresh `remediation_tracker.md` if scope or ownership changes are recorded.
 
 Pitfalls To Avoid:
-- Do not re-run the full test suite; this loop is documentation-only.
-- Keep edits ASCII and respect Protected Assets referenced in docs/index.md.
-- Preserve existing guard behavior—no code modifications unless documentation reveals a bug.
-- When editing docs, note subsection anchors so future references remain stable.
-- Record the new Attempt in docs/fix_plan.md without disturbing prior numbering.
-- Maintain consistent terminology (`NANOBRAGG_DISABLE_COMPILE=1`) across all documents.
-- If you can’t complete every doc in one go, stop after logging partial progress in summary.md and avoid mixing unfinished edits in git.
-- Don’t delete prior Phase M2 artifacts; new STAMP directories must be unique.
-- Ensure remediation_tracker.md counts still total 11→1 failures before/after so ledger stays accurate.
-- Leave environment variables unset when you finish to avoid contaminating later runs.
+- Don’t run pytest; this loop is documentation-only.
+- Keep artifacts under the stamped `phase_m3` directory; no reuse of prior timestamps.
+- Reference spec/arch sections verbatim instead of paraphrasing to prevent drift.
+- Maintain ASCII edits; avoid introducing new Unicode beyond existing punctuation.
+- When updating plans/ledger, preserve Attempt numbering and historical context.
+- Ensure MOSFLM sync cites authoritative commands (no invented selectors).
+- Do not touch Protected Assets listed in docs/index.md.
+- Call out unresolved blockers explicitly; don’t silently defer them.
+- If detector-config plan changes, note rationale in both the plan and summary.
+- Leave environment vars unset after finishing.
 
 Pointers:
-- plans/active/test-suite-triage.md:223
-- docs/fix_plan.md:44
-- reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md:1
-- arch.md:322
-- docs/development/testing_strategy.md:18
-- docs/development/pytorch_runtime_checklist.md:1
-- reports/2026-01-test-suite-triage/phase_m2/20251011T171454Z/strategy.md:140
+- docs/fix_plan.md:48-51
+- plans/active/test-suite-triage.md:235-237
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:186
+- plans/active/detector-config.md:30-44
+- docs/development/testing_strategy.md:14
 
-Next Up: Prep Phase M3a scope notes once M2d is committed.
+Next Up: After the sync, tackle Phase M3b detector-orthogonality owner notes using the new plan context.
