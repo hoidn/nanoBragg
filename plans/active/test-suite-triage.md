@@ -124,9 +124,9 @@ Exit Criteria: `reports/2026-01-test-suite-triage/phase_i/<STAMP>/` hosts update
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| I1 | Build comparative failure table | [ ] | Clone Phase F `triage_summary.md` template to `phase_i/${STAMP}/triage_summary.md`; parse Phase H junit/log to populate counts, mark deltas, and flag suspected deprecations. |
-| I2 | Classify failure causes | [ ] | For each failure annotate `Implementation Bug`, `Likely Deprecation`, or `Needs Verification`; cite supporting evidence (spec sections, doc notes) in an appended rationale column and summarise tallies in `classification_overview.md`. |
-| I3 | Sync ledger + baton | [ ] | Update `docs/fix_plan.md` Next Actions/Attempts with Phase I findings and add galph_memory note linking to the new artifacts and classification decisions. |
+| I1 | Build comparative failure table | [D] | Clone Phase F `triage_summary.md` template to `phase_i/${STAMP}/triage_summary.md`; parse Phase H junit/log to populate counts, mark deltas, and flag suspected deprecations. |
+| I2 | Classify failure causes | [D] | For each failure annotate `Implementation Bug`, `Likely Deprecation`, or `Needs Verification`; cite supporting evidence (spec sections, doc notes) in an appended rationale column and summarise tallies in `classification_overview.md`. |
+| I3 | Sync ledger + baton | [D] | Update `docs/fix_plan.md` Next Actions/Attempts with Phase I findings and add galph_memory note linking to the new artifacts and classification decisions. |
 
 ### Phase J — Remediation Launch & Tracking
 Goal: Translate refreshed failure inventory into an actionable remediation roadmap and sequencing across fix-plan items.

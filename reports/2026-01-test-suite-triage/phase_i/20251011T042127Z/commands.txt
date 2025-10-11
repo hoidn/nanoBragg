@@ -1,0 +1,37 @@
+# Phase I Classification - Commands Log
+# Timestamp: 20251011T042127Z
+# Initiative: [TEST-SUITE-TRIAGE-001]
+# Phase: I — Failure Classification Refresh
+
+## Environment Setup
+export STAMP=20251011T042127Z
+mkdir -p reports/2026-01-test-suite-triage/phase_i/${STAMP}/docs
+
+## Source Artifacts (Phase H)
+# Base inputs from Phase H rerun (Attempt #10)
+# - reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/docs/summary.md
+# - reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/full_suite/pytest_full.log
+# - reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/artifacts/pytest_full.xml
+
+## Structural Template
+# Using Phase F template for table structure:
+# - reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/triage_summary.md
+
+## Analysis Commands
+# Parsed Phase H artifacts manually (docs-only loop per input.md Mode: Docs)
+# No pytest execution; classification derived from Phase H summary + fix-plan context
+
+## Classification Methodology
+# For each of 36 failures:
+# - Reviewed failure type and cluster context from Phase H summary
+# - Cross-referenced with spec sections and fix-plan status
+# - Categorized as:
+#   * Implementation Bug - requires code fix to meet spec
+#   * Likely Deprecation - test may be obsolete/superseded
+#   * Needs Verification - insufficient evidence to classify
+
+## Output Files
+# Created:
+# - docs/triage_summary.md (refreshed classification table)
+# - docs/classification_overview.md (classification tallies + rationale)
+# - commands.txt (this file)
