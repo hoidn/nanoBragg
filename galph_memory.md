@@ -2358,3 +2358,6 @@
 - Focus issue: [TEST-SUITE-TRIAGE-001] Phase K closure + remediation planning
 - Action type: Planning
 - Mode: Docs
+- Updated plans/active/test-suite-triage.md with Phase K2 completion snapshot and queued K3 tracker work; docs/fix_plan.md Next Actions now target tracker refresh and SOURCE-WEIGHT-002 restart gating. Input.md directs Ralph to execute Phase K3 docs-only updates (remediation_tracker.md, remediation_sequence.md, ledger). No new findings in docs/findings.md.
+- Follow-up for Ralph: finish Phase K3 tracker refresh, extend Attempt #16 entry, then unpause SOURCE-WEIGHT-002 per sprint sequence.
+- <Action State>: [ready_for_implementation]
