@@ -634,7 +634,7 @@ Acceptance Tests (Normative)
 - Sources, Divergence & Dispersion
   - AT-SRC-001 Sourcefile and weighting
     - Setup: -sourcefile with two sources having distinct weights and λ; disable other sampling.
-    - Expectation: steps = 2; intensity contributions SHALL sum with per-source λ and weight, then divide by steps.
+    - Expectation: steps = 2; intensity contributions SHALL sum equally (per spec lines 151-155, CLI -lambda is authoritative for all sources and weight column is ignored); final intensity divides by steps. See also `docs/development/pytorch_runtime_checklist.md` item #4 for dtype neutrality requirements.
   - AT-SRC-002 Auto-selection of count/range/step
     - Setup: Provide only step (or only range, or only count) for divergence/dispersion; also thickness sampling.
     - Expectation: The missing quantities SHALL resolve to count/range/step per the rules in the spec, with angles default range=1.0 rad and thickness default range=0.5e-6 m when only count is provided.
