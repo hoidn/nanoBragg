@@ -1,0 +1,7 @@
+375:    long misset_seed = seed;
+570:            /* Check for -misset random (must not match -misset_seed) */
+579:            /* Check for -misset rotx roty rotz (must not match -misset_seed) */
+1127:            if(strstr(argv[i], "-misset_seed") && (argc > (i+1)))
+1129:                misset_seed = -atoi(argv[i+1]);
+1368:        printf("\t-misset_seed     \tspecify random-number seed for crystal orentaiton when -misset random (default, same as -seed)\n");
+2083:        mosaic_rotation_umat(90.0, umat, &misset_seed);

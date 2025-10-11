@@ -1,0 +1,5 @@
+374:    long mosaic_seed = -12345678;
+1123:            if(strstr(argv[i], "-mosaic_seed") && (argc > (i+1)))
+1125:                mosaic_seed = -atoi(argv[i+1]);
+1367:        printf("\t-mosaic_seed     \tspecify random-number seed for mosaic domain generation (default: 1234567)\n");
+2689:        mosaic_rotation_umat(mosaic_spread, mosaic_umats+9*mos_tic, &mosaic_seed);

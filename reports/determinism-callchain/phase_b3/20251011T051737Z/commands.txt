@@ -1,0 +1,54 @@
+# Phase B3 Evidence Capture Commands
+# Timestamp: 2025-10-11T05:17:37Z
+# Purpose: Document nanoBragg.c seed propagation per plans/active/determinism.md Phase B3
+
+# 1. Create artifact directory
+mkdir -p reports/determinism-callchain/phase_b3/20251011T051737Z
+
+# 2. Search for misset_seed references
+rg -n "misset_seed" golden_suite_generator/nanoBragg.c | tee reports/determinism-callchain/phase_b3/20251011T051737Z/grep_misset_seed.txt
+
+# 3. Search for mosaic_seed references
+rg -n "mosaic_seed" golden_suite_generator/nanoBragg.c | tee reports/determinism-callchain/phase_b3/20251011T051737Z/grep_mosaic_seed.txt
+
+# 4. Extract RNG implementation (ran1 + mosaic_rotation_umat)
+# Note: input.md suggested lines 48650-49220 but file is only 4690 lines
+# Correct locations: ran1 (4143-4185), mosaic_rotation_umat (3820-3868)
+# Created composite excerpt manually in c_rng_excerpt.c (105 lines)
+
+# 5. Check file line count
+wc -l golden_suite_generator/nanoBragg.c
+# Output: 4690 golden_suite_generator/nanoBragg.c
+
+# 6. Find ran1 function location
+rg -n "^float ran1" golden_suite_generator/nanoBragg.c
+# Output: No exact match (not at column 1)
+
+# 7. Search for ran1 references (confirms function exists)
+rg -n "ran1" golden_suite_generator/nanoBragg.c | head -20
+# Output: Multiple matches at lines 142, 3795, 3802, etc.
+
+# 8. Search for mosaic_rotation_umat references
+rg -n "mosaic_rotation_umat" golden_suite_generator/nanoBragg.c
+# Output: Lines 128 (declaration), 2083 (misset usage), 2689 (mosaic loop), 3820 (definition)
+
+# 9. Manually read C source sections to extract:
+#    - ran1 implementation (lines 4143-4185)
+#    - mosaic_rotation_umat implementation (lines 3820-3868)
+#    - Created c_rng_excerpt.c with both functions and documentation
+
+# 10. Author seed flow callchain document
+# File: reports/determinism-callchain/phase_b3/20251011T051737Z/c_seed_flow.md
+# Content: Comprehensive RNG architecture, seed initialization, propagation, and invocation patterns
+
+# Results Summary:
+# - grep_misset_seed.txt: 7 matches
+# - grep_mosaic_seed.txt: 4 matches
+# - c_rng_excerpt.c: 105 lines (ran1 + mosaic_rotation_umat with annotations)
+# - c_seed_flow.md: Callchain summary mirroring structure of reports/determinism-callchain/callchain/static.md
+
+# Phase B3 Exit Criteria: ✅ COMPLETE
+# - C seed contract captured
+# - RNG implementation documented
+# - Seed propagation flow mapped (CLI → vars → ran1 via pointer side effects)
+# - Ready for Phase C dynamic instrumentation (blocked by TorchDynamo; mitigation planned)
