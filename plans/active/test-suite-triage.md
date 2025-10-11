@@ -8,7 +8,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2026-01-20)
+### Status Snapshot (2026-01-21)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
@@ -21,7 +21,8 @@
 - Phase J ✅ tracker maintained — `remediation_tracker.md` and `remediation_sequence.md` refreshed (Attempt #16) with determinism clusters cleared; Phase D4 closure appended C3 ✅ resolved and Sprint 1 progress advanced to 30.6% (9/17 failures retired).
 - Phase K ✅ complete — Attempt #15 (rerun) + Attempt #16 (analysis + tracker) delivered the 512/31/143 baseline; Attempt #19 Phase D closure now recorded in `analysis/summary.md`, yielding the current 516 passed / 27 failed / 143 skipped snapshot.
 - Phase L ✅ complete (Attempt #17 — `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/`); targeted detector-config rerun captured, failure brief authored, ledger pending tracker sync with `[DETECTOR-CONFIG-001]` remediation.
-- Phase M0 🔄 new — user directive (2026-01-20) requires an immediate full-suite rerun + triage refresh before proceeding with MOSFLM remediation; see new Phase M0 checklist.
+- Phase M0 ✅ complete — Attempt #21 (20251011T153931Z) executed the chunked rerun: 504 passed / 46 failed / 136 skipped, triage_summary.md refreshed with nine active clusters (C1–C9) and new quick-win priorities.
+- Phase M1 🔄 new — launch failure burn-down sprint targeting Phase M0 P1/P2 clusters (CLI setup, detector dtype conversion, debug trace scope, simulator API mismatch) before re-attempting MOSFLM remediation.
 - Phase M ⏳ pending — retains post-remediation validation gate once MOSFLM offset fix lands (dependent on `[DETECTOR-CONFIG-001]` Phase C1–C3 completion and targeted retest).
 
 ### Phase A — Preflight & Inventory
@@ -172,11 +173,11 @@ Exit Criteria: Full-suite rerun artifacts archived under `reports/2026-01-test-s
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| M0a | Refresh pre-run environment checklist | [ ] | Re-run Phase A guardrails in light form: capture `collect_only.log` + env snapshot under `phase_m0/<STAMP>/preflight/`; cite `docs/development/testing_strategy.md` §1 and `arch.md` §2 for guardrails. |
-| M0b | Execute chunked suite rerun | [ ] | Follow the runtime guard note below: run the ten chunk commands sequentially (each <360 s) with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`, capture per-chunk junit/log output under `phase_m0/$STAMP/chunks/chunk_##/`, and record exit codes in `commands.txt`. |
-| M0c | Re-triage and classify failures | [ ] | Update `reports/2026-01-test-suite-triage/phase_m0/$STAMP/triage_summary.md` with failure clusters, mark each as implementation bug vs legacy/deprecation; sync findings into `docs/fix_plan.md` Attempt ledger and `remediation_tracker.md` pending queue. |
+| M0a | Refresh pre-run environment checklist | [D] | Attempt #21 → `reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/preflight/{collect_only.log,env.txt,pip_freeze.txt}` captured collect-only (687 tests) and env snapshot per `docs/development/testing_strategy.md` §1. |
+| M0b | Execute chunked suite rerun | [D] | Attempt #21 executed all ten chunk commands (`commands.txt` + `chunks/chunk_##/pytest.{log,xml}`) with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`; total runtime ~502 s, exit codes logged beside each chunk. |
+| M0c | Re-triage and classify failures | [D] | Attempt #21 authored `triage_summary.md` + `summary.md` under `phase_m0/20251011T153931Z/`, classifying 46 failures across clusters C1–C9 and syncing results into `docs/fix_plan.md` Attempt log (pending tracker refresh). |
 
-**Runtime guard note (2026-01-21):** Supervisor review confirmed the CLI harness enforces a hard 360 s timeout per command, so Phase M0b must execute the suite in timestamped chunks rather than one monolithic `pytest tests/` invocation. Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` once per attempt, create `reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/` ahead of time, and keep the environment assignments on the same line as the pytest command (`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest …`) to avoid `/bin/bash: CUDA_VISIBLE_DEVICES=-1: command not found` errors. Run the ten chunk commands below (each with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=.../pytest.xml …`) and archive logs under `reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_##/{commands.txt,pytest.log,pytest.xml}` before compiling the combined triage summary.
+**Runtime guard note (2026-01-21):** Retain the chunked-command workflow for any re-runs (hard 360 s CLI cap). Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` once per attempt, pre-create `.../phase_m0/$STAMP/chunks/`, and keep environment assignments on the same line as each pytest invocation to avoid `/bin/bash: CUDA_VISIBLE_DEVICES=-1: command not found` errors. The historical command list below remains authoritative for future baselines.
 
 Chunk 01 (11 files): `tests/test_at_abs_001.py tests/test_at_cli_009.py tests/test_at_io_002.py tests/test_at_parallel_007.py tests/test_at_parallel_017.py tests/test_at_parallel_028.py tests/test_at_pol_001.py tests/test_at_src_002.py tests/test_cli_scaling.py tests/test_detector_pivots.py tests/test_physics.py`
 
@@ -198,15 +199,54 @@ Chunk 09 (10 files): `tests/test_at_cli_007.py tests/test_at_geo_006.py tests/te
 
 Chunk 10 (10 files): `tests/test_at_cli_008.py tests/test_at_io_001.py tests/test_at_parallel_006.py tests/test_at_parallel_016.py tests/test_at_parallel_027.py tests/test_at_perf_008.py tests/test_at_src_001_simple.py tests/test_cli_flags.py tests/test_detector_geometry.py tests/test_perf_pytorch_006.py`
 
+### Phase M1 — Sprint 0 Quick Fixes (C1, C3, C4, C5, C7)
+Goal: Execute the Phase M0 priority ladder (Sprint 0) to retire 31 of 46 failures by addressing low-effort clusters owned by Ralph before gradient and MOSFLM work proceeds.
+Prereqs: Phase M0 artifacts (`reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/`) reviewed; implementation handoffs for `[CLI-TEST-SETUP-001]`, `[DETECTOR-DTYPE-CONVERSION-001]`, `[DEBUG-TRACE-SCOPE-001]`, `[SIMULATOR-API-KWARGS-001]`, `[SIMULATOR-DETECTOR-REQUIRED-001]` acknowledged.
+Exit Criteria: Targeted pytest selectors for C1/C3/C4/C5/C7 pass on CPU (and CUDA where applicable), ledger + tracker updated with Attempt IDs, and a consolidated summary captured under `reports/2026-01-test-suite-triage/phase_m1/<STAMP>/summary.md`.
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| M1a | Harden CLI fixtures (Cluster C1) | [ ] | Follow triage guidance `reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:31`–`55`; add `-default_F 100`/`-hkl` to failing cases in `tests/test_cli_flags.py` + `tests/test_cli_scaling.py`. Reproduce via `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias`. Archive diff + pytest log under `phase_m1/$STAMP/cli_fixtures/`. |
+| M1b | Tensorize detector beam centers (Cluster C3) | [ ] | Ensure `DetectorConfig` keeps `beam_center_s/f` as tensors per `triage_summary.md:92`–`122`; touch `src/nanobrag_torch/models/detector.py` only with dtype-neutral conversions. Validate with `pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params`. Capture before/after `type()` evidence in `phase_m1/$STAMP/detector_dtype/notes.md`. |
+| M1c | Guard debug trace pre-polar accumulator (Cluster C4) | [ ] | Initialise `I_before_normalization_pre_polar` and gate printouts (`triage_summary.md:126`–`153`). Run `pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag`. Store updated debug trace output under `phase_m1/$STAMP/debug_trace/`. |
+| M1d | Align simulator API usage (Cluster C5) | [ ] | Update CUDA graphs tests to use positional ctor per `triage_summary.md:157`–`182`. Selector: `pytest -v tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution`. Document CLI vs API signature decision in `phase_m1/$STAMP/simulator_api/summary.md`. |
+| M1e | Provide detectors for lattice-shape tests (Cluster C7) | [ ] | Patch fixtures referenced in `triage_summary.md:218`–`243` so Simulator receives a valid detector (or enforce explicit error). Run `pytest -v tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model`. Evidence lives in `phase_m1/$STAMP/shape_models/`. |
+| M1f | Ledger + tracker update | [ ] | Once C1/C3/C4/C5/C7 pass, update `[TEST-SUITE-TRIAGE-001]` Attempt log, `remediation_tracker.md`, and `reports/.../phase_m1/<STAMP>/summary.md` with new failure counts and links to code diffs. |
+
+### Phase M2 — Gradient Infrastructure Gate (Cluster C2)
+Goal: Stabilise gradcheck coverage by resolving the donated-buffer compile constraint so gradient suites can run without manual intervention.
+Prereqs: Phase M1 quick fixes merged; gradient owner (Ralph or designated specialist) available; consult `triage_summary.md:59`–`89` and `arch.md` §15.
+Exit Criteria: Gradient selectors pass with `NANOBRAGG_DISABLE_COMPILE=1`, documentation updated with compile guard, and artifacts captured under `reports/2026-01-test-suite-triage/phase_m2/<STAMP>/`.
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| M2a | Draft guardrail strategy | [ ] | Outline proposed compile-disable approach referencing `arch.md` §15 and `docs/development/pytorch_runtime_checklist.md`. Record rationale in `phase_m2/$STAMP/strategy.md`. |
+| M2b | Implement/diff guard | [ ] | Apply minimal changes (likely `torch._dynamo.disable()` context or env flag) covering `tests/test_gradients.py` cases. Selector: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck"`. |
+| M2c | Cross-device sanity (if CUDA available) | [ ] | Repeat key gradcheck on GPU per testing strategy §1.4; stash logs under `phase_m2/$STAMP/gradients_gpu/`. |
+| M2d | Documentation + ledger sync | [ ] | Update `[VECTOR-PARITY-001]` / `[TEST-SUITE-TRIAGE-001]` entries with compile guard instructions; file `phase_m2/$STAMP/summary.md` capturing pass counts (expected +10). |
+
+### Phase M3 — Specialist Follow-Through (C6, C8, C9)
+Goal: Stage remaining clusters for their owning initiatives so Phase M (post-fix validation) unblocks once MOSFLM and physics investigations complete.
+Prereqs: Phase M1 + M2 closed; coordinate with `[DETECTOR-CONFIG-001]`, `[VECTOR-GAPS-002]`, and `[VECTOR-PARITY-001]` owners.
+Exit Criteria: Each cluster mapped to its canonical plan with up-to-date status; interim reproduction commands verified.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| M3a | Sync MOSFLM remediation (C6) | [ ] | Ensure `plans/active/detector-config.md` Phase B/C incorporate Phase M0 findings (`triage_summary.md:186`–`214`). Capture targeted pytest log refresh if parameters drift. |
+| M3b | Assign detector orthogonality owner (C8) | [ ] | Coordinate with geometry specialist; record scope in `phase_m3/$STAMP/detector_ortho/notes.md`. Selector: `pytest -v tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts`. |
+| M3c | Scope mixed-units zero intensity (C9) | [ ] | Promote to `[VECTOR-PARITY-001]` Tap backlog; add callchain requirement referencing `triage_summary.md:277`–`303`. Store hypotheses in `phase_m3/$STAMP/mixed_units/hypotheses.md`. |
+
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).
+- Phase M0 artifacts archived with failure count +46 and Sprint ladder documented.
+- Phase M1 + Phase M2 deliver expected failure reductions (≤15 failures remaining) with evidence bundles under `phase_m1/` and `phase_m2/`.
 - All artifacts stored under `reports/2026-01-test-suite-triage/` with timestamped folders and referenced in `docs/fix_plan.md`.
 - `triage_summary.md` (Phase I) identifies categories for every failing test and maps each to a next action (bug fix, test removal request, infrastructure follow-up).
 - `handoff addendum` plus Phase J tracker are approved (by supervisor) and actively steering remediation; once backlog execution is underway, archive this plan.
 
 ### Phase M — Post-Fix Validation & Suite Refresh
 Goal: Confirm detector-config remediation clears C8 and refresh overall failure counts before the next sprint.
-Prereqs: `[DETECTOR-CONFIG-001]` Phase C1–C3 complete; targeted detector-config pytest passes locally.
+Prereqs: Phase M1 + Phase M2 closed; `[DETECTOR-CONFIG-001]` Phase C1–C3 complete; targeted detector-config pytest passes locally.
 Exit Criteria: Phase M directory contains targeted + full-suite rerun artifacts, fix plan/tracker synced with updated failure counts.
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |

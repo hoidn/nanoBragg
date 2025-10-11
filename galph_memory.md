@@ -2485,3 +2485,16 @@
 - Reissued input.md with env-prefixed preflight/chunk commands, explicit STAMP setup, and env capture snippet for Ralph's redo.
 - Action State: [ready_for_implementation]
 
+
+### 2026-01-21 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1 remediation planning
+- Action type: Planning
+- Mode: Docs
+
+### 2026-01-21 (galph loop - Phase M1 sprint kickoff)
+- Phase M0 Attempt #21 triage reviewed; logged in docs/fix_plan.md:681 with summary and failure deltas.
+- Updated plans/active/test-suite-triage.md:202-233 with Phase M1/M2/M3 sections and refreshed exit criteria; Phase M prerequisites now reference M1/M2 completion.
+- docs/fix_plan.md:3-7,41-47 now steer Sprint 0 quick fixes + gradient guard; Attempt #21 recorded with artifact path.
+- input.md rewritten for Phase M1a CLI fixture fix, mapped selectors, artifact cadence under phase_m1/$STAMP.
+- <Action State>: [ready_for_implementation]
+
