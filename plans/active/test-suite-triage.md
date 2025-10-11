@@ -8,7 +8,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2025-10-11)
+### Status Snapshot (2026-01-18)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
@@ -18,8 +18,8 @@
 - Phase G ✅ progressing — Attempt #9 recorded the refreshed remediation ladder addendum at `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/`.
 - Phase H ✅ complete (Attempt #10 — `reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/` captured full-suite rerun, 36 failures remaining, gradient checks stable).
 - Phase I ✅ complete (Attempt #11 — `reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/` delivers triage_summary.md + classification_overview.md with 36 failures classified; fix_plan updated accordingly).
-- **Phase J (active)** — draft remediation tracker + execution sequence using Phase I inputs before resuming individual remediation workstreams.
-- **Phase K (active)** — Attempt #15 (`reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/`) completed the 60-minute full-suite rerun (512 passed / 31 failed / 143 skipped). Proceed with K2–K3 to regenerate the classification bundle and refresh the remediation tracker before resuming remediation sprints.
+- **Phase J (active)** — remediation tracker + execution sequence published under `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/`; awaiting Phase K tracker refresh before relaunching remediation sprints.
+- **Phase K (active)** — Attempt #15 (rerun) + Attempt #16 (K2 analysis bundle) captured: 512 passed / 31 failed / 143 skipped. Classification refreshed (`triage_summary.md`, `classification_overview.md`, `analysis/summary.md`), tracker refresh (K3) pending to mark determinism clusters resolved and source-weighting counts updated.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -148,8 +148,8 @@ Exit Criteria: Phase K directory populated with logs + junit XML + env snapsho
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | K1 | Execute full suite (Phase K) | [D] | Attempt #15 (20251011T072940Z) captured the rerun with `timeout 3600`; artifacts include `logs/pytest_full.log`, `artifacts/pytest_full.xml`, `env/torch_env.txt`, and `summary.md`. |
-| K2 | Refresh classification | [ ] | Create `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/` and regenerate `triage_summary.md` + `classification_overview.md` from the new junit/log; highlight deltas vs Phase I and label each failure as implementation bug vs deprecation candidate. |
-| K3 | Sync tracker + ledger | [ ] | Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/` (or clone to a new STAMP) with refreshed counts/owners, note shifts in `remediation_tracker.md`/`remediation_sequence.md`, and log Attempt #15 + analysis outputs in `docs/fix_plan.md` alongside a brief `phase_k/.../analysis/summary.md`. |
+| K2 | Refresh classification | [D] | Attempt #16 → `analysis/{triage_summary.md,classification_overview.md,summary.md}` reconciled Phase K failures with Phase I baseline (31 failures across 14 clusters; C1/C2/C15 resolved, C3 improved). |
+| K3 | Sync tracker + ledger | [ ] | Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/` (or clone to a new STAMP) with refreshed counts/owners (mark C2/C15 ✅, set C3 = 4 failures, Sprint 1 progress 3/17), revise `remediation_sequence.md`, and log Attempt #16/K3 outputs in `docs/fix_plan.md`. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).

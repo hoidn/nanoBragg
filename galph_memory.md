@@ -2353,3 +2353,8 @@
 - Rewrote input.md instructing Ralph to build Phase K triage_summary/classification_overview and update remediation tracker (docs-only, no pytest).
 - Follow-up for Ralph: execute K2/K3 per plan, write Attempt #16 entry with artifact links once complete.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-18 (galph loop - focus note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase K closure + remediation planning
+- Action type: Planning
+- Mode: Docs
