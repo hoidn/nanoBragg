@@ -2521,3 +2521,15 @@
 - Expect Ralph to create reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/ with baseline/fix/regression logs, update docs/fix_plan Attempt #23, and flip plan row M1c to [D].
 - Action State: [ready_for_implementation]
 
+
+### 2025-10-11T16:35:06Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1c debug trace guard (Cluster C4)
+- Action type: Review/housekeeping
+- Mode: none
+
+### 2025-10-11T16:39:55Z (galph loop - Cluster C4 refresh)
+- Ran env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py (reports/2026-01-test-suite-triage/phase_m1/20251011T163812Z/debug_trace/pytest_failed.log) confirming new failure: TRACE output lacks "Final intensity" when only -trace_pixel is supplied.
+- Updated plans/active/test-suite-triage.md M1c guidance to require emitting the summary line and pointed to the new baseline log.
+- docs/fix_plan.md: added context to Next Actions and logged Attempt #24 (regression still open).
+- Rewrote input.md directing Ralph to add the missing summary print and close Cluster C4.
+- <Action State>: [ready_for_implementation]

@@ -1,37 +1,45 @@
-Summary: Guard the debug trace pre-polar accumulator so Cluster C4 stops throwing UnboundLocalError during Phase M1 quick fixes.
-Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Phase M1 — Sprint 0 Quick Fixes (Cluster C4)
+Summary: Restore TRACE output to include the final-intensity summary so Cluster C4 stops failing.
+Mode: none
+Focus: [TEST-SUITE-TRIAGE-001] Phase M1c — Cluster C4 debug trace guard
 Branch: feature/spec-based-2
-Mapped tests: tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag; tests/test_debug_trace.py::TestDebugTraceFeatures
-Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/
-Do Now: Execute [TEST-SUITE-TRIAGE-001] Phase M1c and run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag
-If Blocked: Capture the failing log with the selector above into reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/baseline.log, note the traceback in notes.md, and halt for guidance.
+Mapped tests: tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag; tests/test_debug_trace.py
+Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/{pytest_before.log,pytest_after.log,summary.md}
+Do Now: [TEST-SUITE-TRIAGE-001] Phase M1c — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag
+If Blocked: Capture the failure log under phase_m1/$STAMP/debug_trace/blocked.log and update docs/fix_plan.md with the blocker description + command used.
+
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:202-214 keeps Phase M1 on track; M1c is the next open Sprint 0 task after C1/C3 landed.
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:126-153 documents Cluster C4’s root cause and selectors.
-- docs/fix_plan.md:40-51 binds current Sprint 0 work to clusters C4/C5/C7 now that C1/C3 are closed.
-- src/nanobrag_torch/simulator.py:1000-1275 contains the debug trace path that dereferences I_before_normalization_pre_polar.
-- docs/development/testing_strategy.md:31-48 reminds us to stay on targeted selectors and log artifacts under stamped directories.
+- docs/fix_plan.md:48-109 – Cluster C4 remains open after Attempt #24; new failure log pinned at reports/2026-01-test-suite-triage/phase_m1/20251011T163812Z/debug_trace/pytest_failed.log.
+- plans/active/test-suite-triage.md:208-214 – Task M1c now calls for emitting "Final intensity" when only -trace_pixel is set.
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:130-153 – Original C4 diagnosis; reconcile new output requirement without regressing the pre-polar guard.
+- tests/test_debug_trace.py:96-155 – Acceptance criteria for debug CLI flags; assertions we must satisfy.
+- arch.md:1016-1345 – `_apply_debug_output` implementation; keep vectorization/device guardrails.
+
 How-To Map:
-- export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md; export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/
-- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/baseline.log
-- In src/nanobrag_torch/simulator.py ensure I_before_normalization_pre_polar is initialised before conditional branches (vectorised + oversample paths) and guard _apply_debug_output so it only prints when the value is not None; keep vectorisation and dtype/device neutrality intact.
-- Re-run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag --maxfail=1 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/fix.log
-- Run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/regression.log to confirm the other three tests cleared.
-- Summarise the before/after behaviour and any code touchpoints in reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/notes.md, then log Attempt #23 in docs/fix_plan.md and mark plan row M1c as done before requesting review.
+1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; mkdir -p `reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace` and drop `env.txt` with `env | sort` for traceability.
+2. Reproduce current failure once via `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag | tee reports/.../pytest_before.log` so the baseline for this attempt lives beside the new work.
+3. Update `src/nanobrag_torch/simulator.py` so `_apply_debug_output` prints the per-pixel summary ("Final intensity" + "Normalized intensity") whenever `trace_pixel` is set, regardless of `printout`. Preserve differentiability (no `.item()` on tensors needed beyond existing debug path) and keep device/dtype neutrality.
+4. Double-check that `I_before_normalization_pre_polar` stays initialised for both oversample and non-oversample branches; avoid reintroducing the old UnboundLocalError.
+5. Run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py` and save the passing log to `reports/.../pytest_after.log`. If CUDA is available later, note whether GPU execution is required (optional per plan, but mention in summary if skipped).
+6. Update `reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/summary.md` with command list, runtimes, and before→after status. Remove temporary float images (the tests leave `/tmp/` files) if they persist.
+7. Sync documentation: mark M1c `[D]` in plans/active/test-suite-triage.md after validating, add Attempt #25 entry (success) to docs/fix_plan.md with links to artifacts, and refresh remediation tracker if it references C4.
+
 Pitfalls To Avoid:
-- Do not run the full pytest suite or unrelated selectors—stay on the mapped debug-trace tests.
-- Preserve vectorisation: no per-pixel Python loops or scalar tensor conversions when initialising the debug variable.
-- Avoid `.item()` or `.cpu()` on tensors inside the simulator; keep device/dtype neutrality per arch.md §15.
-- Keep `_apply_debug_output` signature compatible with existing call sites (no parameter order changes).
-- Do not remove or rename debug-tap variables referenced by other instrumentation (specifically CLI-FLAGS-003 comments).
-- Leave other Sprint 0 clusters (C5/C7) untouched in this loop; they will follow once C4 lands.
-- Maintain Protected Assets from docs/index.md (loop.sh, input.md, etc.).
-- Capture logs under the stamped directory before editing code so Attempt history has baseline evidence.
+- Do not strip existing TRACE_PY lines; only add the missing summary without breaking parity instrumentation.
+- Keep all new debug strings ASCII and consistent with existing wording (tests match on "Final intensity").
+- No `.cpu()`/`.cuda()` calls; rely on existing tensors for device propagation.
+- Preserve vectorization (no per-pixel Python loops when adding output logic).
+- Ensure CLI env var `KMP_DUPLICATE_LIB_OK=TRUE` accompanies every pytest invocation.
+- Do not delete or rename anything listed in docs/index.md (e.g., loop.sh, input.md).
+- Capture artifacts under the prescribed reports/ path; avoid scattering logs elsewhere.
+- Update docs/fix_plan.md in the same loop; do not leave the ledger stale.
+- Clean up temporary output files (float images) generated by the debug tests.
+- Mention skipped CUDA validation explicitly if it is not run.
+
 Pointers:
+- docs/fix_plan.md:48-109
 - plans/active/test-suite-triage.md:202-214
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:126-153
-- docs/fix_plan.md:40-51
-- src/nanobrag_torch/simulator.py:1000-1275
-- docs/development/testing_strategy.md:31-48
-Next Up: Cluster C5 (Simulator API kwargs) once debug trace scope is resolved and logged.
+- tests/test_debug_trace.py:96-155
+- src/nanobrag_torch/simulator.py:1200-1405
+- reports/2026-01-test-suite-triage/phase_m1/20251011T163812Z/debug_trace/pytest_failed.log
+
+Next Up: [TEST-SUITE-TRIAGE-001] Phase M1d — run `tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution` after resolving Cluster C4.
