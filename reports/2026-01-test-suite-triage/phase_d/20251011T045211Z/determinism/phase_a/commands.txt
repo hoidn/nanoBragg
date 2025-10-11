@@ -1,0 +1,3 @@
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10

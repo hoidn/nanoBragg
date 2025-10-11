@@ -1,38 +1,48 @@
-Summary: Confirm the dtype blocker is truly cleared by running the determinism smoke test and logging a go/no-go for Sprint 1.
+Summary: Disable TorchDynamo in the determinism harness and align mosaic rotation dtype so AT-PARALLEL-013/024 can execute seed checks.
 Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
-Branch: feature/spec-based-2
-Mapped tests: tests/test_at_parallel_013.py::test_pytorch_determinism_same_seed
-Artifacts: reports/2026-01-test-suite-triage/phase_j/<STAMP>/pre_sprint/{commands.txt,pytest.log,summary.md}
-Do Now: [TEST-SUITE-TRIAGE-001] Pre-Sprint blocker verification — CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::test_pytorch_determinism_same_seed -x
-If Blocked: Capture pytest.log plus summary.md noting dtype crash persists, update docs/fix_plan.md Attempts with the log path, and halt Sprint 1 until dtype neutrality is re-fixed.
+Focus: [DETERMINISM-001] PyTorch RNG determinism
+Branch: main
+Mapped tests: tests/test_at_parallel_013.py; tests/test_at_parallel_024.py
+Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/phase_a_fix/
+Do Now: Update the determinism helpers to skip TorchDynamo when no CUDA device is available, standardise `mosaic_rotation_umat` dtype/device handling, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10` and `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10`, archiving each log under the phase_a_fix stamp.
+If Blocked: Capture the failing stack trace plus `python -c "import torch, json; print(json.dumps({'cuda_available': torch.cuda.is_available(), 'device_count': torch.cuda.device_count()}))"` into attempts history and stop.
+
 Priorities & Rationale:
-- docs/fix_plan.md:39-54 mandates the Pre-Sprint smoke test before any Sprint 1 remediation.
-- plans/active/test-suite-triage.md:131-140 captures Phase J gating deliverables that depend on this verification.
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md:17-44 defines the exact command and go/no-go decision logic.
-- plans/active/determinism.md:1-74 shows Phase A reproduction tasks that this smoke run feeds.
-- docs/development/testing_strategy.md:1-120 provides the authoritative env/test discipline (KMP env, targeted selectors only).
+- plans/active/determinism.md — Phase A checklist now [D]; next gate is removing infrastructure blockers before Phase B callchain starts.
+- docs/fix_plan.md (DETERMINISM-001) — Attempt #3 documents current Dynamo failure; unblocker is prerequisite for Sprint 1 remediation.
+- specs/spec-a-parallel.md#L95 — AT-PARALLEL-013 determinism contract demands bitwise equality; torch.compile interference must be avoided.
+- specs/spec-a-core.md#L520 — RNG seed contract requires mosaic/misset helpers to honour caller dtype/device to maintain differentiability expectations.
+- docs/development/testing_strategy.md §1.4 — Device/dtype neutrality guardrail; mosaic helper should respect execution dtype.
+
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_j/$STAMP/pre_sprint and echo the value into commands.txt alongside the exact pytest command and env vars used.
-- Run CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py::test_pytorch_determinism_same_seed -x | tee reports/2026-01-test-suite-triage/phase_j/$STAMP/pre_sprint/pytest.log.
-- Summarise pass/fail outcome, presence or absence of dtype crashes, and next-step recommendation in summary.md (include go/no-go for Sprint 1 determinism work).
-- Update docs/fix_plan.md `[TEST-SUITE-TRIAGE-001]` Attempts with Attempt #13 (Pre-Sprint verification) referencing the new artifact paths and decision.
-- Append a short status line to remediation_tracker.md (under C2/C15 rows) noting Pre-Sprint gate result, linking to summary.md.
+- Set `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and `BASE=reports/2026-01-test-suite-triage/phase_d/${STAMP}/determinism/phase_a_fix`; create `${BASE}/{logs,at_parallel_013,at_parallel_024}`.
+- Code changes:
+  1. In `tests/test_at_parallel_013.py` update `set_deterministic_mode()` to set `os.environ['TORCHDYNAMO_DISABLE'] = '1'` before calling `torch.use_deterministic_algorithms(...)`, and call `torch._dynamo.reset()` after toggling so other tests resume with defaults.
+  2. In `src/nanobrag_torch/utils/c_random.py` accept `dtype: Optional[torch.dtype] = None` for `mosaic_rotation_umat()` and default to `torch.get_default_dtype()` when omitted.
+  3. In `src/nanobrag_torch/models/crystal.py:728` pass `dtype=self.dtype` and `device=self.device` to `mosaic_rotation_umat(...)` so misset sampling respects the active execution settings.
+- After edits run:
+  * `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10 | tee ${BASE}/at_parallel_013/pytest.log`
+  * `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10 | tee ${BASE}/at_parallel_024/pytest.log`
+  Store the commands in `${BASE}/commands.txt` and copy any additional summaries into `${BASE}/logs/` as needed.
+- Update `docs/fix_plan.md` Attempt history for `[DETERMINISM-001]` with Attempt #4 (include pass/fail counts and notes on the Dynamo guard + dtype fix) and refresh `plans/active/determinism.md` Phase B status if blockers clear.
+
 Pitfalls To Avoid:
-- Do not edit simulator code or widen test scope beyond the mapped selector.
-- Keep protected assets untouched and respect docs/index.md guardrails.
-- Ensure KMP_DUPLICATE_LIB_OK=TRUE is exported; missing it can crash torch imports.
-- Avoid running the full pytest suite; stay within the single determinism test.
-- If the test unexpectedly passes, still document correlation/tolerance context before declaring go.
-- If dtype crashes reappear, stop and document; do not roll forward to Sprint 1 fixes.
-- Maintain device neutrality by forcing CPU (CUDA_VISIBLE_DEVICES=-1) as the plan specifies.
-- Record exit code in commands.txt for reproducibility.
-- Keep summary.md concise but explicit about next actions (e.g., proceed to determinism Phase A or re-open dtype plan).
-- Update fix_plan.md only after artifacts are in place to avoid broken references.
+- Keep the Dynamo disablement scoped to the determinism harness; do not wire `TORCHDYNAMO_DISABLE` globally in production code.
+- Preserve existing docstring C references and surrounding comments when editing `c_random.py` and `crystal.py`.
+- Do not introduce `.cpu()`/`.cuda()` calls in mosaic helpers; rely on provided dtype/device.
+- Maintain differentiability—avoid `.detach()`/`.item()` when passing tensors between crystal and simulator.
+- Run only the mapped tests; skip full-suite `pytest tests/` to save time.
+- Respect Protected Assets listed in docs/index.md (no edits to loop.sh/input.md outside expected workflow).
+- Capture the updated seed/determinism logs before moving on; they gate Phase B callchain work.
+- Commit messages should cite the determinism plan item and list tests executed.
+
 Pointers:
-- docs/fix_plan.md:39-55
-- plans/active/test-suite-triage.md:131-140
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md:17-44
-- plans/active/determinism.md:1-74
-- docs/development/testing_strategy.md:1-120
-Next Up: If the gate is green, start Phase A tasks from plans/active/determinism.md (env capture + AT-013/024 reproductions).
+- docs/fix_plan.md:39 — determinism next actions snapshot.
+- plans/active/determinism.md — Phase A completion notes and Phase B prerequisites.
+- specs/spec-a-parallel.md#L95 — AT-PARALLEL-013 acceptance criteria.
+- specs/spec-a-core.md#L520 — RNG seed and dtype expectations.
+- tests/test_at_parallel_013.py — `set_deterministic_mode()` helper to tweak Dynamo env.
+- src/nanobrag_torch/utils/c_random.py — `mosaic_rotation_umat` implementation.
+- src/nanobrag_torch/models/crystal.py:720 — random misset call site.
+
+Next Up: Prepare Phase B callchain tracing once determinism selectors execute without infrastructure failures.

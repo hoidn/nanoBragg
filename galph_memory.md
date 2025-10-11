@@ -2230,3 +2230,14 @@
 - Directed updates to docs/fix_plan.md Attempts and remediation_tracker.md once the smoke output is captured to record the go/no-go decision.
 - <Action State>: [ready_for_implementation]
 
+
+### 2026-01-17 (galph loop - determinism Phase A reproduction kickoff)
+- Focus issue: [DETERMINISM-001] Phase A reproduction
+- Action type: Evidence collection (Callchain tracing not yet invoked)
+- Mode: Parity
+- Notes: Beginning reproduction pass for AT-PARALLEL-013/024 to unblock Sprint 1 remediation. Detailed summary to follow end-of-loop.
+- <Action State>: [gathering_evidence]
+- Evidence captured under reports/2026-01-test-suite-triage/phase_d/20251011T045211Z/determinism/phase_a/ (collect-only + AT-013/024 logs, env snapshot).
+- TorchDynamo still queries CUDA device metadata when cuda_available==True but device_count==0, causing the same IndexError as Attempt #2; mosaic_rotation_umat dtype mismatch persists.
+- Next loop should choose between disabling Dynamo for determinism selectors or provisioning a stub CUDA device before launching Phase B callchain.
+- <Action State>: [planning]

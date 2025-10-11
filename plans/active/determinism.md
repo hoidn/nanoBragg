@@ -22,10 +22,10 @@ Exit Criteria: Failure logs for AT-PARALLEL-013/024 with environment snapshot, p
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| A1 | Collect environment + seed baseline | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` and log torch/numpy/OMP seeds in `env.json`. Cite `docs/development/testing_strategy.md` §1.4 for device guardrails. |
-| A2 | Reproduce AT-PARALLEL-013 failures | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10`. Capture full log → `phase_a/<STAMP>/at_parallel_013/pytest.log`. Include `commands.txt`. |
-| A3 | Reproduce AT-PARALLEL-024 failures | [ ] | Command: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10`. Store logs under `phase_a/<STAMP>/at_parallel_024/`. Record failing assertions. |
-| A4 | Capture control run (if any) | [ ] | If a direct API script (e.g., `debug_misset_seed.py`) exists, run it to confirm seed reproducibility expectations; otherwise note absence. Summarise findings in `phase_a/<STAMP>/summary.md`. |
+| A1 | Collect environment + seed baseline | [D] | Attempt #3 (20260117) — `logs/collect_only.log` + `env.json` under `reports/2026-01-test-suite-triage/phase_d/20251011T045211Z/determinism/phase_a/` capture global env + seed state. |
+| A2 | Reproduce AT-PARALLEL-013 failures | [D] | Attempt #3 — `pytest` selector executed; failure log stored at `reports/2026-01-test-suite-triage/phase_d/20251011T045211Z/determinism/phase_a/at_parallel_013/pytest.log`, confirming TorchDynamo CUDA probe still blocks determinism asserts. |
+| A3 | Reproduce AT-PARALLEL-024 failures | [D] | Attempt #3 — `reports/2026-01-test-suite-triage/phase_d/20251011T045211Z/determinism/phase_a/at_parallel_024/pytest.log` documents RNG determinism success plus residual `mosaic_rotation_umat` dtype mismatch. |
+| A4 | Capture control run (if any) | [D] | No standalone control script available; absence documented in `summary.md` for Attempt #3 (Phase A). |
 
 ### Phase B — Seed Callchain & Trace Mapping
 Goal: Identify where seed propagation diverges between CLI/API and within simulator components using `prompts/callchain.md` SOP.

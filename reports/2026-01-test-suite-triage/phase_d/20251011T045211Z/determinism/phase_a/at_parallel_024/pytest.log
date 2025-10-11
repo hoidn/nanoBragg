@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg4/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 6 items
+
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism PASSED [ 16%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_c_pytorch_equivalence SKIPPED [ 50%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_lcg_compatibility PASSED [ 66%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism FAILED [ 83%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip PASSED [100%]
+
+=================================== FAILURES ===================================
+__________ TestAT_PARALLEL_024.test_mosaic_rotation_umat_determinism ___________
+
+self = <tests.test_at_parallel_024.TestAT_PARALLEL_024 object at 0x7241d8f00170>
+
+    def test_mosaic_rotation_umat_determinism(self):
+        """Test that mosaic_rotation_umat is deterministic with same seed."""
+        seed = 12345
+        mosaicity = np.pi / 2.0  # 90 degrees
+    
+        # Generate two matrices with same seed
+        umat1 = mosaic_rotation_umat(mosaicity, seed)
+        umat2 = mosaic_rotation_umat(mosaicity, seed)
+    
+        # They should be identical
+        assert torch.allclose(umat1, umat2, rtol=1e-12, atol=1e-15), \
+            "Same seed did not produce identical rotation matrices"
+    
+        # Check that it's unitary (rotation matrix property)
+        identity = torch.matmul(umat1, umat1.T)
+        expected_identity = torch.eye(3, dtype=torch.float64)
+>       assert torch.allclose(identity, expected_identity, rtol=1e-10, atol=1e-12), \
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            "Generated matrix is not unitary"
+E       RuntimeError: Float did not match Double
+
+tests/test_at_parallel_024.py:356: RuntimeError
+============================= slowest 10 durations =============================
+1.89s call     tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism
+0.01s call     tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence
+
+(8 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism
+==================== 1 failed, 4 passed, 1 skipped in 3.96s ====================
