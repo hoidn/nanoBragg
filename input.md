@@ -1,38 +1,37 @@
-Summary: Close Cluster C3 by keeping detector beam centers as tensors so Phase M1 quick fixes stay on track.
+Summary: Guard the debug trace pre-polar accumulator so Cluster C4 stops throwing UnboundLocalError during Phase M1 quick fixes.
 Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Phase M1 — Sprint 0 Quick Fixes (Cluster C3)
+Focus: [TEST-SUITE-TRIAGE-001] Phase M1 — Sprint 0 Quick Fixes (Cluster C4)
 Branch: feature/spec-based-2
-Mapped tests: tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params; tests/test_suite.py::TestTier1TranslationCorrectness
-Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/
-Do Now: Execute [TEST-SUITE-TRIAGE-001] Phase M1b and run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params
-If Blocked: Capture the failing log with the same selector under reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/baseline.log, note the traceback, and pause.
+Mapped tests: tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag; tests/test_debug_trace.py::TestDebugTraceFeatures
+Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/
+Do Now: Execute [TEST-SUITE-TRIAGE-001] Phase M1c and run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag
+If Blocked: Capture the failing log with the selector above into reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/baseline.log, note the traceback in notes.md, and halt for guidance.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:200-214 keeps Phase M1 ladder authoritative; we must advance M1b now that M1a is done.
-- docs/fix_plan.md:30-68 lists Sprint 0 quick fixes as the current critical path with C3 still open.
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:92-122 documents the dtype root cause and the reproduction selector.
-- arch.md:317-319 reiterates dtype/device neutrality requirements that this fix must uphold.
-- docs/development/testing_strategy.md:31-48 defines the targeted-test cadence we must obey (no full suite yet).
+- plans/active/test-suite-triage.md:202-214 keeps Phase M1 on track; M1c is the next open Sprint 0 task after C1/C3 landed.
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:126-153 documents Cluster C4’s root cause and selectors.
+- docs/fix_plan.md:40-51 binds current Sprint 0 work to clusters C4/C5/C7 now that C1/C3 are closed.
+- src/nanobrag_torch/simulator.py:1000-1275 contains the debug trace path that dereferences I_before_normalization_pre_polar.
+- docs/development/testing_strategy.md:31-48 reminds us to stay on targeted selectors and log artifacts under stamped directories.
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ) and mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/
-- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/baseline.log
-- Implement the tensor conversion guard in src/nanobrag_torch/models/detector.py per triage guidance; keep conversions device/dtype neutral.
-- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params --maxfail=1 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/fix.log
-- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/regression.log
-- Document before/after type() evidence in reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/notes.md and update docs/fix_plan.md Attempts plus remediation_tracker.md with results before requesting review.
+- export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md; export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/
+- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/baseline.log
+- In src/nanobrag_torch/simulator.py ensure I_before_normalization_pre_polar is initialised before conditional branches (vectorised + oversample paths) and guard _apply_debug_output so it only prints when the value is not None; keep vectorisation and dtype/device neutrality intact.
+- Re-run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag --maxfail=1 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/fix.log
+- Run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/regression.log to confirm the other three tests cleared.
+- Summarise the before/after behaviour and any code touchpoints in reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/notes.md, then log Attempt #23 in docs/fix_plan.md and mark plan row M1c as done before requesting review.
 Pitfalls To Avoid:
-- Do not run the full pytest suite; stay on the mapped selectors.
-- Preserve tensor devices/dtypes—no hard-coded .cpu()/.cuda() or float literals without torch.tensor.
-- Avoid touching unrelated clusters (C4/C5/C7) until C3 evidence is committed.
-- Keep DetectorConfig conversions differentiable; do not call .item() on tensors.
-- Record artifacts under the stamped directory before cleaning logs.
-- Leave Protected Assets listed in docs/index.md untouched.
-- Follow KMP_DUPLICATE_LIB_OK=TRUE in every torch invocation to prevent MKL conflicts.
-- Capture before/after type() evidence exactly as the plan requires so we can audit conversions later.
-- Update attempts history only after tests pass; otherwise log under Attempts with a BLOCKED note.
+- Do not run the full pytest suite or unrelated selectors—stay on the mapped debug-trace tests.
+- Preserve vectorisation: no per-pixel Python loops or scalar tensor conversions when initialising the debug variable.
+- Avoid `.item()` or `.cpu()` on tensors inside the simulator; keep device/dtype neutrality per arch.md §15.
+- Keep `_apply_debug_output` signature compatible with existing call sites (no parameter order changes).
+- Do not remove or rename debug-tap variables referenced by other instrumentation (specifically CLI-FLAGS-003 comments).
+- Leave other Sprint 0 clusters (C5/C7) untouched in this loop; they will follow once C4 lands.
+- Maintain Protected Assets from docs/index.md (loop.sh, input.md, etc.).
+- Capture logs under the stamped directory before editing code so Attempt history has baseline evidence.
 Pointers:
-- plans/active/test-suite-triage.md:210
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:92-122
-- docs/fix_plan.md:30-68
-- arch.md:317-319
+- plans/active/test-suite-triage.md:202-214
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:126-153
+- docs/fix_plan.md:40-51
+- src/nanobrag_torch/simulator.py:1000-1275
 - docs/development/testing_strategy.md:31-48
-Next Up: M1c (debug trace init) once dtype conversion lands and logs are archived.
+Next Up: Cluster C5 (Simulator API kwargs) once debug trace scope is resolved and logged.

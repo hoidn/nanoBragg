@@ -2509,3 +2509,15 @@
 - Issued fresh input.md directing Ralph to execute M1b (detector dtype conversion) with stamped artifact capture per triage_summary.md:92-122.
 - <Action State>: [ready_for_implementation]
 
+### 2025-10-11T16:25:32Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1c debug trace scope
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-11T16:28:22Z (galph loop - Phase M1c briefing)
+- Updated plans/active/test-suite-triage.md to mark M1b [D] with Attempt #22 evidence and noted C4/C5/C7 as remaining Sprint 0 tasks.
+- Refreshed docs/fix_plan.md Next Actions to drop C3 from the remaining cluster list; emphasised C4/C5/C7 path.
+- Rewrote input.md directing Ralph to execute Phase M1c (Cluster C4) with stamped artifact capture and fix_plan logging.
+- Expect Ralph to create reports/2026-01-test-suite-triage/phase_m1/$STAMP/debug_trace/ with baseline/fix/regression logs, update docs/fix_plan Attempt #23, and flip plan row M1c to [D].
+- Action State: [ready_for_implementation]
+
