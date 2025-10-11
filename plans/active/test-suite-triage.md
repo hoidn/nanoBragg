@@ -14,7 +14,8 @@
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
 - Phase D ✅ complete (D1–D4). This loop issued the supervisor handoff for `[CLI-DEFAULTS-001]` (input stamp 20251010T153734Z) unlocking remediation attempts.
 - Phase E ✅ complete (Attempt #7 — `reports/2026-01-test-suite-triage/phase_e/20251010T180102Z/`); 691 executed tests, 516 passed, 49 failed, 126 skipped. CLI defaults cluster cleared; other clusters unchanged.
-- Phase F ✅ complete (Attempt #8 — `reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/`); refreshed triage bundle with 49-failure classification, cluster deltas, and pending actions table. C1 resolved, 17 active clusters documented. Ready for Phase G coordination.
+- Phase F ✅ complete (Attempt #8 — `reports/2026-01-test-suite-triage/phase_f/20251010T184326Z/`); refreshed triage bundle with 49-failure classification, cluster deltas, and pending actions table. C1 resolved, 17 active clusters documented.
+- Phase G ✅ progressing — Attempt #9 (this loop) captured the refreshed remediation ladder addendum at `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/` and the supervisor playbook has been refreshed for `[DTYPE-NEUTRAL-001]` Phase E delegation.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -97,8 +98,8 @@ Exit Criteria: `handoff.md` appendix updated with 2026 priority ladder and super
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| G1 | Update remediation ladder | [ ] | Amend `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md` (or publish Phase G handoff) to reflect 2026 clusters; cite spec/test references per item. |
-| G2 | Sync supervisor playbook | [ ] | Ensure `input.md` template and galph_memory entries reference the refreshed Do Now sequence; coordinate with `[DETERMINISM-001]`/`[CLI-FLAGS-003]` plans as needed. |
+| G1 | Update remediation ladder | [D] | Attempt #9 → Published Phase G addendum (`reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`) superseding the Phase D ladder with status-aware priorities. |
+| G2 | Sync supervisor playbook | [D] | Attempt #9 → `input.md` and galph_memory baton updated to reference the Phase G addendum and delegate `[DTYPE-NEUTRAL-001]` Phase E validation. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–G marked complete with `[D]` status in tables (Phase E onward newly activated for 2026 refresh).

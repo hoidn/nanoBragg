@@ -2185,3 +2185,11 @@
 - Follow-up for Ralph: execute the deterministic test reruns, archive logs + summary, and update fix_plan Attempt #2 before we author Phase B callchain tasks.
 - <Action State>: [ready_for_implementation]
 
+
+### 2025-10-11 (galph loop - pre-review note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase G coordination (Action: Review/housekeeping, Mode: Docs).
+### 2025-10-11 (galph loop - Phase G addendum + dtype validation prep)
+- Published Phase G addendum at `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md` and marked G1/G2 complete in `plans/active/test-suite-triage.md`.
+- Updated `docs/fix_plan.md` header + `[TEST-SUITE-TRIAGE-001]` Attempt #9/logistics and corrected `[DTYPE-NEUTRAL-001]` status/next steps (Phase E outstanding).
+- Replaced `input.md` with Parity-mode Do Now for `[DTYPE-NEUTRAL-001]` Phase E validation; baton now points Ralph at CPU-only rerun + docs updates.
+- <Action State>: [ready_for_implementation]

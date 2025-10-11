@@ -1,0 +1,2 @@
+# Phase G Addendum — commands executed
+- (docs only) No pytest or nb-compare commands executed; reviewed Fix Plan + Phase F artifacts.
