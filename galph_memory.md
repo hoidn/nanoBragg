@@ -2452,3 +2452,14 @@
 - Refreshed `docs/fix_plan.md` Active Focus, Next Actions (both `[TEST-SUITE-TRIAGE-001]` + `[DETECTOR-CONFIG-001]`), and issued `input.md` (Parity mode) directing MOSFLM offset implementation + detector-config pytest rerun.
 - <Action State>: [ready_for_implementation]
 
+### 2026-01-20 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M relaunch
+- Action type: Planning
+- Mode: Parity
+
+### 2026-01-20 (galph loop - Phase M0 directive alignment)
+- Refocused `[TEST-SUITE-TRIAGE-001]` on the 2026-01-20 mandate: added Phase M0 section to plans/active/test-suite-triage.md (lines 168-177) with preflight/full-run/triage checklist.
+- Updated docs/fix_plan.md (lines 44-52) to point reproduction + Next Actions at Phase M0 artifacts and to park `[DETECTOR-CONFIG-001]` follow-up until the new baseline lands.
+- Reissued input.md steering Ralph to capture collect-only + full-suite runs under phase_m0/$STAMP and refresh triage_summary.md before resuming detector work.
+- Action State: [ready_for_implementation]
+

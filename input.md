@@ -1,39 +1,32 @@
-Summary: Apply MOSFLM +0.5 beam-center offset and clear detector-config regressions ahead of Phase M.
+Summary: Capture the directive-mandated full-suite baseline and refresh failure triage before resuming MOSFLM remediation.
 Mode: Parity
-Focus: [DETECTOR-CONFIG-001] Detector defaults audit
+Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 Branch: feature/spec-based-2
-Mapped tests: pytest -v tests/test_detector_config.py --maxfail=0
-Artifacts: reports/2026-01-test-suite-triage/phase_m/$STAMP/{detector_config,full_suite}/
-Do Now: [DETECTOR-CONFIG-001] Detector defaults audit — KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0
-If Blocked: Capture notes in plans/active/detector-config.md Phase B checklist, add Attempt entry in docs/fix_plan.md, and pause implementation.
+Mapped tests: pytest --collect-only -q tests; pytest tests/ -v --durations=25 --maxfail=0
+Artifacts: reports/2026-01-test-suite-triage/phase_m0/$STAMP/{preflight,artifacts,triage_summary.md}
+Do Now: [TEST-SUITE-TRIAGE-001] Full pytest run and triage — KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml
+If Blocked: Stop after logging the failure in reports/2026-01-test-suite-triage/phase_m0/$STAMP/attempt_blocked.md and update docs/fix_plan.md + plans/active/test-suite-triage.md (Phase M0 table) with the observed blocker.
 Priorities & Rationale:
-- plans/active/detector-config.md Phase B: blueprint enumerates mm→pixel conversion sites and offset rules that must be implemented this loop.
-- docs/fix_plan.md#detector-config-001: Next Actions now require Phase C1–C3 to land before we can rerun the suite.
-- reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md: documents failing expectations (513.0/1024.5 px) caused by missing MOSFLM +0.5 offset.
-- specs/spec-a-core.md:72-75 & arch.md ADR-03: normative references for MOSFLM beam-center offsets you must match exactly.
-- docs/development/pytorch_runtime_checklist.md item 1 & 2: maintain vectorization and device/dtype neutrality while editing Detector.
+- plans/active/test-suite-triage.md:168 — Phase M0 mandates the preflight snapshot, full-suite rerun, and refreshed triage package before other work.
+- docs/fix_plan.md:38 — Next Actions now require Phase M0a–M0c artifacts and ledger sync; completing them unblocks downstream remediation.
+- docs/development/testing_strategy.md:18 — Device/dtype discipline plus full-suite cadence guardrails apply while collecting this baseline.
+- docs/development/pytorch_runtime_checklist.md:12 — Reconfirm runtime guardrails (dtype neutrality, vectorization) before entering the long run.
 How-To Map:
-- Implementation: adjust `src/nanobrag_torch/models/detector.py` mm→pixel conversion (see lines 78-142, 612-690). Apply MOSFLM-only +0.5 offsets; document rationale in code comments only if non-obvious.
-- Tests: extend `tests/test_detector_config.py` to assert MOSFLM pixel centres shift by +0.5 while XDS remains unchanged. Add regression for `Detector.get_pixel_coords()` if needed.
-- Docs/ledger: update `docs/architecture/detector.md` (§8.2) and `docs/development/c_to_pytorch_config_map.md` beam-center row to mention the MOSFLM +0.5 application site; refresh `docs/fix_plan.md` Attempt log and `reports/.../analysis.md` with results.
-- Commands: `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-triage/phase_m/$STAMP/detector_config`; `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0 | tee reports/2026-01-test-suite-triage/phase_m/$STAMP/detector_config/pytest.log`.
-- Optional (post-pass): if time, run `KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/$STAMP/full_suite/pytest_full.xml`.
+- Export STAMP=`date -u +%Y%m%dT%H%M%SZ`; mkdir -p reports/2026-01-test-suite-triage/phase_m0/$STAMP/{preflight,artifacts}.
+- Preflight (Phase M0a): `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/preflight/collect_only.log`; capture `python -m pip freeze > .../preflight/pip_freeze.txt` and `python - <<'PY'` env summary (Python, torch, CUDA) into `env.txt`.
+- Full-suite run (Phase M0b): `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.log`; note runtime + exit code in `commands.txt`.
+- Post-run triage (Phase M0c): parse failures into `reports/2026-01-test-suite-triage/phase_m0/$STAMP/triage_summary.md`, flag each as implementation bug vs deprecation candidate, and log counts in `summary.md`.
+- Update docs: append Attempt entry under `[TEST-SUITE-TRIAGE-001]` in docs/fix_plan.md with metrics, link new artifacts, and note any novel failure classes.
+- Prep follow-up: if detector-config regressions resurface, open a new row in remediation_tracker.md with cluster IDs; otherwise, document confirmation so `[DETECTOR-CONFIG-001]` stays marked done.
 Pitfalls To Avoid:
-- Do not offset non-MOSFLM conventions; verify conditional logic before editing.
-- Preserve tensor dtype/device neutrality; avoid `.item()` or hard-coded CPU tensors in Detector.
-- Keep vectorization intact; no Python loops added around pixel calculations.
-- Respect Protected Assets listed in docs/index.md (e.g., input.md, loop.sh); do not rename or remove them.
-- Maintain differentiability by using tensor operations; no `.detach()`/`.numpy()` in core paths.
-- Update docs together with code; avoid drift between spec references and implementation.
-- Capture artifacts under the documented reports/ path with timestamped STAMP directories.
-- Record Attempt details in docs/fix_plan.md and plans/active/detector-config.md once execution completes.
-- Run targeted pytest before any full-suite invocation; only run the full suite if the targeted tests pass.
-- Set `KMP_DUPLICATE_LIB_OK=TRUE` for every pytest/python command involving torch.
+- Do not shorten runtime options; allow the run to exceed 30 minutes if needed rather than splitting unless timeout recurs.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest invocation to avoid MKL crashes.
+- No implementation edits this loop; capture evidence only.
+- Store artifacts exactly under the phase_m0/$STAMP/ hierarchy to keep history consistent.
+- Watch disk usage; abort if <10 GB free and record the blockage.
 Pointers:
-- src/nanobrag_torch/models/detector.py:78-142,612-690
-- tests/test_detector_config.py:1
-- docs/architecture/detector.md#L60
-- docs/development/c_to_pytorch_config_map.md:35
-- reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/analysis.md
-- plans/active/detector-config.md:1
-Next Up: 1. After targeted pass, execute Phase M full-suite rerun and sync remediation_tracker.md per plans/active/test-suite-triage.md.
+- plans/active/test-suite-triage.md:168
+- docs/fix_plan.md:38
+- docs/development/testing_strategy.md:18
+- docs/development/pytorch_runtime_checklist.md:12
+Next Up: If time remains after triage, stage the remediation_tracker.md updates so Phase M gating can resume once MOSFLM fixes land.

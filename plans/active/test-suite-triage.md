@@ -21,7 +21,8 @@
 - Phase J ✅ tracker maintained — `remediation_tracker.md` and `remediation_sequence.md` refreshed (Attempt #16) with determinism clusters cleared; Phase D4 closure appended C3 ✅ resolved and Sprint 1 progress advanced to 30.6% (9/17 failures retired).
 - Phase K ✅ complete — Attempt #15 (rerun) + Attempt #16 (analysis + tracker) delivered the 512/31/143 baseline; Attempt #19 Phase D closure now recorded in `analysis/summary.md`, yielding the current 516 passed / 27 failed / 143 skipped snapshot.
 - Phase L ✅ complete (Attempt #17 — `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/`); targeted detector-config rerun captured, failure brief authored, ledger pending tracker sync with `[DETECTOR-CONFIG-001]` remediation.
-- Phase M ⏳ pending — reopen full-suite gate once MOSFLM offset fix ships (dependent on `[DETECTOR-CONFIG-001]` Phase C1–C3 completion and targeted retest).
+- Phase M0 🔄 new — user directive (2026-01-20) requires an immediate full-suite rerun + triage refresh before proceeding with MOSFLM remediation; see new Phase M0 checklist.
+- Phase M ⏳ pending — retains post-remediation validation gate once MOSFLM offset fix lands (dependent on `[DETECTOR-CONFIG-001]` Phase C1–C3 completion and targeted retest).
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -163,6 +164,17 @@ Exit Criteria: Targeted detector-config rerun archived under `reports/2026-01-te
 | L1 | Capture detector-config targeted run | [D] | Attempt #17 (20251011T104618Z) executed `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; artifacts stored under `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/` with `commands.txt`, env snapshot, and junit XML. |
 | L2 | Draft detector-config failure brief | [D] | Attempt #17 produced `analysis.md` citing `specs/spec-a-core.md` §4 and `arch.md` §ADR-03; documents MOSFLM +0.5 pixel gap blocking `[DETECTOR-CONFIG-001]`. |
 | L3 | Sync ledger + tracker | [P] | Fix plan `[TEST-SUITE-TRIAGE-001]` updated (Attempt #17). `remediation_tracker.md` still needs Phase L attempt row once `[DETECTOR-CONFIG-001]` remediation closes — leave open until post-fix validation. |
+
+### Phase M0 — Directive Compliance Baseline
+Goal: Honour the 2026-01-20 directive by capturing a fresh full-suite baseline (pre-MOSFLM remediation) and re-triaging failures so downstream fixes can be prioritised.
+Prereqs: Phase L artifacts acknowledged; environment guardrails per `docs/development/testing_strategy.md` §§1.4–1.5 and `docs/development/pytorch_runtime_checklist.md` item 1 satisfied; confirm latest `pip install -e .` still valid.
+Exit Criteria: Full-suite rerun artifacts archived under `reports/2026-01-test-suite-triage/phase_m0/<STAMP>/`; triage summary + fix_plan ledger updated with Attempt metadata and refined failure classification (implementation bug vs deprecation candidate).
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| M0a | Refresh pre-run environment checklist | [ ] | Re-run Phase A guardrails in light form: capture `collect_only.log` + env snapshot under `phase_m0/<STAMP>/preflight/`; cite `docs/development/testing_strategy.md` §1 and `arch.md` §2 for guardrails. |
+| M0b | Execute full `pytest tests/` rerun | [ ] | `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml`; tee console log to `pytest_full.log`, capture exit code, runtime, counts. |
+| M0c | Re-triage and classify failures | [ ] | Update `reports/2026-01-test-suite-triage/phase_m0/$STAMP/triage_summary.md` with failure clusters, mark each as implementation bug vs legacy/deprecation; sync findings into `docs/fix_plan.md` Attempt ledger and `remediation_tracker.md` pending queue. |
 
 ### Exit Criteria (Plan Completion)
 - Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).

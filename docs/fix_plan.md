@@ -41,14 +41,14 @@
 - Status: in_progress
 - Owner/Date: galph/2025-10-11
 - Plan Reference: `plans/active/test-suite-triage.md`
-- Reproduction: Phase K command — `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k/<STAMP>/artifacts/pytest_full.xml`
-- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`, `phase_k`)
+- Reproduction: Phase M0 command — `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/<STAMP>/artifacts/pytest_full.xml`
+- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`, `phase_k`, `phase_l`, `phase_m0`, `phase_m`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
-- Next Actions:
-  1. ✅ Phase C1-C3 complete — MOSFLM offset implemented and validated
-  2. Execute Phase C4 full-suite regression per plan
-  3. Mark cluster C8 resolved in remediation_tracker.md
+- Next Actions (2026-01-20 directive refresh):
+  1. Run Phase M0a preflight snapshot (collect-only + env) and log Attempt in `reports/.../phase_m0/<STAMP>/preflight/`.
+  2. Execute Phase M0b full-suite rerun capturing junit/log metrics under `phase_m0/<STAMP>/artifacts/`.
+  3. Author Phase M0c triage_summary.md (implementation bug vs deprecation), sync findings into `docs/fix_plan.md` Attempts + `remediation_tracker.md` pending queue; prepare MOSFLM remediation follow-up.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -218,9 +218,8 @@
 - Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase K triage (2 failures)
 - Attempts History: none yet
 - Next Actions:
-  1. Finalise Phase B blueprint (tasks B1–B4 in `plans/active/detector-config.md`): document the mm→pixel conversion sites, decide the single-application offset rule, and note any downstream adjustments required.
-  2. Execute Phase C1–C3: implement MOSFLM +0.5 offset in `Detector`, extend `tests/test_detector_config.py` with MOSFLM/XDS coverage, and refresh docs/ledger artefacts (analysis.md, fix_plan, tracker).
-  3. Gate with Phase C4: rerun targeted detector-config pytest followed by full-suite validation per test-suite-triage Phase M, archiving results under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/`.
+  1. Monitor `[TEST-SUITE-TRIAGE-001]` Phase M0 baseline run; confirm detector-config failures remain resolved once new triage summary posts.
+  2. Resume Phase C4 validation only after Phase M (post-remediation) rerun is scheduled; no code edits pending until then.
 - Exit Criteria: ✅ COMPLETE
   - ✅ Detector initialization tests pass (15/15)
   - ✅ Defaults match spec (MOSFLM +0.5 offset per §72)
