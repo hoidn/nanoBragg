@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-21 (galph loop — Phase M1 ledger refresh prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Sprint 0 (C1/C3/C4/C5/C7) complete; finish M1f ledger/tracker refresh and stage Phase M2 gradient guard before resuming MOSFLM remediation.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Phase M2 full-suite rerun blocked at 600 s. Re-execute the suite via the Phase M0 chunk ladder, capture aggregated results, and refresh tracker/analysis before advancing Phase M3 follow-through (MOSFLM + mixed-units).
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -45,11 +45,11 @@
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`, `phase_k`, `phase_l`, `phase_m0`, `phase_m`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
-- Next Actions (Phase M3/M follow-through):
-1. Sync `[TEST-SUITE-TRIAGE-001]` artifacts with Attempt #40: update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` and `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` with the MOSFLM evidence bundle (`phase_m3/20251011T190855Z/mosflm_fix/`).
-2. Author Phase M3c mixed-units hypotheses in `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/hypotheses.md`, linking the zero-intensity cluster to `[VECTOR-PARITY-001]` Tap backlog and recording outstanding owners/blockers in `remediation_tracker.md`.
-3. Execute Phase M2 full-suite validation: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/$STAMP/artifacts/pytest_full.xml`, capturing stdout in `phase_m/$STAMP/logs/pytest_full.log` and summarising pass/fail counts in `summary.md`.
-4. After the run, update `[TEST-SUITE-TRIAGE-001]` Attempts History, `triage_summary.md`, and tracker totals with the new failure counts; call out any regressions or deviance from prior chunked totals.
+- Next Actions (Phase M2 chunk rerun + M3 follow-through):
+1. Execute Phase M2 via the Phase M0 10-chunk command ladder under a fresh `STAMP`, capturing `commands.txt` and `chunks/chunk_##/pytest.{log,xml}` with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE` inline to avoid shell errors (harness cap = 600 s).
+2. Aggregate chunk results into `reports/2026-01-test-suite-triage/phase_m/$STAMP/summary.md`, recording total pass/fail/skip counts, top durations, and a delta note versus Attempt #34 (blocked) and the Phase K baseline.
+3. Once the chunk rerun completes, update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md`, `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md`, and the `[TEST-SUITE-TRIAGE-001]` attempts ledger with the new counts and STAMP.
+4. After ledger sync, fold in the remaining Phase M3 tasks: cite Attempt #40 MOSFLM evidence in tracker notes and author Phase M3c mixed-units hypotheses (`phase_m3/$STAMP/mixed_units/hypotheses.md`) tied to `[VECTOR-PARITY-001]`.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.

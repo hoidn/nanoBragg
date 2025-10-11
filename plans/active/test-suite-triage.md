@@ -22,7 +22,8 @@
 - Phase K ✅ complete — Attempt #15 (rerun) + Attempt #16 (analysis + tracker) delivered the 512/31/143 baseline; Attempt #19 Phase D closure now recorded in `analysis/summary.md`, yielding the current 516 passed / 27 failed / 143 skipped snapshot.
 - Phase L ✅ complete (Attempt #17 — `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/`); targeted detector-config rerun captured, failure brief authored, ledger pending tracker sync with `[DETECTOR-CONFIG-001]` remediation.
 - Phase M0 ✅ complete — Attempt #21 (20251011T153931Z) executed the chunked rerun: 504 passed / 46 failed / 136 skipped, triage_summary.md refreshed with nine active clusters (C1–C9) and new quick-win priorities.
-- Phase M1 ✅ complete — Sprint 0 clusters C1/C3/C4/C5/C7 closed (Attempts #21/#22/#25/#26/#27) with Attempt #28 capturing the M1f ledger/tracker refresh and Phase M2 brief; Attempt #29 verified the existing compile guard (10/10 gradchecks pass) and logged CPU artifacts, and Attempt #30 documented the compile-guard updates closing Phase M2 so Phase M3 prep can proceed.
+- Phase M1 ✅ complete — Sprint 0 clusters C1/C3/C4/C5/C7 closed (Attempts #21/#22/#25/#26/#27); Attempt #28 logged the M1f ledger/tracker refresh, Attempt #29 verified the compile guard (10/10 gradchecks pass), and Attempt #30 documented the compile-guard doc updates.
+- Phase M ⚠️ blocked (Attempt #34, 20251011T191757Z) — Full-suite command hit the 600 s harness timeout; Phase M2 rerun must reuse the Phase M0 10-chunk command ladder under a fresh STAMP.
 - Phase M ⏳ pending — retains post-remediation validation gate once MOSFLM offset fix lands (dependent on `[DETECTOR-CONFIG-001]` Phase C1–C3 completion and targeted retest).
 
 ### Phase A — Preflight & Inventory
@@ -252,7 +253,7 @@ Exit Criteria: Phase M directory contains targeted + full-suite rerun artifact
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
 | M1 | Retest detector-config after fix | [D] | Attempt #40 (20251011T190855Z) executed `pytest -v tests/test_detector_config.py` and `pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size`; logs archived under `reports/2026-01-test-suite-triage/phase_m3/20251011T190855Z/mosflm_fix/`. Diff vs Attempt #17 noted in summary.md. |
-| M2 | Full-suite validation sweep | [ ] | Execute `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/<STAMP>/artifacts/pytest_full.xml`; ensure runtime guardrails per testing_strategy §§1.4–1.5. |
+| M2 | Full-suite validation sweep | [ ] | Re-run the baseline via the Phase M0 chunk ladder (10 commands) to stay under the 600s harness cap. Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`, pre-create `reports/2026-01-test-suite-triage/phase_m/$STAMP/chunks/`, then execute each chunk command with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE` on the same line. Log exit codes in `commands.txt`, capture `pytest.{log,xml}` per chunk, and author `summary.md` aggregating pass/fail counts. Reference Attempt #34 partial log for before/after comparison. |
 | M3 | Tracker + ledger sync | [ ] | After Phase M2 run, update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md`, `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md`, and `[TEST-SUITE-TRIAGE-001]` Attempts with fresh counts. |
 
 ### Metrics & Reporting Guidelines
@@ -261,7 +262,7 @@ Exit Criteria: Phase M directory contains targeted + full-suite rerun artifact
 - Maintain Attempt numbering continuity in `docs/fix_plan.md`; include `pytest` exit code and timestamp.
 
 ### Risks & Mitigations
-- **Long runtime / timeouts:** If the full suite exceeds loop budget, split run via `pytest tests/test_*pattern*.py`; document split and recombine results in `triage_summary.md`.
+- **Long runtime / timeouts:** Harness imposes a hard 600 s limit — always execute the Phase M0 10-chunk command ladder (documented above) for Phase M reruns and roll the combined metrics into `summary.md`.
 - **Environment drift:** Re-run Phase A if dependencies change (new torch version, GPU availability changes).
 - **Protected Assets:** Ensure `docs/index.md` references (`loop.sh`, `input.md`) remain untouched; do not delete artifacts listed there during cleanup.
 - **Flaky tests:** Mark with `Needs Reproduction` status; capture rerun commands and conditions.

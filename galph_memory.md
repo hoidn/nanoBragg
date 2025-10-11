@@ -2641,3 +2641,14 @@
 - Reissued input.md pointing Ralph at targeted detector tests + chunk workflow with STAMPed artefacts.
 - Follow-up for Ralph: produce the new phase_m3/phase_m artefacts, update tracker + fix_plan attempts, and record parity deltas.
 - <Action State> [ready_for_implementation]
+
+### 2025-10-11T19:37:05Z (galph loop - Phase M2 chunk rerun prep)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M2 chunk rerun
+- Action type: Planning
+- Mode: Parity
+- Reviewed Attempt #34 partial log (`reports/2026-01-test-suite-triage/phase_m/20251011T191757Z/blocked.md`) and the latest Ralph commit (64680791; partial pytest log only) — confirmed we must abandon the single-command full suite because of the 600 s harness cap.
+- Updated `plans/active/test-suite-triage.md` Phase M snapshot + M2 row (lines 240-266) to require the Phase M0 10-chunk ladder and captured the timeout note in the status snapshot.
+- Refreshed `docs/fix_plan.md` Active Focus + Next Actions (lines 4-52) to prioritise the chunk rerun before tracker sync; recorded guidance to fold in Attempt #40 artifacts post-run.
+- Rewrote `input.md` with the chunk ladder commands, STAMP setup, artifact expectations, and exit-code logging instructions for Ralph.
+- Next for Ralph: execute the chunk ladder, capture exit codes & summary, then update tracker/analysis per fix-plan step 3.
+- <Action State>: [ready_for_implementation]
