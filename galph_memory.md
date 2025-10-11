@@ -2577,3 +2577,12 @@
 - Replaced `input.md` with guard-implementation instructions: implement `NANOBRAGG_DISABLE_COMPILE` path, run targeted gradcheck selector(s), capture artifacts under `phase_m2/$STAMP/`, and update docs/tracker.
 - Follow-up for Ralph: execute Phase M2b CPU run first, extend to CUDA if available, then update docs/ledger per strategy.
 - <Action State>: [ready_for_implementation]
+### 2026-01-21 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M2 follow-through
+- Action type: Planning
+- Mode: Docs
+### 2026-01-21 (galph loop - Phase M2d planning recap)
+- Refreshed `plans/active/test-suite-triage.md` Phase M2 table (lines 216-226) to mark M2b done via Attempt #29, note optional M2c GPU run, and expand M2d guidance to cover doc updates + ledger sync.
+- Updated `[TEST-SUITE-TRIAGE-001]` Next Actions in `docs/fix_plan.md` (around lines 44-50) to focus on Phase M2d documentation, optional GPU validation, and pivot prep for Phase M3 once docs land.
+- Rewrote `input.md` to steer Ralph toward the Phase M2d documentation bundle and tracker refresh; Mode=Docs with artifacts under `phase_m2/$STAMP/{docs_diff,summary.md}`.
+- Action State: [ready_for_implementation]
