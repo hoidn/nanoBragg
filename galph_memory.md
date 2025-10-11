@@ -2498,3 +2498,14 @@
 - input.md rewritten for Phase M1a CLI fixture fix, mapped selectors, artifact cadence under phase_m1/$STAMP.
 - <Action State>: [ready_for_implementation]
 
+### 2025-10-11T16:16:08Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M1 plan alignment
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-11T16:19:01Z (galph loop - Phase M1 alignment recap)
+- Marked Phase M1a complete in plans/active/test-suite-triage.md (row M1a) and refreshed status snapshot so Sprint 0 now highlights remaining C3/C4/C5/C7 work.
+- Updated docs/fix_plan.md Next Actions to call out that Phase M1 quick fixes continue with C3+ clusters only.
+- Issued fresh input.md directing Ralph to execute M1b (detector dtype conversion) with stamped artifact capture per triage_summary.md:92-122.
+- <Action State>: [ready_for_implementation]
+

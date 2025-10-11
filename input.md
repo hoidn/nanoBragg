@@ -1,30 +1,38 @@
-Summary: Sprint 0 quick fixes from Phase M0 baseline to retire C1/C3/C4/C5/C7 failures.
+Summary: Close Cluster C3 by keeping detector beam centers as tensors so Phase M1 quick fixes stay on track.
 Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
+Focus: [TEST-SUITE-TRIAGE-001] Phase M1 — Sprint 0 Quick Fixes (Cluster C3)
 Branch: feature/spec-based-2
-Mapped tests: env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias; env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params; env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag; env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution; env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model
-Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/{cli_fixtures,detector_dtype,debug_trace,simulator_api,shape_models,summary.md}
-Do Now: [TEST-SUITE-TRIAGE-001] Phase M1a — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias (after exporting STAMP and preparing phase_m1 dirs)
-If Blocked: Capture failing command + traceback to reports/2026-01-test-suite-triage/phase_m1/$STAMP/blocked/pytest.log, append reproduction details to summary.md, and stop before touching other selectors. Ping supervisor via Attempts History.
+Mapped tests: tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params; tests/test_suite.py::TestTier1TranslationCorrectness
+Artifacts: reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/
+Do Now: Execute [TEST-SUITE-TRIAGE-001] Phase M1b and run env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params
+If Blocked: Capture the failing log with the same selector under reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/baseline.log, note the traceback, and pause.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:202 — Sprint 0 checklist defines C1/C3/C4/C5/C7 as immediate burn-down scope.
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:31 — Cluster C1 root cause (missing default_F) reproduces in today’s command.
-- docs/fix_plan.md:3 — Active focus escalates Phase M1 quick-fix sprint before MOSFLM remediation.
+- plans/active/test-suite-triage.md:200-214 keeps Phase M1 ladder authoritative; we must advance M1b now that M1a is done.
+- docs/fix_plan.md:30-68 lists Sprint 0 quick fixes as the current critical path with C3 still open.
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:92-122 documents the dtype root cause and the reproduction selector.
+- arch.md:317-319 reiterates dtype/device neutrality requirements that this fix must uphold.
+- docs/development/testing_strategy.md:31-48 defines the targeted-test cadence we must obey (no full suite yet).
 How-To Map:
-- Export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/{cli_fixtures,detector_dtype,debug_trace,shape_models,simulator_api,blocked}; printf "STAMP=%s\n" "$STAMP" > reports/2026-01-test-suite-triage/phase_m1/$STAMP/commands.txt.
-- Run the Do Now command with env prefix; tee output to reports/.../phase_m1/$STAMP/cli_fixtures/pytest.log and append exit code to commands.txt.
-- If tests pass, stage patches for CLI fixtures, capture git diff to cli_fixtures/diff.patch, and note residual failures in summary.md; proceed to next selector in mapped tests order, routing each log to the matching subdir.
-- After all five selectors pass, append aggregate pass/fail counts + remaining suite failures to summary.md and update docs/fix_plan Attempts History before ending loop.
+- export STAMP=$(date -u +%Y%m%dT%H%M%SZ) and mkdir -p reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/
+- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/baseline.log
+- Implement the tensor conversion guard in src/nanobrag_torch/models/detector.py per triage guidance; keep conversions device/dtype neutral.
+- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params --maxfail=1 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/fix.log
+- env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_suite.py::TestTier1TranslationCorrectness 2>&1 | tee reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/regression.log
+- Document before/after type() evidence in reports/2026-01-test-suite-triage/phase_m1/$STAMP/detector_dtype/notes.md and update docs/fix_plan.md Attempts plus remediation_tracker.md with results before requesting review.
 Pitfalls To Avoid:
-- Do not run the full pytest suite this loop; stay on mapped selectors only.
-- Keep env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE on every command to avoid GPU drift or MKL crashes.
-- Reuse the same STAMP for all Phase M1 artifacts; no writes to legacy phase_m0 directories.
-- Maintain dtype/device neutrality in Detector fixes (avoid .cpu()/.item()).
-- Do not edit Protected Assets (docs/index.md references) during CLI fixture updates.
-- Avoid merging unrelated remediation work (C6/C8/C9) until Sprint 0 closes.
-- Ensure junit XML expectation changes remain aligned with spec; log any deviations instead of guessing.
+- Do not run the full pytest suite; stay on the mapped selectors.
+- Preserve tensor devices/dtypes—no hard-coded .cpu()/.cuda() or float literals without torch.tensor.
+- Avoid touching unrelated clusters (C4/C5/C7) until C3 evidence is committed.
+- Keep DetectorConfig conversions differentiable; do not call .item() on tensors.
+- Record artifacts under the stamped directory before cleaning logs.
+- Leave Protected Assets listed in docs/index.md untouched.
+- Follow KMP_DUPLICATE_LIB_OK=TRUE in every torch invocation to prevent MKL conflicts.
+- Capture before/after type() evidence exactly as the plan requires so we can audit conversions later.
+- Update attempts history only after tests pass; otherwise log under Attempts with a BLOCKED note.
 Pointers:
-- plans/active/test-suite-triage.md:202
-- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:31
-- docs/fix_plan.md:38
-Next Up: 1) Phase M1b detector beam-center tensorization; 2) Phase M2 gradient compile guard draft once Sprint 0 selectors are green.
+- plans/active/test-suite-triage.md:210
+- reports/2026-01-test-suite-triage/phase_m0/20251011T153931Z/triage_summary.md:92-122
+- docs/fix_plan.md:30-68
+- arch.md:317-319
+- docs/development/testing_strategy.md:31-48
+Next Up: M1c (debug trace init) once dtype conversion lands and logs are archived.
