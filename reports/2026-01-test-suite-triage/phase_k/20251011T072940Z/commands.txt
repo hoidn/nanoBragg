@@ -1,0 +1,2 @@
+export STAMP=20251011T072940Z
+mkdir -p reports/2026-01-test-suite-triage/phase_k/$STAMP/{artifacts,logs,analysis,env}
