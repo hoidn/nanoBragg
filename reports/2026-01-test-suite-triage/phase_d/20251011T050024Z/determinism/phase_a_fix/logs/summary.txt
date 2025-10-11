@@ -1,0 +1,68 @@
+=== AT-PARALLEL-013 Results ===
+5 passed, 1 skipped
+
+Passing tests:
+- test_pytorch_determinism_same_seed
+- test_pytorch_determinism_different_seeds
+- test_pytorch_consistency_across_runs
+- test_platform_fingerprint
+- test_numerical_precision_float64
+
+Skipped:
+- test_c_pytorch_equivalence (requires NB_RUN_PARALLEL=1 and C binary)
+
+=== AT-PARALLEL-024 Results ===
+5 passed, 1 skipped
+
+Passing tests:
+- test_pytorch_determinism
+- test_seed_independence
+- test_lcg_compatibility
+- test_mosaic_rotation_umat_determinism
+- test_umat2misset_round_trip
+
+Skipped:
+- test_c_pytorch_equivalence (known scaling issue)
+
+=== Changes Made ===
+
+1. tests/test_at_parallel_013.py:
+   - Set CUDA_VISIBLE_DEVICES='', TORCHDYNAMO_DISABLE='1', NANOBRAGG_DISABLE_COMPILE='1' at module level before torch import
+   - Cleaned up set_deterministic_mode() to remove redundant env var settings
+   - Added dtype=torch.float64 to Simulator instantiation in run_simulation_deterministic()
+
+2. src/nanobrag_torch/utils/c_random.py:
+   - Changed mosaic_rotation_umat() dtype parameter from torch.float32 default to Optional[torch.dtype] = None
+   - Added logic to default to torch.get_default_dtype() when dtype is None
+   - Added device parameter support
+
+3. src/nanobrag_torch/models/crystal.py (line 728):
+   - Updated mosaic_rotation_umat() call to pass dtype=self.dtype and device=self.device
+
+4. tests/test_at_parallel_024.py:
+   - Updated test_mosaic_rotation_umat_determinism() to explicitly request dtype=torch.float64
+
+=== Key Fixes ===
+
+1. TorchDynamo/Triton device query issue:
+   - Root cause: TorchDynamo attempted CUDA device queries even when CUDA_VISIBLE_DEVICES='' was set
+   - Solution: Set environment variables at module level before torch import
+   - Set TORCHDYNAMO_DISABLE='1' to completely disable TorchDynamo
+   - Set NANOBRAGG_DISABLE_COMPILE='1' to disable torch.compile in simulator
+
+2. dtype neutrality in mosaic_rotation_umat:
+   - Root cause: Function was hardcoded to return float32 tensors
+   - Solution: Made dtype parameter optional, defaults to torch.get_default_dtype()
+   - Crystal class now passes its dtype/device to ensure consistency
+
+3. Test dtype consistency:
+   - Root cause: Tests were not explicitly requesting float64 from Simulator
+   - Solution: Added dtype=torch.float64 parameter to Simulator instantiations
+
+=== Determinism Status ===
+
+Both test suites now pass with deterministic execution:
+- Same-seed runs produce bit-for-bit identical results (np.array_equal passes)
+- Correlation >= 0.9999999 for same-seed runs
+- float64 precision is maintained throughout the pipeline
+- No TorchDynamo/Triton device query failures
