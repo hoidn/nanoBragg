@@ -235,9 +235,24 @@ class Detector:
         self.sdet_vec = self.sdet_vec.to(device=self.device, dtype=self.dtype)
         self.odet_vec = self.odet_vec.to(device=self.device, dtype=self.dtype)
 
-        # Move beam center tensors
-        self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
-        self.beam_center_f = self.beam_center_f.to(device=self.device, dtype=self.dtype)
+        # Move beam center tensors (handle both tensor and scalar cases)
+        if isinstance(self.beam_center_s, torch.Tensor):
+            self.beam_center_s = self.beam_center_s.to(device=self.device, dtype=self.dtype)
+        else:
+            self.beam_center_s = torch.tensor(
+                self.beam_center_s,
+                device=self.device,
+                dtype=self.dtype,
+            )
+
+        if isinstance(self.beam_center_f, torch.Tensor):
+            self.beam_center_f = self.beam_center_f.to(device=self.device, dtype=self.dtype)
+        else:
+            self.beam_center_f = torch.tensor(
+                self.beam_center_f,
+                device=self.device,
+                dtype=self.dtype,
+            )
 
         # Invalidate cache since device/dtype changed
         self.invalidate_cache()
