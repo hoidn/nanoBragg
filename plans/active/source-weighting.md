@@ -74,7 +74,7 @@ Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix-plan ite
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | D1 | Run acceptance suite | [D] | ✅ Attempt #18 executed `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py -x` on CPU; 10 passed, 1 warning, runtime 3.93s. Artifacts: `reports/2026-01-test-suite-triage/phase_d/20251011T090906Z/source_weighting/`. |
-| D2 | Full-suite regression delta | [ ] | ⏸ Deferred to fix_plan closure per supervisor guidance. Command: `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=5`. Expected: C3 cluster clears (36→≤30 failures). |
+| D2 | Full-suite regression delta | [ ] | Blocked until AT-SRC-001 tests become dtype-neutral. First update `tests/test_at_src_001_simple.py` expectations to use parser dtypes and add a float64-default fixture; rerun targeted selectors on both defaults. Then execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=0 --durations=25` to capture the new C3 counts. |
 | D3 | Documentation updates | [D] | ✅ Attempt #18 updated `specs/spec-a-core.md:637` AT-SRC-001 text (references spec §151-155 + runtime checklist item #4); confirmed `docs/development/pytorch_runtime_checklist.md` item #4 already compliant (no edits needed). |
 | D4 | Fix-plan closure | [ ] | ⏸ Pending D2 full-suite run. Then: mark `[SOURCE-WEIGHT-002]` done in docs/fix_plan.md with Phase D artifacts + remediation tracker update. |
 

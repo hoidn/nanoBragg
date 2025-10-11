@@ -2397,3 +2397,14 @@
 - No conflicts with existing findings; ready for Ralph to execute the regression sweep and log Attempt #18 follow-up.
 - Action State: [ready_for_implementation]
 
+### 2026-01-19 (galph loop - Focus selection note)
+- Focus issue: [SOURCE-WEIGHT-002] Phase D2 full-suite regression
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2026-01-19 (galph loop - Source weighting D2 prep summary)
+- Reviewed Phase D evidence bundle `reports/2026-01-test-suite-triage/phase_d/20251011T091844Z/source_weighting/`; confirmed `test_sourcefile_parsing` still hard-codes float32, triggering dtype failures when the global default shifts to float64.
+- Updated `docs/fix_plan.md` (`[SOURCE-WEIGHT-002]` section) to add the dtype-neutral testing task + explicit rerun plan and clarified Attempt #18 root cause.
+- Adjusted `plans/active/source-weighting.md` Phase D2 row to gate the regression run on those dtype fixes.
+- Rewrote `input.md` with Parity-mode guidance covering the test edits, targeted AT-SRC-001 run, and full-suite command (no `--maxfail`).
+- Action State: [ready_for_implementation]
