@@ -2361,3 +2361,14 @@
 - Updated plans/active/test-suite-triage.md with Phase K2 completion snapshot and queued K3 tracker work; docs/fix_plan.md Next Actions now target tracker refresh and SOURCE-WEIGHT-002 restart gating. Input.md directs Ralph to execute Phase K3 docs-only updates (remediation_tracker.md, remediation_sequence.md, ledger). No new findings in docs/findings.md.
 - Follow-up for Ralph: finish Phase K3 tracker refresh, extend Attempt #16 entry, then unpause SOURCE-WEIGHT-002 per sprint sequence.
 - <Action State>: [ready_for_implementation]
+### 2026-01-19 (galph loop - pre-edit focus note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase K follow-through
+- Action type: Review/housekeeping
+- Mode: Docs
+
+- Synced Phase K documentation and fix_plan: refreshed `docs/fix_plan.md` (Next Actions now point at Source Weighting Phase C), `plans/active/test-suite-triage.md` status snapshot (Phase K marked complete), and `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` (K3 now documented as complete).
+- Re-activated `[SOURCE-WEIGHT-002]` execution path: updated `docs/fix_plan.md` (§[SOURCE-WEIGHT-002]) and `plans/active/source-weighting.md` to move Phase C tasks from paused → active with Attempt #17 expectations.
+- Reissued `input.md` guiding Ralph to deliver Phase C1–C3 (dtype-neutral parser + regression test) with targeted pytest runs and artifact bundle under a fresh Phase C stamp.
+- Follow-up: Expect Attempt #17 delivering parser fix + targeted tests + artifact paths, then refresh Sprint 1 tracker counts.
+- <Action State>: [ready_for_implementation]
+

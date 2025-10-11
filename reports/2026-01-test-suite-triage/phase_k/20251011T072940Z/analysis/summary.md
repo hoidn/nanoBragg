@@ -28,17 +28,15 @@ Phase K2-K3 delivered comprehensive triage artifacts reconciling Phase K pytest 
 - Documented test suite health metrics (pass rate: 73.8%→74.5%)
 - Provided runtime analysis (1867s→1841s, -1.4%)
 
-### K3: Tracker Refresh (IN PROGRESS)
-🔄 **Next Actions:**
-1. Update `remediation_tracker.md` table:
-   - Mark C2/C15 as ✅ RESOLVED
-   - Update C3 count (6→4)
-   - Refresh Sprint 1 completion (0→3 failures resolved, 17.6% complete)
-2. Update `remediation_sequence.md`:
-   - Note Sprint 1.1 (Determinism) complete
-   - Update Sprint 1 progress bar (3/17)
-   - Adjust remaining sprint targets
-3. Create this summary file documenting K2/K3 highlights
+### K3: Tracker Refresh (COMPLETE)
+✅ Updated `remediation_tracker.md` table:
+   - C2/C15 marked ✅ RESOLVED
+   - C3 count reduced 6→4 with "⬇️ IMPROVED" flag
+   - Sprint 1 completion refreshed (3/17 failures resolved, 17.6% complete)
+✅ Updated `remediation_sequence.md`:
+   - Sprint 1.1 (Determinism) flagged ✅ COMPLETE
+   - Progress bar updated (3/17) and Sprint 1.2 focus set to `[SOURCE-WEIGHT-002]`
+✅ Logged K2/K3 highlights in this summary + `docs/fix_plan.md` Attempt #16 entry
 
 ---
 
@@ -55,9 +53,9 @@ Phase K2-K3 delivered comprehensive triage artifacts reconciling Phase K pytest 
 ### 2. Source Weighting Partial Progress
 - **C3 (Source Weighting):** 6 failures → 4 ⬇️
 - **Improvement:** -2 failures (-33% cluster reduction)
-- **Status:** Paused per input.md directive (awaiting K3 completion)
-- **Next:** Resume Phase C implementation post-tracker refresh
-- **Artifacts:** `reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/` (Phase B semantics)
+- **Status:** Phase C ready (Option A approved; Phase K tracker synced)
+- **Next:** Execute Phase C implementation bundle (dtype fix + AT-SRC-001 alignment)
+- **Artifacts:** `reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/` (Phase B semantics)
 
 ### 3. No New Regressions
 - **10 clusters unchanged** — confirms determinism fixes did not introduce instability
@@ -81,10 +79,10 @@ Phase K2-K3 delivered comprehensive triage artifacts reconciling Phase K pytest 
 - ✅ `analysis/classification_overview.md` (delta analysis, sprint readiness)
 - ✅ `analysis/summary.md` (this file — K2/K3 highlights)
 
-### Phase K3 (Tracker Refresh) — IN PROGRESS
-- 🔄 Updated `remediation_tracker.md` (pending)
-- 🔄 Updated `remediation_sequence.md` (pending)
-- 🔄 Updated `docs/fix_plan.md` Attempt #16 entry (pending)
+### Phase K3 (Tracker Refresh)
+- ✅ Updated `remediation_tracker.md`
+- ✅ Updated `remediation_sequence.md`
+- ✅ Updated `docs/fix_plan.md` Attempt #16 entry
 
 ---
 
@@ -102,9 +100,9 @@ Phase K2-K3 delivered comprehensive triage artifacts reconciling Phase K pytest 
 
 ## Recommendations
 
-1. **Proceed with K3 tracker refresh** — Update remediation_tracker.md and remediation_sequence.md to reflect Phase K results.
+1. **Validate tracker alignment** — Keep remediation_tracker.md and remediation_sequence.md in sync as Sprint 1.2 attempts land (starting with `[SOURCE-WEIGHT-002]`).
 
-2. **Resume [SOURCE-WEIGHT-002] Phase C** — Implement Option A semantics (equal-weight, dtype-neutral parser) per approved Phase B design.
+2. **Resume [SOURCE-WEIGHT-002] Phase C** — Implement Option A semantics (equal-weight, dtype-neutral parser) per approved Phase B design.
 
 3. **Maintain K-series discipline** — Continue full-suite reruns after major remediation milestones to catch regressions early.
 
@@ -115,11 +113,10 @@ Phase K2-K3 delivered comprehensive triage artifacts reconciling Phase K pytest 
 ## Next Loop Guidance
 
 **Per input.md "Do Now" (implicit):**
-1. Complete K3 by updating `remediation_tracker.md` and `remediation_sequence.md`
-2. Update `docs/fix_plan.md` Attempt #16 with K2/K3 artifact links
-3. Commit K2/K3 deliverables with message: `[TEST-SUITE-TRIAGE-001] Phase K2-K3 complete: 31 failures classified, tracker refreshed`
-4. Resume [SOURCE-WEIGHT-002] Phase C implementation in next loop
+1. Keep `remediation_tracker.md` / `remediation_sequence.md` aligned with subsequent Sprint 1 attempts.
+2. When Attempt #17 (source weighting Phase C) lands, append artifact links + delta counts back to this Phase K bundle and docs/fix_plan.md.
+3. Resume [SOURCE-WEIGHT-002] Phase C implementation in the next engineer loop using Option A guardrails.
 
 ---
 
-**Phase K2 COMPLETE. K3 tracker refresh in progress.**
+**Phase K2–K3 COMPLETE. Tracker refreshed; Sprint 1.2 ready.**
