@@ -1,0 +1,51 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed FAILED [100%]
+
+=================================== FAILURES ===================================
+_ TestATParallel013CrossPlatformConsistency.test_pytorch_determinism_same_seed _
+
+self = <tests.test_at_parallel_013.TestATParallel013CrossPlatformConsistency object at 0x7b7b94f95d10>
+
+    def test_pytorch_determinism_same_seed(self):
+        """Test that PyTorch produces identical results with same seed."""
+        # Run simulation twice with same seed
+        result1 = run_simulation_deterministic(seed=42)
+        result2 = run_simulation_deterministic(seed=42)
+    
+        # Should be exactly identical (bit-for-bit)
+        assert np.array_equal(result1, result2), (
+            "PyTorch not deterministic - results differ with same seed"
+        )
+    
+        # Also check with allclose for numerical precision
+        np.testing.assert_allclose(
+            result1, result2,
+            rtol=1e-7,
+            atol=1e-12,
+            err_msg="PyTorch determinism: tolerance check failed"
+        )
+    
+        # Correlation should be perfect (1.0)
+        corr, _ = pearsonr(result1.flatten(), result2.flatten())
+>       assert corr >= 0.9999999, f"Correlation {corr} < 0.9999999 for same-seed runs"
+E       AssertionError: Correlation 0.9999874830245972 < 0.9999999 for same-seed runs
+E       assert np.float32(0.9999875) >= 0.9999999
+
+tests/test_at_parallel_013.py:164: AssertionError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+auto-selected 2-fold oversampling
+----------------------------- Captured stderr call -----------------------------
+No CUDA runtime is found, using CUDA_HOME='/usr'
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 5.09s ===============================
+Exit code: 1
