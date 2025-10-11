@@ -143,45 +143,58 @@ User Parameter (tensor) → Unit Conversion → Basis Vectors → Pixel Coords �
 
 ### 8.2 Beam Center Calculation
 
-**CRITICAL:** Beam center values are physical distances in mm, NOT pixel coordinates:
+**CRITICAL:** Beam center values are physical distances in mm, NOT pixel coordinates.
+
+**MOSFLM/DENZO Default Formula (per spec-a-core.md §71):**
+```
+Default Xbeam = (detsize_s + pixel)/2
+Default Ybeam = (detsize_f + pixel)/2
+```
+
+**Examples:**
 
 ```python
 # For a 512×512 detector with 0.1mm pixels:
-# Center pixel: (256, 256)
-# Physical center: 256 × 0.1mm = 25.6mm
+# MOSFLM default: (51.2 + 0.1)/2 = 25.65 mm
+# Note: The +0.5 pixel mapping offset is applied during mm→pixel conversion
 config = DetectorConfig(
     spixels=512,
     fpixels=512,
     pixel_size_mm=0.1,
-    beam_center_s=25.6,  # mm from detector edge
-    beam_center_f=25.6   # mm from detector edge
+    beam_center_s=25.65,  # mm from detector edge (MOSFLM default)
+    beam_center_f=25.65   # mm from detector edge (MOSFLM default)
 )
 
 # For a 1024×1024 detector with 0.1mm pixels:
-# Center pixel: (512, 512)
-# Physical center: 512 × 0.1mm = 51.2mm
+# MOSFLM default: (102.4 + 0.1)/2 = 51.25 mm
+# Mapping to pixels: Fbeam = Ybeam + 0.5·pixel → 51.25 + 0.05 = 51.3 → pixel 513
 config = DetectorConfig(
     spixels=1024,
     fpixels=1024,
     pixel_size_mm=0.1,
-    beam_center_s=51.2,  # mm from detector edge
-    beam_center_f=51.2   # mm from detector edge
+    beam_center_s=51.25,  # mm from detector edge (MOSFLM default)
+    beam_center_f=51.25   # mm from detector edge (MOSFLM default)
 )
 ```
 
-**Common Mistake:** Using pixel coordinates (256, 512) instead of physical distances (25.6mm, 51.2mm)
+**Common Mistakes:**
+- Using pixel coordinates (256, 512) instead of physical distances (25.65mm, 51.25mm)
+- Using formula `detsize/2` instead of `(detsize + pixel)/2` for MOSFLM defaults
+- Confusing the user-facing beam center (mm) with the internal +0.5 pixel mapping offset
 
 ## 9. Example Configurations
 
 ### 9.1 Default Detector (simple_cubic compatibility)
 ```python
+# MOSFLM convention (default)
+# Default beam center: (detsize + pixel)/2 = (102.4 + 0.1)/2 = 51.25 mm
 config = DetectorConfig(
     distance_mm=100.0,
     pixel_size_mm=0.1,
     spixels=1024,
     fpixels=1024,
-    beam_center_s=51.2,
-    beam_center_f=51.2,
+    beam_center_s=51.25,  # MOSFLM default per spec-a-core.md §71
+    beam_center_f=51.25,  # MOSFLM default per spec-a-core.md §71
 )
 ```
 

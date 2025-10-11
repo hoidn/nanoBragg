@@ -54,8 +54,8 @@ Before writing any test or implementation that involves C-code validation, you *
 | `-detsize <val>` | Derived from pixels × pixel_size | `detsize_f, detsize_s` | mm → meters | Sets both dimensions |
 | `-pixel <val>` | `DetectorConfig.pixel_size_mm` | `pixel_size` | mm → meters | Square pixels |
 | `-detpixels <val>` | `DetectorConfig.spixels/fpixels` | `fpixels, spixels` | Count | Sets both dimensions |
-| `-Xbeam <val>` | `DetectorConfig.beam_center_f` | `Xbeam` | mm → meters | **MOSFLM: → Fbeam directly** |
-| `-Ybeam <val>` | `DetectorConfig.beam_center_s` | `Ybeam` | mm → meters | **MOSFLM: → Sbeam = detsize_s - Ybeam** |
+| `-Xbeam <val>` | `DetectorConfig.beam_center_s` | `Xbeam` | mm → meters | **MOSFLM default: (detsize_s+pixel)/2; maps to Sbeam = Xbeam + 0.5·pixel** |
+| `-Ybeam <val>` | `DetectorConfig.beam_center_f` | `Ybeam` | mm → meters | **MOSFLM default: (detsize_f+pixel)/2; maps to Fbeam = Ybeam + 0.5·pixel** |
 | `-twotheta <val>` | `DetectorConfig.detector_twotheta_deg` | `detector_twotheta` | Degrees → radians | **Sets pivot=SAMPLE implicitly** |
 | `-detector_rotx <val>` | `DetectorConfig.detector_rotx_deg` | `detector_rotx` | Degrees → radians | Rotation around X axis |
 | `-detector_roty <val>` | `DetectorConfig.detector_roty_deg` | `detector_roty` | Degrees → radians | Rotation around Y axis |

@@ -177,15 +177,16 @@ class Detector:
 
         c = self.config
         # Check all basic parameters
-        # Note: default beam_center is now 51.2 mm (detsize/2), not 51.25 mm
-        # The MOSFLM +0.5 offset is applied during mm→pixel conversion in __init__
+        # Note: MOSFLM default beam_center is now 51.25 mm per spec-a-core.md §71
+        # Formula: (detsize + pixel)/2 = (102.4 + 0.1)/2 = 51.25 mm
+        # The MOSFLM +0.5 pixel mapping offset is applied during mm→pixel conversion in __init__
         basic_check = (
             c.distance_mm == 100.0
             and c.pixel_size_mm == 0.1
             and c.spixels == 1024
             and c.fpixels == 1024
-            and c.beam_center_s == 51.2
-            and c.beam_center_f == 51.2
+            and c.beam_center_s == 51.25
+            and c.beam_center_f == 51.25
         )
 
         # Check detector convention is default (MOSFLM)

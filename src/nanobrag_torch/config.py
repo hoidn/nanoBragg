@@ -289,21 +289,34 @@ class DetectorConfig:
             detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
             detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
-            # For all conventions: beam_center = detsize / 2 (simple center)
-            # The convention-specific offsets (e.g., MOSFLM +0.5 pixel) will be
-            # applied later in Detector when converting to Fbeam/Sbeam.
-            if self.beam_center_s is None:
-                self.beam_center_s = detsize_s / 2.0
-            if self.beam_center_f is None:
-                self.beam_center_f = detsize_f / 2.0
-
-            # ADXV convention special case: Different default beam center calculation
-            # Per spec-a-core.md §72: "Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2"
-            if self.detector_convention == DetectorConvention.ADXV:
+            # Per spec-a-core.md §71-72:
+            # MOSFLM/DENZO: Default Xbeam = Ybeam = (detsize + pixel)/2
+            # ADXV: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2
+            # Others: beam_center = detsize / 2 (simple center)
+            if self.detector_convention == DetectorConvention.MOSFLM:
+                # Per spec-a-core.md §71: "Default Xbeam = (detsize_s + pixel)/2, Ybeam = (detsize_f + pixel)/2"
+                if self.beam_center_s is None:
+                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            elif self.detector_convention == DetectorConvention.DENZO:
+                # DENZO uses same defaults as MOSFLM (per spec-a-core.md §73)
+                if self.beam_center_s is None:
+                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            elif self.detector_convention == DetectorConvention.ADXV:
+                # Per spec-a-core.md §66-67: "Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2"
                 if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s - self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            else:
+                # XDS, DIALS, CUSTOM: simple center (detsize / 2)
+                if self.beam_center_s is None:
+                    self.beam_center_s = detsize_s / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = detsize_f / 2.0
 
         # Set default twotheta axis if not provided
         if self.twotheta_axis is None:
