@@ -2420,3 +2420,14 @@
 - Outstanding: Ralph must update Phase J/K tracker docs, author closure.md under a new Phase D stamp, then mark `[SOURCE-WEIGHT-002]` done.
 - <Action State>: [ready_for_implementation]
 
+
+### 2026-01-20 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase K/D refresh
+- Action type: Planning
+- Mode: Docs
+
+- Updated plans/active/test-suite-triage.md Phase L checklist + status snapshot (27 failures baseline, Sprint 1.3 pending).
+- Refreshed docs/fix_plan.md active focus + Next Actions to point Ralph at Phase L detector-config rerun; corrected detector-config entry and reproduction command.
+- Issued input.md instructing targeted pytest run and artifact capture for Phase L kickoff.
+- <Action State>: [ready_for_implementation]
+

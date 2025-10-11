@@ -1,11 +1,11 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-11 (galph loop — Phase D4 tracker prep)
+**Last Updated:** 2026-01-20 (galph loop — Phase L launch prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Keep Phase K artifacts consistent (analysis ↔ tracker) and steward Sprint 1 sequencing while Source Weighting remediation executes.
-- IN PROGRESS: `[SOURCE-WEIGHT-002]` — Phase D tracker/ledger closure after the Phase K rerun (full-suite delta captured; sync artifacts before marking C3 resolved).
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Launch Phase L (Sprint 1.3) detector-config rerun; keep plan/tracker aligned to the 516 / 27 / 143 baseline and document new artifacts.
+- IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
+- WATCH: `[DETECTOR-CONFIG-001]` — Await Phase L evidence bundle before delegating implementation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
-- `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -14,7 +14,7 @@
 | [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | done |
 | [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | done |
 | [DETECTOR-GRAZING-001](#detector-grazing-001-extreme-detector-angles) | Extreme detector angles | High | in_planning |
-| [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | in_progress |
+| [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | done |
 | [TOOLING-DUAL-RUNNER-001](#tooling-dual-runner-001-restore-dual-runner-parity) | Restore dual-runner parity | High | in_planning |
 | [DEBUG-TRACE-001](#debug-trace-001-debug-flag-support) | Debug flag support | High | in_planning |
 | [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | in_planning |
@@ -47,9 +47,9 @@
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions:
-  1. Align Phase K documentation — update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` to reflect completed tracker refresh and cross-link the refreshed `remediation_tracker.md` / `remediation_sequence.md` artifacts.
-  2. Refresh plan + ledger sync — edit `plans/active/test-suite-triage.md` status snapshot to note Phase K closure and Sprint 1.2 focus, then verify this fix-plan entry mirrors the updated sequencing.
-  3. Steward Sprint 1.2 — monitor `[SOURCE-WEIGHT-002]` Phase C attempts (reports timestamp + pytest logs) and log progress deltas back into `docs/fix_plan.md` once Attempt #17 lands.
+  1. Phase L targeted rerun — Execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0` and archive logs/JUnit/env under `reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config/` (per testing_strategy §§1.4–1.5).
+  2. Phase L failure brief — Summarise outcomes into `analysis.md` (same stamp) citing `specs/spec-a-core.md` §4, `arch.md` §2, and `phase_k/analysis/triage_summary.md` (C8) to document default vs CLI mapping gaps; note blockers for `[DETECTOR-CONFIG-001]`.
+  3. Ledger & tracker refresh — Update `plans/active/test-suite-triage.md` (Phase L checklist), this entry, and `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` with the new attempt ID + 2-failure count before delegating implementation.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -212,13 +212,13 @@
 - Priority: High
 - Status: in_planning
 - Owner/Date: ralph/2025-10-10
-- Reproduction: `pytest -v tests/test_detector_config.py`
-- Source: Cluster C12 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py`
+- Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase K triage (2 failures)
 - Attempts History: none yet
 - Next Actions:
-  1. Audit detector config dataclass + CLI mapping
-  2. Capture reproduction commands; identify spec divergence
-  3. Fix defaults; add targeted tests
+  1. Consume `[TEST-SUITE-TRIAGE-001]` Phase L targeted rerun artifacts (detector_config) once captured.
+  2. Audit detector config dataclass + CLI mapping against spec-a-core §4 and arch.md §2; document gaps.
+  3. Implement default fixes + regression tests before rerunning the full suite gate.
 - Exit Criteria:
   - Detector initialization tests pass
   - Defaults match spec; CLI mapping documented
@@ -673,4 +673,3 @@
   - ✅ AT-SRC-001 text and runtime checklist updated (Attempt #18 completed)
   - ✅ Full suite failure count drops by 4 (31→27, -12.9%)
   - ✅ Tracker and ledger sync complete (remediation_tracker.md, remediation_sequence.md, Phase K summary updated)
-

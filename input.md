@@ -1,32 +1,34 @@
-Summary: Capture Phase D4 closure evidence for source weighting by syncing trackers/analysis to show cluster C3 resolved and logging the Attempt #19 deltas.
-Mode: Docs
-Focus: [SOURCE-WEIGHT-002] Simulator source weighting
+Summary: Capture Phase L detector-config baseline logs and document findings for Sprint 1.3 kickoff.
+Mode: Parity
+Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/
-Do Now: [SOURCE-WEIGHT-002] Simulator source weighting — author the Phase D4 closure bundle (tracker updates + closure memo); no pytest this loop
-If Blocked: Record blocker notes in `$outdir/notes.md`, include links to any files you could not update, and stop.
+Mapped tests: tests/test_detector_config.py
+Artifacts: reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config/
+Do Now: [TEST-SUITE-TRIAGE-001] Phase L targeted rerun — CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0
+If Blocked: Capture the failing console log to reports/2026-01-test-suite-triage/phase_l/<STAMP>/detector_config/blocked.log and note the blocker plus command in analysis.md.
 Priorities & Rationale:
-- plans/active/source-weighting.md marks D2 done and leaves D4 tracker/ledger sync outstanding (lines 5-35, 73-83).
-- docs/fix_plan.md:155-205 sets new Next Actions for D4 (tracker sync, closure memo, final status update).
-- reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/ holds Attempt #19 logs that must anchor the closure memo.
-- remediation tracker still lists C3 with 4 failures, so Sprint 1 metrics remain stale (`reports/.../remediation_tracker.md:24-88`).
+- plans/active/test-suite-triage.md:23 — Phase L pending until detector-config artifacts exist; unlocks Sprint 1.3 sequencing.
+- plans/active/test-suite-triage.md:155 — Checklist defines targeted run + brief requirements; we need both before delegating implementation.
+- docs/fix_plan.md:39 — Next actions now demand the Phase L rerun, summary, and tracker sync before moving on.
+- reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/triage_summary.md:181 — Authoritative reproduction selector and failing tests for C8.
 How-To Map:
-- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `outdir=reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting`; `mkdir -p "$outdir" "$outdir/artifacts"`.
-- Diff the current tracker docs (`reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/{remediation_tracker.md,remediation_sequence.md}`) and Phase K analysis files (`reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/{summary.md,classification_overview.md}`); update each to reflect C3=0, total failures 27, pass count 516, skip count 143.
-- In `$outdir/closure.md`, summarise: targeted selector results (10/10 pass), full-suite totals (516/27/143, 2 xfail), default dtype coverage outcome, and reference the Attempt #19 artifacts (`20251011T093344Z`).
-- Note edits in `commands.txt` within `$outdir` (list files touched + git status snippets).
-- After document edits, update `docs/fix_plan.md` Attempts History with the new Attempt ID and note where closure memo lives; adjust plan status if anything changed beyond the tracker counts.
+- Run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0 | tee reports/2026-01-test-suite-triage/phase_l/$STAMP/detector_config/pytest.log` (create `$STAMP=$(date -u +%Y%m%dT%H%M%SZ)`).
+- Move `pytest.xml` to the same directory and save `env/torch_env.txt`, `env/pip_freeze.txt`, and `commands.txt` capturing the exact invocation.
+- Summarise failures + context into `reports/2026-01-test-suite-triage/phase_l/$STAMP/detector_config/analysis.md`, referencing spec-a-core §4 and arch.md §2 for expected defaults.
+- Update `docs/fix_plan.md` attempt notes and `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` with the new stamp and counts once artifacts exist.
 Pitfalls To Avoid:
-- Do not rerun pytest; this is a documentation loop only.
-- Keep Attempt numbering consistent when you log the closure (next Attempt should be #20 for this initiative).
-- Preserve Protected Assets from docs/index.md; do not relocate existing report folders.
-- When editing trackers, retain the sprint sequencing tables and only adjust the counts/status fields relevant to C3.
-- Ensure all markdown tables remain properly aligned; avoid introducing trailing spaces in tables.
+- Do not modify production code or tests this loop — evidence gathering only.
+- Keep `KMP_DUPLICATE_LIB_OK=TRUE` set or pytest may crash loading torch.
+- Maintain vectorization/device neutrality; no ad-hoc CPU-only rewrites.
+- Respect Protected Assets listed in docs/index.md (e.g., loop.sh, input.md).
+- Store artifacts under the new `phase_l/$STAMP` folder; do not reuse Phase K directories.
+- Record exact commands/versions via commands.txt before leaving the run.
+- Avoid pruning prior Phase K/D artifacts; they stay authoritative.
+- Ensure `--maxfail=0` so both detector-config tests execute.
+- Include environment captures; missing env snapshots will block plan closure.
 Pointers:
-- plans/active/source-weighting.md:1-85
-- docs/fix_plan.md:1-220, 620-700
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md:1-120
-- reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md:1-200
-- reports/2026-01-test-suite-triage/phase_d/20251011T093344Z/source_weighting/summary.md:1-120
-Next Up: 1. Once C3 is marked resolved, archive `[SOURCE-WEIGHT-002]` (mark done + update Sprint 1 metrics). 2. Begin prep for `[VECTOR-PARITY-001]` Tap 5.3 instrumentation brief per plan Phase E.
+- plans/active/test-suite-triage.md:155 — Phase L checklist and exit criteria.
+- docs/fix_plan.md:39 — Current next actions for the suite triage workstream.
+- reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/triage_summary.md:181 — Detector-config failure details.
+- docs/development/testing_strategy.md:44 — Runtime guardrails for targeted pytest runs.
+Next Up: Draft detector-config spec vs implementation gap memo (per plans/active/test-suite-triage.md Phase L L2) once artifacts are collected.
