@@ -1,0 +1,96 @@
+# Phase B Commands Provenance Log
+# Timestamp: 20251011T062955Z
+# Initiative: [SOURCE-WEIGHT-002] Sprint 1.2
+# Phase: B (Semantics Alignment & Design)
+# Mode: Docs-only (no pytest execution per input.md)
+
+## Environment Snapshot
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)  # → 20251011T062955Z
+mkdir -p "reports/2026-01-test-suite-triage/phase_j/$STAMP/source_weighting"
+
+python --version  # → Python 3.13.5
+python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA available: {torch.cuda.is_available()}'); print(f'CUDA version: {torch.version.cuda if torch.cuda.is_available() else \"N/A\"}')"
+# → PyTorch: 2.7.1+cu126, CUDA available: True, CUDA version: 12.6
+
+git rev-parse HEAD  # → 97c410f5a7b1d2162b3f436f0228235e29292a61
+
+## Context File Reads (no modifications)
+# Supervisor steering memo
+cat /home/ollie/Documents/tmp/nanoBragg/input.md
+
+# Fix plan ledger
+head -200 /home/ollie/Documents/tmp/nanoBragg/docs/fix_plan.md
+
+# Source weighting plan
+cat /home/ollie/Documents/tmp/nanoBragg/plans/active/source-weighting.md
+
+# Spec text (normative)
+sed -n '140,220p' /home/ollie/Documents/tmp/nanoBragg/specs/spec-a-core.md  # §Sources, Divergence & Dispersion
+sed -n '495,500p' /home/ollie/Documents/tmp/nanoBragg/specs/spec-a-core.md  # AT-SRC-001
+
+# Architecture documentation
+sed -n '90,130p' /home/ollie/Documents/tmp/nanoBragg/docs/architecture/pytorch_design.md  # §1.1.5 Source Weighting
+
+# Test files (expectations analysis)
+cat /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001_simple.py
+head -120 /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001.py
+
+# Parser implementation (current state)
+head -150 /home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/io/source.py
+
+## Artifact Creation (Phase B Tasks B1-B4)
+
+# B1: Semantics brief (Option A recommendation)
+# Author: semantics.md (10 sections: spec analysis, C evidence, root causes, Option A/B comparison, dtype strategy, touchpoint map, verification checklist, spec amendment proposal, risk assessment, supervisor decision point)
+# Output: reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/semantics.md
+
+# B2: Dtype neutrality strategy (embedded in semantics.md §5)
+# Recommendation: Change signature from `dtype: torch.dtype = torch.float32` to `dtype: Optional[torch.dtype] = None`
+# Default fallback: `torch.get_default_dtype()` when omitted
+
+# B3: Implementation touchpoint map
+# Author: implementation_map.md (7 sections: modules requiring edits, modules NOT requiring edits, implementation sequence, verification commands, runtime guardrails, artifact expectations, risk mitigation)
+# Output: reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/implementation_map.md
+
+# B4: Verification checklist
+# Author: verification_checklist.md (8 sections: Phase C exit criteria, Phase D exit criteria, documentation updates, acceptance test matrix, artifact inventory, risk mitigation, success metrics, cross-references)
+# Output: reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/verification_checklist.md
+
+# Environment snapshot (traceability)
+# Output: reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/env.json
+
+# This file (provenance)
+# Output: reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/commands.txt
+
+## No pytest Execution
+# Per input.md line 5: "Mapped tests: none — evidence-only"
+# Per input.md line 7: "no pytest run this loop; planning deliverables only"
+
+## Phase B Exit Criteria Check
+# [x] B1: Semantics brief authored (Option A recommendation, C parity evidence, spec/test contradiction resolution)
+# [x] B2: Dtype strategy documented (boundary enforcement via Optional[dtype] with torch.get_default_dtype() fallback)
+# [x] B3: Implementation touchpoint map authored (file:line anchors, guardrails, sequence)
+# [x] B4: Verification checklist authored (pytest selectors, artifact expectations, documentation updates)
+
+## Next Actions (per plans/active/source-weighting.md Phase B → Phase C transition)
+# 1. Obtain supervisor approval for Option A (equal weighting per spec §151-153)
+# 2. Update docs/fix_plan.md Attempt #15 with Phase B artifacts paths + key decisions
+# 3. Commit Phase B bundle: git add reports/.../phase_j/20251011T062955Z/source_weighting/ docs/fix_plan.md
+# 4. Await input.md update from galph to authorize Phase C implementation
+
+## Artifact Bundle Contents
+ls -lah reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/
+# Expected output:
+# - env.json (environment snapshot)
+# - semantics.md (Option A brief)
+# - implementation_map.md (touchpoints + guardrails)
+# - verification_checklist.md (exit criteria + pytest selectors)
+# - commands.txt (this file)
+
+## Cross-References
+# - Phase A evidence: reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/
+# - Remediation sequence: reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md
+# - Fix plan ledger: docs/fix_plan.md §[SOURCE-WEIGHT-002]:160-175
+# - Source weighting plan: plans/active/source-weighting.md Phase B table (rows B1-B4)
+
+# END COMMANDS LOG
