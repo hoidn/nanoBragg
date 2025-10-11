@@ -2307,3 +2307,15 @@
 - Replaced input.md with Docs+Parity guidance instructing Ralph to produce the Phase B semantics bundle (semantics.md, implementation_map.md, verification_checklist.md) under a fresh phase_j/<STAMP>/ directory; no tests this loop.
 - Follow-up for Ralph: execute Phase B tasks B1–B4, archive artifacts, and record Attempt #15 before requesting implementation approval.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - focus note pre-work)
+- Focus issue: [SOURCE-WEIGHT-002] Phase B status alignment
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2026-01-17 (galph loop - Source weighting Phase C kickoff)
+- Reviewed reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/{semantics.md,implementation_map.md,verification_checklist.md} plus specs/spec-a-core.md:142-166 and docs/architecture/pytorch_design.md:95-116; no matching entries in docs/findings.md.
+- Approved Option A and refreshed plans/active/source-weighting.md to mark Phase B complete, re-scope Phase C tasks (parser dtype fix, regression test, AT-SRC-001 alignment), and update Phase D gate to full-suite delta.
+- Updated docs/fix_plan.md `[SOURCE-WEIGHT-002]` ledger with new Next Actions/Exit Criteria and noted supervisor approval; top-level Active Focus now targets Phase C implementation.
+- Rewrote input.md (Mode Parity) instructing Ralph to execute Phase C1–C3 with targeted pytest runs and artifact capture under phase_j/<STAMP>/source_weighting/.
+- <Action State>: [ready_for_implementation]

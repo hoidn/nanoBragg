@@ -3,7 +3,7 @@
 **Initiative:** `[TEST-SUITE-TRIAGE-001]` Sprint 1.2  
 **Owner:** ralph  
 **Priority:** High (Critical Path — Spec Compliance)  
-**Status Snapshot (2026-01-17):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B pending supervisor go-ahead.
+**Status Snapshot (2026-01-17):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) delivered with Option A approved; delegate Phase C implementation next.
 
 ---
 
@@ -19,8 +19,8 @@
 
 ### Failure Summary (from Phase A)
 - dtype mismatch: `read_sourcefile()` defaults to `torch.float32`, tests expect float64 (5/6 failures).
-- Wavelength column ignored: simulator always uses CLI wavelength, violating AT-SRC-001 (2/6 failures).
-- Weight column preserved but unused by simulator normalization (needs confirmation during design).
+- Wavelength column ignored: simulator always uses CLI wavelength, diverging from current AT-SRC-001 expectations (2/6 failures).
+- Weight column preserved but unused by simulator normalization (confirmed acceptable via Option A semantics).
 
 ---
 
@@ -38,45 +38,45 @@ Exit Criteria: Baseline artifacts logged under `reports/.../<STAMP>/source_weigh
 
 ---
 
-### Phase B — Semantics Alignment & Design (Active)
+### Phase B — Semantics Alignment & Design ✅
 Goal: Resolve spec/test contradiction, lock the target behaviour, and outline the implementation/test plan before touching code.
 Prereqs: Review Phase A artifacts; read spec/arch references listed above.
 Exit Criteria: Design memo approved + fix_plan updated with Phase B decisions; ready to delegate implementation.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Draft semantics brief | [ ] | Produce `reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/semantics.md` summarising spec text vs AT expectations, proposing final rule (per-source λ + weight). Include recommendation for spec amendment (specs/spec-a-core.md) and architecture doc alignment. |
-| B2 | Decide dtype strategy | [ ] | Document how `read_sourcefile()` and downstream configs honour caller-provided dtype/device while satisfying float64 tests (e.g., boundary conversion helper). Capture in semantics brief + update plan if additional helpers required. |
-| B3 | Map implementation touchpoints | [ ] | Inventory modules requiring edits (`io/source.py`, `config.py`, `simulator.py`, potential BeamConfig plumbing). Provide file:line anchors and note existing guardrails (vectorization, differentiability). |
-| B4 | Define verification checklist | [ ] | List required tests/commands (Tier 1 selectors, potential new regression, gradient checks) and artifact expectations for Phase C/Phase D. |
+| B1 | Draft semantics brief | [D] | Attempt #15 → `semantics.md` reconciles spec §§142-166 vs AT-SRC-001, endorses Option A (equal weighting, CLI λ authority), and documents C reference inspection (`nanoBragg.c:2570-2720`). |
+| B2 | Decide dtype strategy | [D] | Attempt #15 → Defines parser signature change to `dtype: Optional[torch.dtype] = None` with `torch.get_default_dtype()` fallback; preserves device neutrality. |
+| B3 | Map implementation touchpoints | [D] | Attempt #15 → `implementation_map.md` inventories `io/source.py`, `tests/test_at_src_001*.py`, and spec update anchors with guardrail notes. |
+| B4 | Define verification checklist | [D] | Attempt #15 → `verification_checklist.md` fixes Phase C/D selectors, artifact bundles, and success metrics for dtype + acceptance test alignment.
 
 ---
 
 ### Phase C — Implementation & Unit Tests (Pending)
-Goal: Apply agreed semantics across parser + simulator while maintaining vectorized flows and dtype neutrality.
-Prereqs: Phase B brief approved; update docs/fix_plan Next Actions accordingly.
-Exit Criteria: Code changes landed with unit/acceptance tests passing locally (no full suite yet).
+Goal: Implement Option A fixes (dtype neutrality + acceptance test alignment) while maintaining vectorized flows.
+Prereqs: Phase B artifacts accepted; update docs/fix_plan Next Actions accordingly.
+Exit Criteria: Code changes landed with targeted acceptance tests passing locally (no full suite yet).
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update source parser | [ ] | Modify `io/source.py` to honour per-source λ/weight, default to caller dtype if provided, and issue targeted warnings only when spec requires. Ensure normalization of direction vectors stays differentiable. |
-| C2 | Thread weights/λ through configs | [ ] | Ensure `BeamConfig` stores weights/wavelengths as tensors respecting dtype/device; adjust serialization/cache if needed. |
-| C3 | Apply weighting in simulator | [ ] | Update `_compute_physics_for_position` + accumulation path to multiply intensities by weights and use per-source λ in q calculations. Maintain vectorization (no Python loops) and device/dtype neutrality. Reference `docs/architecture/pytorch_design.md` broadcast shapes. |
-| C4 | Extend regression tests | [ ] | Augment `tests/test_at_src_001*.py` if additional asserts needed; add unit tests for dtype propagation if absent. Keep CPU/GPU parametrisation per testing_strategy §1.4. |
+| C1 | Update source parser dtype handling | [ ] | Modify `src/nanobrag_torch/io/source.py` to accept `dtype: Optional[torch.dtype] = None`, resolve via `torch.get_default_dtype()`, and ensure all tensors honour caller `device`/`dtype`. Maintain differentiable normalization. |
+| C2 | Add dtype propagation regression test | [ ] | Extend `tests/test_at_src_001_simple.py` with explicit dtype parametrisation verifying parser outputs match requested dtype and implicit default. |
+| C3 | Align AT-SRC-001 expectations | [ ] | Update `tests/test_at_src_001.py` docstrings and assertions so wavelengths default to CLI λ and weights remain read-only, citing spec §§151-153. |
+| C4 | Targeted validation run | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` capturing logs + diffs under Phase C reports directory.
 
 ---
 
 ### Phase D — Parity & Documentation Closure (Pending)
-Goal: Verify spec compliance, refresh documentation, and archive artifacts for Sprint 1 handoff.
+Goal: Verify Option A behaviour, refresh documentation, and archive artifacts for Sprint 1 handoff.
 Prereqs: Phase C code merged into feature branch; initial targeted tests passing.
-Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix_plan item ready to close.
+Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix-plan item ready to close.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | D1 | Run acceptance suite | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py` on CPU and GPU (if available). Archive logs under new timestamp. |
-| D2 | Gradient/edge validation | [ ] | Add/confirm gradcheck or targeted gradient tests touching source parameters; capture under `reports/` per testing_strategy. |
-| D3 | Documentation updates | [ ] | Sync `specs/spec-a-core.md` (if amendment approved), `docs/architecture/pytorch_design.md` §1.1.5, and `docs/development/pytorch_runtime_checklist.md` to reflect new semantics. |
-| D4 | Fix-plan closure | [ ] | Update `docs/fix_plan.md` attempts + exit criteria; note artifact paths; mark `[SOURCE-WEIGHT-002]` as done when tests + docs finalized. |
+| D2 | Full-suite regression delta | [ ] | `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=5`; confirm C3 cluster clears (36→≤30 failures). |
+| D3 | Documentation updates | [ ] | Update `specs/spec-a-core.md` AT-SRC-001 wording, annotate `docs/development/pytorch_runtime_checklist.md` with dtype reminder, and record outcomes in docs/fix_plan.md. |
+| D4 | Fix-plan closure | [ ] | Log Phase D artifacts (cpu/gpu logs, spec diff) and mark `[SOURCE-WEIGHT-002]` done once validations succeed. |
 
 ---
 
@@ -89,4 +89,4 @@ Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix_plan
 
 ---
 
-**Plan Status:** Phase B in progress — execute semantics/design tasks before code changes.
+**Plan Status:** Phase B complete — Option A endorsed; delegate Phase C implementation next.

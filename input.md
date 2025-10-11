@@ -1,36 +1,37 @@
-Summary: Deliver `[SOURCE-WEIGHT-002]` Phase B semantics brief + design so Sprint 1.2 can advance to implementation.
-Mode: Docs+Parity
+Summary: Implement Option A Phase C fixes for source-file parsing and acceptance tests.
+Mode: Parity
 Focus: [SOURCE-WEIGHT-002] Simulator source weighting
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/{semantics.md,implementation_map.md,verification_checklist.md,env.json}
-Do Now: Execute `[SOURCE-WEIGHT-002]` Phase B tasks B1–B4 — create the semantics/design artifact bundle under a fresh `<STAMP>` in `reports/2026-01-test-suite-triage/phase_j/` (no pytest run this loop; planning deliverables only).
-If Blocked: Capture an interim blockers.md in the `<STAMP>` directory summarising what prevented the brief and note the dependency in docs/fix_plan.md Attempts; stop for supervisor review.
+Mapped tests: tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation; tests/test_at_src_001.py
+Artifacts: reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/{commands.txt,pytest_simple.log,pytest_full.log,source.py.diff,test_at_src_001.py.diff,summary.md}
+Do Now: Phase C1–C3 — add the dtype regression test, confirm it fails, implement the parser dtype fix + AT-SRC-001 expectation updates, then rerun `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` (capture stdout/stderr in the artifact bundle).
+If Blocked: Write blockers.md under the `<STAMP>/source_weighting/` directory outlining the obstacle and updated reproduction command, then halt for supervisor review.
 Priorities & Rationale:
-- docs/fix_plan.md:5-7,160-175 — Sprint 1.2 now requires the Phase B semantics brief before code edits.
-- plans/active/source-weighting.md:32-87 — Phase B table defines B1–B4 deliverables needed to unlock implementation.
-- specs/spec-a-core.md:142-210 — authoritative sourcefile semantics that must be reconciled with AT-SRC-001 expectations.
-- tests/test_at_src_001.py:1-230 — current acceptance criteria demonstrating the required per-source weight/λ behaviour.
-- docs/architecture/pytorch_design.md:95-116 — existing equal-weight assumption we must revisit in the design brief.
+- plans/active/source-weighting.md:55-79 — Phase C table lists parser dtype fix, regression test, and AT-SRC-001 alignment as the next gated tasks.
+- docs/fix_plan.md:154-212 — `[SOURCE-WEIGHT-002]` Next Actions now call for Phase C1–C3 execution and Phase C artifact logging.
+- reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/semantics.md — Option A decision keeps equal weighting; only dtype/test updates are required.
+- specs/spec-a-core.md:142-166 — authoritative statement that file λ/weights are ignored; tests must match this behaviour.
+- docs/architecture/pytorch_design.md:95-116 — documents equal-weight source handling; reinforce vectorized path while editing parser/tests.
 How-To Map:
-- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_j/$STAMP/source_weighting`.
-- Capture env snapshot for traceability: `python -m platform` info, `torch.__version__`, and current git SHA into `env.json` inside the new directory.
-- Draft `semantics.md` covering spec text vs test behaviour, proposed resolution, and any spec amendment notes; cite exact line numbers.
-- Create `implementation_map.md` outlining modules/files to touch (io/source.py, BeamConfig, simulator) with current line anchors and guardrails (vectorization, dtype neutrality, differentiability).
-- Write `verification_checklist.md` enumerating targeted pytest selectors, gradient checks, documentation updates, and artifact expectations for Phases C/D.
-- Update plans/active/source-weighting.md status section if new insights arise; log the artifact paths + key decisions in Attempt history when reporting back.
+- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-triage/phase_j/$STAMP/source_weighting` and log every command to `commands.txt` (append with `tee -a`).
+- Implement Phase C1: adjust `src/nanobrag_torch/io/source.py` signature to `dtype: Optional[torch.dtype] = None`, default via `torch.get_default_dtype()`, ensure all tensor constructions use the resolved dtype/device; avoid `.cpu()`/`.numpy()`.
+- Implement Phase C2: add `test_sourcefile_dtype_propagation` in `tests/test_at_src_001_simple.py` (parametrise over float32/float64/None); run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation` before the fix to confirm the failure, recording output to `pytest_simple.log` (expected fail message documents baseline).
+- Implement Phase C3: update `tests/test_at_src_001.py` docstrings and wavelength assertions so both sources use CLI λ (6.2e-10) while weights remain read-only; cite spec lines in comments.
+- After code + test edits land, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` and store stdout/stderr in `pytest_full.log`; expected result is 8/8 passing.
+- Save `git diff src/nanobrag_torch/io/source.py > source.py.diff` and `git diff tests/test_at_src_001*.py > test_at_src_001.py.diff`; summarise outcomes in `summary.md` (include pass counts, runtime, dtype evidence).
 Pitfalls To Avoid:
-- Do not modify production code or tests yet; this loop is planning only.
-- Keep all new docs ASCII and reference authoritative spec sections directly.
-- Respect Protected Assets (docs/index.md); do not relocate input.md/loop.sh.
-- Ensure dtype/device guidance aligns with runtime guardrails (no `.cpu()`/`.cuda()` shortcuts in proposals).
-- Avoid inventing new scripts; place artifacts under the prescribed reports path.
-- Include concrete file:line anchors for planned code edits; avoid vague directives.
-- Note spec contradictions explicitly; do not silently overwrite the current contract.
+- Do not introduce per-source weighting or λ usage; Option A keeps equal weighting semantics.
+- Maintain tensor device neutrality (`device` argument already supplied by caller); no implicit CPU allocations.
+- Preserve vectorization; avoid Python loops when adjusting normalization.
+- Keep new regression test deterministic (no random seeds, no device-specific asserts beyond dtype equality).
+- Ensure new warnings/errors are not silenced; fail fast if pytest still reports dtype mismatches.
+- Reference spec sections in test comments; avoid duplicating semantics prose elsewhere.
+- Update docs/fix_plan Attempts once artifacts are archived; include `<STAMP>` in the note.
+- Retain Protected Assets (docs/index.md references) untouched.
 Pointers:
-- plans/active/source-weighting.md:32-87
-- docs/fix_plan.md:160-175
-- specs/spec-a-core.md:142-210
+- plans/active/source-weighting.md:55-79
+- docs/fix_plan.md:154-212
+- reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/semantics.md
+- specs/spec-a-core.md:142-166
 - docs/architecture/pytorch_design.md:95-116
-- tests/test_at_src_001_simple.py:1-60
-Next Up: Once Phase B artifacts are committed, proceed to Phase C implementation tasks (C1–C3) with targeted pytest selectors.
+Next Up: Prepare Phase D documentation diff (spec text + runtime checklist) once targeted tests pass.
