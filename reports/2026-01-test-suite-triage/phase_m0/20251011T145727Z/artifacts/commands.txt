@@ -1,0 +1,2 @@
+STAMP=20251011T145727Z
+Command: CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=pytest_full.xml

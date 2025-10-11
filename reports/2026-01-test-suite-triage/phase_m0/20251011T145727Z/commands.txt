@@ -1,0 +1,74 @@
+# Phase M0 Commands Log
+
+**Timestamp:** 2025-10-11T14:57:27Z
+**Status:** BLOCKED (timeout)
+
+## Preflight (M0a)
+
+### Environment Snapshot
+```bash
+python - <<'PY' > reports/2026-01-test-suite-triage/phase_m0/20251011T145727Z/preflight/env.txt
+import sys, torch
+print(f"Python: {sys.version}")
+print(f"PyTorch: {torch.__version__}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"CUDA version: {torch.version.cuda}")
+    print(f"Device count: {torch.cuda.device_count()}")
+PY
+```
+**Result:** ✅ SUCCESS
+**Captured:** Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6, 1 device
+
+### Pip Freeze
+```bash
+python -m pip freeze > reports/2026-01-test-suite-triage/phase_m0/20251011T145727Z/preflight/pip_freeze.txt
+```
+**Result:** ✅ SUCCESS
+**Captured:** 237 packages
+
+### Test Collection
+```bash
+STAMP=20251011T145727Z
+CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q tests | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/preflight/collect_only.log
+```
+**Result:** ⚠️ PARTIAL
+**Issue:** Path error (`phase_m0//preflight/` double slash) prevented tee from writing log
+**Output:** 687 tests collected (visible in stderr), 1 skipped
+
+## Full Suite Run (M0b)
+
+### Attempt 1
+```bash
+STAMP=20251011T145727Z
+CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.log
+```
+**Result:** ⚠️ BLOCKED (system timeout)
+**Runtime:** ~360s (terminated by Bash tool timeout)
+**Progress:** ~510/687 tests (~74%) before termination
+**Last test:** `test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_b`
+
+### Attempt 2 (with timeout wrapper)
+```bash
+STAMP=20251011T145727Z
+timeout 3600 bash -c "CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_m0/$STAMP/artifacts/pytest_full.log"
+```
+**Result:** ⚠️ BLOCKED (system timeout)
+**Runtime:** ~360s (system-level timeout override)
+**Progress:** ~510/687 tests (~75%) before termination
+**Issue:** Bash tool's 360,000ms (6-minute) system timeout overrides internal `timeout 3600` wrapper
+
+## Blocker Summary
+
+**Primary blocker:** System-level timeout (360s) insufficient for full-suite execution (requires ~1860s per Phase H/K)
+
+**Secondary issue:** Path construction with double slashes preventing log capture via tee
+
+**Artifacts status:**
+- Environment snapshot: ✅ COMPLETE
+- Pip freeze: ✅ COMPLETE
+- Test collection log: ❌ NOT CAPTURED (path error)
+- Full suite log: ⚠️ INCOMPLETE (~75% coverage)
+- JUnit XML: ⚠️ INCOMPLETE or missing
+
+**Recommendation:** Retry using Phase K Attempt #15 pattern (pre-resolved STAMP, explicit paths, external timeout wrapper OR acknowledge system limitation and use Phase K baseline)
