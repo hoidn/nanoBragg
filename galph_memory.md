@@ -2628,3 +2628,16 @@
 - Rewrote input.md with Parity-mode guidance: update tests to spec values, adjust DetectorConfig + Detector mapping once, rerun targeted selectors, refresh docs/tracker, then redo chunked suite captures under a new STAMP.
 - Action State: [ready_for_implementation]
 
+
+### 2025-10-11 (current loop focus note)
+- Focus issue: [DETECTOR-CONFIG-001] MOSFLM default alignment
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-11 (galph loop summary)
+- Reviewed findings (API-001/API-002/CONVENTION-001) for detector offsets; no doc conflicts noted.
+- Updated plans/active/detector-config.md Phase C to mark Attempt #39 completion and highlight need for chunked rerun.
+- Refreshed docs/fix_plan.md next actions: capture new MOSFLM bundle, sync remediation tracker, execute Phase M chunked pytest rerun.
+- Reissued input.md pointing Ralph at targeted detector tests + chunk workflow with STAMPed artefacts.
+- Follow-up for Ralph: produce the new phase_m3/phase_m artefacts, update tracker + fix_plan attempts, and record parity deltas.
+- <Action State> [ready_for_implementation]
