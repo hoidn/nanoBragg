@@ -2597,3 +2597,13 @@
 - Refreshed `docs/fix_plan.md` Next Actions to pivot from M2d docs to Phase M3 staging (MOSFLM sync, detector orthogonality notes, mixed-units handoff).
 - Reissued `input.md` (Mode=Docs) directing Ralph to author the Phase M3a MOSFLM remediation sync bundle under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/`.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-11T18:08:02Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M3a MOSFLM sync refresh
+- Action type: Review/housekeeping
+- Mode: Docs
+### $STAMP (galph loop - Phase M3a refresh recap)
+- Reused detector-config pytest log (phase_m/current) and authored refreshed MOSFLM sync summary at `reports/2026-01-test-suite-triage/phase_m3/20251011T181150Z/mosflm_sync/summary.md`.
+- Marked `plans/active/detector-config.md` task B3 [D] after auditing `detector.py:90-107` and `detector.py:522-549` to confirm no double +0.5 offset.
+- Trimmed `[TEST-SUITE-TRIAGE-001]` Next Actions to M3b/M3c, logged Attempt #32 in `docs/fix_plan.md`, and rewrote `input.md` for Phase M3b detector_ortho notes.
+- Action State: [ready_for_implementation]
