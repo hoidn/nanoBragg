@@ -2218,3 +2218,15 @@
 - Authored `input.md` (Docs mode) directing Ralph to create `reports/2026-01-test-suite-triage/phase_j/<STAMP>/` with `remediation_tracker.md`, `remediation_sequence.md`, and `commands.txt`, and to log Attempt #12 in fix_plan.
 - Follow-up for Ralph: build Phase J documentation bundle, update fix_plan attempts/Next Actions, and keep commands.txt referencing Phase I artifacts.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - pre-edit note)
+- Focus issue: [DETERMINISM-001] Phase A repro gate
+- Action type: Evidence collection
+- Mode: Parity
+
+### 2026-01-17 (galph loop - Pre-Sprint gate dispatch)
+- Reviewed remediation_sequence.md Pre-Sprint requirements and confirmed [DTYPE-NEUTRAL-001] marked done; focus set on `[DETERMINISM-001]` Phase A reproductions per test-suite tracker.
+- No plan edits required; pointed Ralph at the smoke test gate via new input.md and specified artifact layout for reports/2026-01-test-suite-triage/phase_j/<STAMP>/pre_sprint/.
+- Directed updates to docs/fix_plan.md Attempts and remediation_tracker.md once the smoke output is captured to record the go/no-go decision.
+- <Action State>: [ready_for_implementation]
+
