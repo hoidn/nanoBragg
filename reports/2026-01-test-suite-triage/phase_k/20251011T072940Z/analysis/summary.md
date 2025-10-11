@@ -138,3 +138,81 @@ After Phase K baseline (31 failures, C3=4), Attempt #19 (Phase D) delivered dtyp
 - `remediation_sequence.md` — Sprint 1.2 marked ✅ COMPLETE, progress table updated
 - `classification_overview.md` — Implementation bugs: 30→26, active clusters: 14→13
 
+---
+
+## Phase M2 Update (2025-10-11, STAMP: 20251011T193829Z)
+
+**Sprint 0 + Phase M1 + Phase M2 Complete:**
+
+After Phase D4 (27 failures), Attempts #21-#41 executed Sprint 0 quick fixes (C1, C3, C4, C5, C7 clusters in Phase M0), gradient guard validation (Phase M2), and full-suite chunked rerun. Phase M2 establishes new baseline:
+
+### Phase M2 Results
+- **Total Collected:** 687 tests (1 skipped during collection)
+- **Final Result:** 561 passed / 13 failed / 112 skipped (81.7% pass rate)
+- **Total Runtime:** ~502 seconds (~8.4 minutes across 10 chunks)
+- **Artifacts:** `reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/`
+
+### Progress vs Baselines
+
+**Phase M2 vs Phase K (20251011T072940Z):**
+- Failures: 31 → 13 (-18, **-58.1%** reduction)
+- Passed: 512 → 561 (+49, +9.6%)
+- Pass Rate: 74.5% → 81.7% (+7.2pp)
+
+**Phase M2 vs Phase M0 (20251011T153931Z - pre-Sprint 0):**
+- Failures: 46 → 13 (-33, **-71.7%** reduction)
+- Passed: 504 → 561 (+57, +11.3%)
+- Pass Rate: 73.5% → 81.7% (+8.2pp)
+
+**Phase M2 vs Phase D4 (27 failures baseline):**
+- Failures: 27 → 13 (-14, **-51.9%** reduction)
+
+### Remaining Failures (13 total, 4 clusters)
+
+**C2 - Gradient Testing Infrastructure (10 failures):**
+- torch.compile donated buffers incompatibility
+- Environment guard `NANOBRAGG_DISABLE_COMPILE=1` validated (Phase M2 Attempt #29)
+- All tests: `test_gradients.py::test_gradcheck_cell_{a,b,c,alpha,beta,gamma}`, `test_joint_gradcheck`, `test_gradgradcheck_cell_params`, `test_gradient_flow_preserved`, `test_property_gradient_stability`
+- Status: **KNOWN ISSUE** (infrastructure, not correctness bug)
+- Priority: P1 (blocks differentiability validation without env guard)
+
+**C8 - MOSFLM Beam Center Offset (1 failure):**
+- Test: `test_at_parallel_003.py::test_detector_offset_preservation`
+- Root cause: +0.5 pixel offset applied to explicit user-provided beam centers
+- Status: **IMPLEMENTATION BUG** (specification violation)
+- Priority: P2 (incorrect behavior for explicit beam centers)
+
+**C15 - Mixed Units Zero Intensity (1 failure):**
+- Test: `test_at_parallel_015.py::test_mixed_units_comprehensive`
+- Root cause: Unknown (simulation produces no signal)
+- Status: **IMPLEMENTATION BUG** (needs callchain investigation)
+- Priority: P2 (edge case)
+
+**C16 - Detector Orthogonality Tolerance (1 failure):**
+- Test: `test_at_parallel_017.py::test_large_detector_tilts`
+- Root cause: Orthogonality check expects ≤1e-10, measured 1.49e-08 with 50°+45°+40° rotations
+- Status: **TOLERANCE ADJUSTMENT NEEDED**
+- Priority: P3 (numerical precision, not physics bug)
+
+### Sprint 0-M2 Impact Summary
+- **Sprint 0 (Phase M1a-M1e):** Cleared C1 (CLI fixtures), C3 (detector dtype), C4 (debug trace scope), C5 (simulator API), C7 (lattice shape detectors) — **-33 failures**
+- **Phase M2 (gradient guard):** Validated existing guard; no code changes needed (Phase M2a-M2d documentation-only)
+- **Net Progress:** 27 failures → 13 failures (**51.9% reduction** post-Phase D4)
+- **Clusters Resolved:** C1, C3, C4, C5, C7 (5 of 9 Phase M0 clusters)
+- **Active Clusters:** C2, C8, C15, C16 (4 remaining)
+
+### Observations
+1. **Sprint 0 high-impact:** 31-failure reduction (67% of Phase M0 failures) with low-effort fixture/API alignment fixes validates quick-win prioritization strategy.
+2. **Gradient guard pre-existing:** Phase M2 validation confirmed `NANOBRAGG_DISABLE_COMPILE=1` was already wired; documentation updates landed in arch.md §15 and testing_strategy.md §4.1.
+3. **No new regressions:** All Sprint 0 fixes held; no additional failures introduced.
+4. **Test suite health:** Pass rate improved 74.5%→81.7% (+7.2pp), runtime stable (~502s chunked execution).
+
+### Recommendations
+1. **Phase M3 evidence bundle:** Create cluster-specific documentation for C2 (gradient guard harness integration), C8 (MOSFLM fix handoff), C15 (mixed-units callchain), C16 (orthogonality tolerance) under `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/`.
+2. **Tracker sync:** Update `remediation_tracker.md` Executive Summary (31→13 failures) and mark Sprint 0 clusters ✅ RESOLVED.
+3. **Delegate remaining clusters:** C8 → [DETECTOR-CONFIG-001] Phase C, C15 → [VECTOR-PARITY-001] callchain investigation, C16 → geometry specialist.
+
+---
+
+**Phase M2 COMPLETE. 13 failures remaining (4 clusters). Ready for Phase M3 cluster documentation and specialist handoffs.**
+
