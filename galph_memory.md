@@ -2280,3 +2280,9 @@
 - Rewrote input.md to direct Ralph toward Phase D2 docstring updates with collect-only verification and mirrored artifact layout.
 - Heads review: inspected Ralph’s latest commits (a4322195, c114c86a); documentation work looks solid, no regressions spotted.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-17 (galph loop - Determinism doc sync prep)
+- Focus issue: [DETERMINISM-001] doc integration status (Action: Review/housekeeping, Mode: Docs).
+- Synced docs/fix_plan.md header to move Sprint 1 into ACTIVE status and mark `[DETERMINISM-001]` Phase D2 complete; refreshed Next Actions to target D3–D4 doc edits and downstream validation.
+- Rewrote input.md (Mode: Docs) instructing Ralph to update `arch.md` ADR-05 + testing_strategy determinism workflow, capture new Phase D/Phase E bundles, and run the guarded determinism pytest command.
+- Action State: [ready_for_implementation]
