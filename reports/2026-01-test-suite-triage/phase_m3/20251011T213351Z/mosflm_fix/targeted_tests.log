@@ -1,0 +1,26 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 16 items
+
+tests/test_detector_config.py::TestDetectorConfig::test_default_values PASSED [  6%]
+tests/test_detector_config.py::TestDetectorConfig::test_post_init_defaults PASSED [ 12%]
+tests/test_detector_config.py::TestDetectorConfig::test_custom_twotheta_axis PASSED [ 18%]
+tests/test_detector_config.py::TestDetectorConfig::test_xds_convention_defaults PASSED [ 25%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_counts PASSED [ 31%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_distance PASSED [ 37%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_size PASSED [ 43%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_oversample PASSED [ 50%]
+tests/test_detector_config.py::TestDetectorConfig::test_tensor_parameters PASSED [ 56%]
+tests/test_detector_config.py::TestDetectorInitialization::test_default_initialization PASSED [ 62%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_initialization PASSED [ 68%]
+tests/test_detector_config.py::TestDetectorInitialization::test_backward_compatibility_check PASSED [ 75%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_not_default PASSED [ 81%]
+tests/test_detector_config.py::TestDetectorInitialization::test_basis_vectors_initialization PASSED [ 87%]
+tests/test_detector_config.py::TestDetectorInitialization::test_device_and_dtype PASSED [ 93%]
+tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation PASSED [100%]
+
+============================== 16 passed in 1.95s ==============================

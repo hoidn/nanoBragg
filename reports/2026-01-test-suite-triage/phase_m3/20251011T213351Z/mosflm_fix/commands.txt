@@ -1,0 +1,26 @@
+# Phase C Verification Commands
+# STAMP: 20251011T213351Z
+# Initiative: [DETECTOR-CONFIG-001] Phase C — Implementation & Targeted Validation
+
+# Setup
+export STAMP=20251011T213351Z
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix
+
+# Targeted validation (16 tests)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_detector_config.py \
+  tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation \
+  --tb=short 2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/targeted_tests.log
+
+# Critical test (explicit beam center preservation)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+
+# Full detector config suite (15 tests)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py
+
+# Comprehensive beam center source coverage
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_beam_center_source.py
+
+# Result: 16/16 PASSED (100%) in 1.95s
+# Status: Phase C COMPLETE, C8 cluster RESOLVED

@@ -12,8 +12,8 @@
 ### Status Snapshot (2026-01-21)
 - Phase A — Evidence & Guardrail Alignment · **[D]** Phase L + M3 artifacts ingested; spec/arch cross-check complete; findings cross-referenced.
 - Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T210514Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T210514Z/mosflm_offset/design.md`.
-- Phase C — Implementation & Targeted Validation · **[P]** Awaiting supervisor approval to proceed with code/test changes per design blueprint.
-- Phase D — Full-Suite Regression & Closure · **[ ]** Pending post-fix chunked rerun, tracker sync, and plan archival.
+- Phase C — Implementation & Targeted Validation · **[D]** Complete (STAMP 20251011T213351Z); all C1-C7 tasks verified passing, 16/16 tests green, C8 cluster resolved; artifacts at `reports/2026-01-test-suite-triage/phase_m3/20251011T213351Z/mosflm_fix/`.
+- Phase D — Full-Suite Regression & Closure · **[P]** Pending Phase M chunked rerun, tracker sync, and plan archival.
 
 ### Phase A — Evidence & Guardrail Alignment
 Goal: Ensure prior evidence, specs, and findings are captured so implementation starts from an aligned baseline.
@@ -45,16 +45,13 @@ Exit Criteria: Code + tests updated, targeted selectors green with artifacts, do
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update configuration layer | [ ] | Modify `src/nanobrag_torch/config.py` to include `beam_center_source` (enum or Literal). Ensure editable install entry points propagate the flag. |
-| C2 | Adjust CLI parsing | [ ] | In `src/nanobrag_torch/__main__.py`, set `beam_center_source="explicit"` whenever `-Xbeam/-Ybeam`, `--beam-center-*`, or API overrides are supplied; default to `"auto"` otherwise. Maintain determinism with existing defaults. |
-| C3 | Apply conditional offset in Detector | [ ] | Update `Detector.__init__` to add +0.5 only when `beam_center_source == "auto"` and convention is MOSFLM. Guard tensor dtype/device; ensure `_is_default_config` remains consistent. |
-| C4 | Expand regression coverage | [ ] | Extend `tests/test_detector_config.py` and `tests/test_at_parallel_002.py` with auto vs explicit assertions, plus non-MOSFLM negative controls. Add new test for "explicit matches default" to verify no accidental offset. |
-| C5 | Targeted validation bundle | [ ] | Run:
-  - `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py`
-  - `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation`
- Capture logs + `summary.md` under `reports/2026-01-test-suite-triage/phase_m3/<STAMP>/mosflm_fix/`. |
-| C6 | Documentation sync | [ ] | Update `docs/architecture/detector.md` §§8.2/9, `docs/development/c_to_pytorch_config_map.md`, and any quick-reference tables to describe explicit/auto behavior. Note interaction with findings API-002. |
-| C7 | Ledger & tracker update | [ ] | Refresh `[DETECTOR-CONFIG-001]` entry in `docs/fix_plan.md` (attempt log + next actions), and update `reports/2026-01-test-suite-triage/phase_j/.../remediation_tracker.md` to mark C8 resolved. |
+| C1 | Update configuration layer | [D] | `src/nanobrag_torch/config.py` includes `BeamCenterSource` enum with AUTO/EXPLICIT values; `DetectorConfig.beam_center_source` field added with default=AUTO. Verified via test_detector_config.py (15/15 passed). |
+| C2 | Adjust CLI parsing | [D] | `src/nanobrag_torch/__main__.py` detects 8 explicit beam center flags (beam_center_s/f, Xbeam/Ybeam, Xclose/Yclose, ORGX/ORGY) and sets `beam_center_source=EXPLICIT`; defaults to AUTO otherwise. Verified via CLI integration tests. |
+| C3 | Apply conditional offset in Detector | [D] | `src/nanobrag_torch/models/detector.py` beam_center_s_pixels/beam_center_f_pixels properties apply +0.5 offset ONLY when `source==AUTO` and `convention==MOSFLM`. Verified via test_at_parallel_003 (PASSED). |
+| C4 | Expand regression coverage | [D] | `tests/test_beam_center_source.py` added with comprehensive auto vs explicit validation; `tests/test_at_parallel_003.py` extended for explicit preservation; non-MOSFLM negative controls included. All tests passing. |
+| C5 | Targeted validation bundle | [D] | Executed both commands; 16/16 tests passed in 1.95s. Logs + summary.md captured at `reports/2026-01-test-suite-triage/phase_m3/20251011T213351Z/mosflm_fix/`. No regressions detected. |
+| C6 | Documentation sync | [D] | `docs/architecture/detector.md` §Beam Center Mapping updated; `docs/development/c_to_pytorch_config_map.md` MOSFLM convention row clarified with source distinction; API-002 interaction documented. |
+| C7 | Ledger & tracker update | [D] | `docs/fix_plan.md` [DETECTOR-CONFIG-001] updated with Attempt #42 (this loop); C8 cluster marked RESOLVED in remediation_tracker.md (pending commit). |
 
 ### Phase D — Full-Suite Regression & Closure
 Goal: Demonstrate suite-wide health post-fix, archive plan, and unblock downstream work.
