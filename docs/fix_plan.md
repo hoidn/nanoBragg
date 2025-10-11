@@ -152,20 +152,26 @@
   - Detector geometry audit documented with findings
 
 ## [SOURCE-WEIGHT-002] Simulator source weighting
-- Spec/AT: `specs/spec-a-core.md` §§3.4–3.5 (source weighting), `tests/test_at_src_001.py`, `tests/test_at_src_001_simple.py`
-- Priority: High
-- Status: in_planning
-- Owner/Date: ralph/2025-10-10
-- Reproduction: `pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py`
-- Source: Cluster C7 from `[TEST-SUITE-TRIAGE-001]` Attempt #3 triage; reopens `[SOURCE-WEIGHT-001]` marked complete but simulator path broken
-- Attempts History: none yet
+- Spec/AT: `specs/spec-a-core.md` §§142–166 (Sources, Divergence & Dispersion), AT-SRC-001
+- Priority: High (Sprint 1.2 — Critical Path)
+- Status: in_progress
+- Owner/Date: ralph/2025-10-11
+- Plan Reference: `plans/active/source-weighting.md`
+- Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py`
+- Source: Cluster C3 from `[TEST-SUITE-TRIAGE-001]` Phase I triage (6 failures)
+- Attempts History:
+  * [2025-10-11] Attempt #1 — Result: ✅ Phase A baseline COMPLETE (evidence-only). Executed baseline test run capturing 6 failures (1 passed, 85.7% fail rate, runtime 2.08s). **Root causes identified**: (1) dtype mismatch — tests expect float64, implementation returns float32 (affects 5/6 failures); (2) wavelength column parsing missing — sourcefile λ values ignored, contradicts AT-SRC-001 requirement (affects 2/6 failures). Warning confirms "sourcefile wavelengths are ignored" per spec lines 150-151, but AT-SRC-001 requires per-source λ support — spec clarification needed. Weight column appears correctly parsed (no weight-related assertion failures). Artifacts: `reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/{summary.md,logs/pytest.log,artifacts/pytest.xml,env/*}`. Next: Proceed to Phase B implementation once approved — (1) fix dtype consistency in `io/source.py`, (2) implement per-source wavelength support, (3) validate AT-SRC-001 weighted multi-source normalization.
 - Next Actions:
-  1. Author follow-up plan ensuring `Simulator` multiplies source weights
-  2. Audit flux normalization path against spec
-  3. Add regression tests validating weighted multi-source runs
+  1. ✅ Phase A baseline complete — evidence archived under 20251011T062017Z timestamp
+  2. Await supervisor approval before beginning Phase B implementation
+  3. Address dtype mismatch: update `read_sourcefile()` to accept/default `dtype=torch.float64`
+  4. Resolve spec contradiction: implement per-source wavelength per AT-SRC-001 (lines 150-151 state "ignored", AT-SRC-001 requires application)
+  5. Validate steps normalization includes source count and per-source weights
 - Exit Criteria:
-  - Source weighting tests pass
-  - Simulator honors weights; normalization matches spec
+  - All 7 tests in `test_at_src_001*.py` pass (currently 1/7 passing)
+  - Sourcefile parsing handles all column configurations (full 5-column, partial, defaults)
+  - Per-source wavelengths and weights correctly applied in simulator normalization
+  - AT-SRC-001 requirement met: `steps = 2` with distinct weights and λ
 
 ## [TOOLING-DUAL-RUNNER-001] Restore dual-runner parity
 - Spec/AT: `specs/spec-a-parallel.md` §2.5 (tooling requirements), `tests/test_at_tools_001.py`
