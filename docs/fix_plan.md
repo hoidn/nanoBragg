@@ -16,7 +16,7 @@
 | [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | done |
 | [TOOLING-DUAL-RUNNER-001](#tooling-dual-runner-001-restore-dual-runner-parity) | Restore dual-runner parity | High | in_planning |
 | [DEBUG-TRACE-001](#debug-trace-001-debug-flag-support) | Debug flag support | High | in_planning |
-| [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | done |
+| [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | in_progress |
 | [VECTOR-PARITY-001](#vector-parity-001-restore-40962-benchmark-parity) | Restore 4096² benchmark parity | High | in_progress |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | blocked |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
@@ -45,9 +45,9 @@
 - Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`, `phase_k`, `phase_l`, `phase_m0`, `phase_m`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
-- Next Actions (Phase M3 staging):
-1. Capture Phase M3b ownership notes for detector orthogonality (C8) under `phase_m3/$STAMP/detector_ortho/notes.md`, identifying the executing engineer and confirming selector `pytest -v tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts`.
-2. Seed Phase M3c mixed-units hypotheses by drafting `phase_m3/$STAMP/mixed_units/hypotheses.md` that links the zero-intensity findings to `[VECTOR-PARITY-001]`, then log the handoff in `remediation_tracker.md` and this ledger.
+- Next Actions (Phase M3 execution):
+1. Delegate `[DETECTOR-CONFIG-001]` Phase C1–C3 implementation: apply the MOSFLM +0.5 pixel offset in `Detector.__init__`, extend `tests/test_detector_config.py`, run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size` and `pytest -v tests/test_detector_config.py`, then update docs/tracker; archive evidence under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/` and log the Attempt in this ledger.
+2. Author Phase M3c mixed-units hypotheses at `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/hypotheses.md`, wiring the zero-intensity cluster to `[VECTOR-PARITY-001]` Tap backlog and updating `remediation_tracker.md` ownership notes.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -226,19 +226,19 @@
 ## [DETECTOR-CONFIG-001] Detector defaults audit
 - Spec/AT: `specs/spec-a-core.md` §§68-72 (MOSFLM convention), `tests/test_detector_config.py`
 - Priority: High
-- Status: done
+- Status: in_progress
 - Owner/Date: ralph/2025-10-10
 - Plan Reference: `plans/active/detector-config.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py`
 - Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase K triage (2 failures)
 - Attempts History: none yet
 - Next Actions:
-  1. Monitor `[TEST-SUITE-TRIAGE-001]` Phase M0 baseline run; confirm detector-config failures remain resolved once new triage summary posts.
-  2. Resume Phase C4 validation only after Phase M (post-remediation) rerun is scheduled; no code edits pending until then.
-- Exit Criteria: ✅ COMPLETE
-  - ✅ Detector initialization tests pass (15/15)
-  - ✅ Defaults match spec (MOSFLM +0.5 offset per §72)
-  - Full-suite regression check (IN PROGRESS)
+  1. Execute Phase C1–C3 implementation per `plans/active/detector-config.md`: apply the MOSFLM +0.5 pixel offset inside `Detector.__init__`, extend `tests/test_detector_config.py`, and update documentation plus tracker entries; capture artifacts under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_fix/`.
+  2. Once targeted selectors pass, decide on Phase C4 full-suite timing and record the outcome (run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation` before any full-suite rerun).
+- Exit Criteria:
+  - MOSFLM offset implementation merged with targeted selectors passing (`tests/test_at_parallel_002.py`, `tests/test_detector_config.py`).
+  - Documentation (`docs/architecture/detector.md`, `docs/development/c_to_pytorch_config_map.md`) and remediation tracker updated to reflect the new convention handling.
+  - Post-fix regression gate executed (Phase M validation bundle with updated failure counts).
 
 ## [VECTOR-PARITY-001] Restore 4096² benchmark parity
 - Spec/AT: `specs/spec-a-core.md` §§4–5, `specs/spec-a-parallel.md` §2.3, `arch.md` §§2/8/15, `docs/architecture/pytorch_design.md` §1.1 & §1.1.5, `docs/development/testing_strategy.md` §§1.4–2, `docs/development/pytorch_runtime_checklist.md` item #4.

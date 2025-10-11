@@ -2607,3 +2607,12 @@
 - Marked `plans/active/detector-config.md` task B3 [D] after auditing `detector.py:90-107` and `detector.py:522-549` to confirm no double +0.5 offset.
 - Trimmed `[TEST-SUITE-TRIAGE-001]` Next Actions to M3b/M3c, logged Attempt #32 in `docs/fix_plan.md`, and rewrote `input.md` for Phase M3b detector_ortho notes.
 - Action State: [ready_for_implementation]
+### 2025-10-11T18:21:08Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M3 next actions refresh
+- Action type: Review/housekeeping
+- Mode: Parity
+### 2025-10-11T18:24:01Z (galph loop - Phase M3 steering recap)
+- Updated docs/fix_plan.md next actions to launch MOSFLM fix attempt and flipped [DETECTOR-CONFIG-001] back to in_progress; index now matches plan (lines 38-58, 226-241).
+- Reissued input.md with Parity-mode instructions for executing Phase C1–C3 (MOSFLM +0.5 offset, targeted selectors, doc/tracker updates).
+- No new evidence gathered; awaiting Ralph to implement detector changes per detector-config plan (Phase C).
+- <Action State>: [ready_for_implementation]
