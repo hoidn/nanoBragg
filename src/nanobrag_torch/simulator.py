@@ -970,6 +970,7 @@ class Simulator:
                 # Reshape back to (S, F, oversample*oversample)
                 # The weighted sum over sources is done inside _compute_physics_for_position
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+                subpixel_physics_intensity_pre_polar_all = physics_intensity_pre_polar_flat.reshape(batch_shape)
             else:
                 # Single source case: use default beam parameters
                 # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
@@ -979,6 +980,7 @@ class Simulator:
 
                 # Reshape back to (S, F, oversample*oversample)
                 subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+                subpixel_physics_intensity_pre_polar_all = physics_intensity_pre_polar_flat.reshape(batch_shape)
 
             # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
             # Only omega needs to be applied here for subpixel oversampling
@@ -1022,6 +1024,9 @@ class Simulator:
 
             # Save pre-normalization intensity for trace (before last-value multiplication)
             I_before_normalization = accumulated_intensity.clone()
+
+            # CLI-FLAGS-003 Phase M1c: Also sum pre-polar intensity for debug trace
+            I_before_normalization_pre_polar = torch.sum(subpixel_physics_intensity_pre_polar_all, dim=2)
 
             # Apply last-value semantics if omega flag is not set
             if not oversample_omega:
