@@ -1,0 +1,20 @@
+Phase D Task D1: Update docs/architecture/c_function_reference.md RNG section
+Date: 2025-10-11T05:45:42Z
+Operator: ralph
+
+Commands executed:
+1. mkdir -p reports/determinism-callchain/phase_d/20251011T054542Z/docs_integration
+2. Edit docs/architecture/c_function_reference.md (§2.5 expansion)
+3. pytest --collect-only -q (verification: 692 tests collected)
+
+Content added to §2.5:
+- §2.5.1 RNG Algorithm Overview (Minimal Standard LCG + Bays-Durham shuffle)
+- §2.5.2 Seed Domains and Defaults (table: seed/mosaic_seed/misset_seed)
+- §2.5.3 Pointer Side-Effect Contract (CRITICAL warning box with C code example)
+- §2.5.4 Invocation Sites (table: mosaic_rotation_umat call sites and RNG consumption)
+
+Source: reports/determinism-callchain/phase_c/20251011T052920Z/docs_updates.md §1.1
+Spec: specs/spec-a-core.md §5.3
+Architecture: arch.md ADR-05
+
+Exit: success (pytest collection passed, no import errors)

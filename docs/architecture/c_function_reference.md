@@ -142,13 +142,80 @@ Each function entry includes:
 
 **Convention:** All random number generators take a pointer to a seed, `long *idum`, and modify its value as a side effect to maintain the state of the generator.
 
+#### 2.5.1 RNG Algorithm Overview
+
+The nanoBragg C implementation uses a **Minimal Standard Linear Congruential Generator (LCG)** enhanced with a **Bays-Durham shuffle** for improved randomness properties. This combination provides a deterministic, reproducible pseudo-random number stream suitable for scientific simulations.
+
+**Algorithm Details:**
+- **Core LCG:** Park & Miller (1988) "Minimal Standard" generator
+  - Multiplier: `IA = 16807`
+  - Modulus: `IM = 2147483647` (2³¹ − 1, a Mersenne prime)
+  - Period: ~2.1 billion values
+- **Enhancement:** 32-element Bays-Durham shuffle table (`NTAB = 32`)
+- **Implementation:** `ran1()` function (lines 4143-4185 in `nanoBragg.c`)
+- **Output Range:** `[1.2e-7, 1.0-1.2e-7]` — excludes exact 0.0 and 1.0 to prevent singularities in downstream calculations
+
+#### 2.5.2 Seed Domains and Defaults
+
+The C implementation maintains three independent seed domains to ensure statistical independence between noise generation, crystal mosaicity, and static misorientation:
+
+| Seed Variable | Default Value | CLI Override | Purpose |
+|---------------|---------------|--------------|---------|
+| `seed` (noise_seed) | `-time(NULL)` (negative wall-clock) | `-seed <val>` | Poisson noise generation for detector readout |
+| `mosaic_seed` | `-12345678` | `-mosaic_seed <val>` | Mosaic domain rotation generation (per-domain variability) |
+| `misset_seed` | `seed` (inherits noise_seed) | `-misset_seed <val>` | Static crystal misorientation (single application) |
+
+**Spec Reference:** `specs/spec-a-core.md` §5.3 (RNG determinism requirements)
+
+#### 2.5.3 Pointer Side-Effect Contract (CRITICAL)
+
+> **⚠️ CRITICAL: Pointer-Based Seed Mutation**
+>
+> The C implementation uses **pointer side effects** to advance seed state. This is a non-obvious but essential aspect of the RNG contract:
+>
+> ```c
+> double ran1(long *idum)  // ← Pointer allows in-place mutation
+> {
+>     // ... LCG computation ...
+>     *idum = new_state;  // ← Mutates caller's seed variable
+>     return random_value;
+> }
+> ```
+>
+> Each call to `ran1(&seed)` mutates `seed` in-place, advancing the LCG chain by one step. Functions that consume multiple random values (e.g., `mosaic_rotation_umat`) advance the seed multiple times per invocation.
+>
+> **Example:** `mosaic_rotation_umat(umat, &mosaic_seed)` consumes **3 random values** internally:
+> 1. Axis direction angle
+> 2. Axis Z-component
+> 3. Rotation magnitude scaling
+>
+> This means `mosaic_seed` advances **3 steps** per call.
+>
+> **PyTorch Parity Requirement:**
+> The PyTorch implementation MUST replicate this deterministic state progression. The `LCGRandom` class in `src/nanobrag_torch/utils/c_random.py` wraps seed state and exposes a `.uniform()` method to advance state identically to C's `ran1(&seed)`.
+
+#### 2.5.4 Invocation Sites
+
+The following table documents where RNG functions are called in the C code and their seed consumption patterns:
+
+| Function | Invocation Site | Seed Parameter | RNG Calls per Invocation | Purpose |
+|----------|----------------|----------------|--------------------------|---------|
+| `mosaic_rotation_umat` | Line 2083 (misset) | `&misset_seed` | 3 | Static crystal misorientation (applied once per simulation) |
+| `mosaic_rotation_umat` | Line 2689 (mosaic loop) | `&mosaic_seed` | 3 × `mosaic_domains` | Mosaic domain rotations (loop over domains) |
+| `poidev` | Multiple sites | `&seed` | Variable | Poisson noise generation for detector output |
+
+**Total RNG Consumption Example:**
+- Configuration: 10 mosaic domains
+- Mosaic RNG calls: 3 calls/domain × 10 domains = 30 calls to `ran1(&mosaic_seed)`
+- Final seed state: Initial `mosaic_seed` advanced 30 steps
+
 #### `ran1`, `poidev`, `gaussdev`, `lorentzdev`, `triangledev`, `expdev`
 *   **Description:** These functions return random deviates from uniform, Poisson, Gaussian, Lorentzian, triangular, and exponential distributions, respectively. All are stateful and not pure.
 
 #### `mosaic_rotation_umat`
 *   **Signature:** `double *mosaic_rotation_umat(float mosaicity, double umat[9], long *idum)`
-*   **Description:** Generates a random 3x3 unitary rotation matrix representing a single mosaic domain.
-*   **Purity Analysis:** Has Side Effects.
+*   **Description:** Generates a random 3x3 unitary rotation matrix representing a single mosaic domain. Consumes **3 random values** from the RNG per invocation (see §2.5.3 for details).
+*   **Purity Analysis:** Has Side Effects (mutates `*idum` seed state via 3 calls to `ran1`).
 
 ### 2.6 Interpolation
 

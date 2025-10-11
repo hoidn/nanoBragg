@@ -1,0 +1,1 @@
+ec51f8e66117b29f1de69ead51c1ddc1fec62d312a0aef16a4c0fe8ccbb57572  ../../../../../docs/architecture/c_function_reference.md
