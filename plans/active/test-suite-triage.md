@@ -116,8 +116,8 @@ Exit Criteria: `reports/2026-01-test-suite-triage/phase_h/<STAMP>/` contains env
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
 | H1 | Stage timestamped workspace | [D] | `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `mkdir -p reports/2026-01-test-suite-triage/phase_h/${STAMP}/{collect_only,full_suite,artifacts,docs}`; capture commands in `commands.txt`. |
-| H2 | Capture preflight snapshot | [D] | Optional: `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee .../collect_only/pytest.log`; record env metadata (`python -V`, `pip list | grep torch`, `nvidia-smi`) into `.../collect_only/env.json`. |
-| H3 | Run authoritative full suite | [D] | `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/${STAMP}/artifacts/pytest_full.xml | tee .../full_suite/pytest_full.log`; note exit code and runtime in `commands.txt`. |
+| H2 | Capture preflight snapshot | [D] | Optional: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q | tee .../collect_only/pytest.log`; record env metadata (`python -V`, `pip list | grep torch`, `nvidia-smi`) into `.../collect_only/env.json`. |
+| H3 | Run authoritative full suite | [D] | `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/${STAMP}/artifacts/pytest_full.xml | tee .../full_suite/pytest_full.log`; note exit code and runtime in `commands.txt`. |
 | H4 | Summarise metrics | [D] | Draft `.../docs/summary.md` with runtime, pass/fail/skip counts, delta vs 20251010T180102Z, and top-25 duration table. |
 | H5 | Update fix-plan attempt ledger | [D] | Add Attempt #10 under `[TEST-SUITE-TRIAGE-001]` with counts + artifact paths; cite Phase H tasks and new summary doc. |
 
@@ -161,7 +161,7 @@ Exit Criteria: Targeted detector-config rerun archived under `reports/2026-01-te
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| L1 | Capture detector-config targeted run | [D] | Attempt #17 (20251011T104618Z) executed `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; artifacts stored under `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/` with `commands.txt`, env snapshot, and junit XML. |
+| L1 | Capture detector-config targeted run | [D] | Attempt #17 (20251011T104618Z) executed `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; artifacts stored under `reports/2026-01-test-suite-triage/phase_l/20251011T104618Z/detector_config/` with `commands.txt`, env snapshot, and junit XML. |
 | L2 | Draft detector-config failure brief | [D] | Attempt #17 produced `analysis.md` citing `specs/spec-a-core.md` §4 and `arch.md` §ADR-03; documents MOSFLM +0.5 pixel gap blocking `[DETECTOR-CONFIG-001]`. |
 | L3 | Sync ledger + tracker | [P] | Fix plan `[TEST-SUITE-TRIAGE-001]` updated (Attempt #17). `remediation_tracker.md` still needs Phase L attempt row once `[DETECTOR-CONFIG-001]` remediation closes — leave open until post-fix validation. |
 
@@ -173,10 +173,10 @@ Exit Criteria: Full-suite rerun artifacts archived under `reports/2026-01-test-s
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
 | M0a | Refresh pre-run environment checklist | [ ] | Re-run Phase A guardrails in light form: capture `collect_only.log` + env snapshot under `phase_m0/<STAMP>/preflight/`; cite `docs/development/testing_strategy.md` §1 and `arch.md` §2 for guardrails. |
-| M0b | Execute chunked suite rerun | [ ] | Follow the runtime guard note below: run the ten chunk commands sequentially (each <360 s) with `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`, capture per-chunk junit/log output under `phase_m0/$STAMP/chunks/chunk_##/`, and record exit codes in `commands.txt`. |
+| M0b | Execute chunked suite rerun | [ ] | Follow the runtime guard note below: run the ten chunk commands sequentially (each <360 s) with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`, capture per-chunk junit/log output under `phase_m0/$STAMP/chunks/chunk_##/`, and record exit codes in `commands.txt`. |
 | M0c | Re-triage and classify failures | [ ] | Update `reports/2026-01-test-suite-triage/phase_m0/$STAMP/triage_summary.md` with failure clusters, mark each as implementation bug vs legacy/deprecation; sync findings into `docs/fix_plan.md` Attempt ledger and `remediation_tracker.md` pending queue. |
 
-**Runtime guard note (2026-01-21):** Supervisor review confirmed the CLI harness enforces a hard 360 s timeout per command, so Phase M0b must execute the suite in timestamped chunks rather than one monolithic `pytest tests/` invocation. Run the ten chunk commands below (each with `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=.../pytest.xml …`) and archive logs under `reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_##/{commands.txt,pytest.log,pytest.xml}` before compiling the combined triage summary.
+**Runtime guard note (2026-01-21):** Supervisor review confirmed the CLI harness enforces a hard 360 s timeout per command, so Phase M0b must execute the suite in timestamped chunks rather than one monolithic `pytest tests/` invocation. Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` once per attempt, create `reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/` ahead of time, and keep the environment assignments on the same line as the pytest command (`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest …`) to avoid `/bin/bash: CUDA_VISIBLE_DEVICES=-1: command not found` errors. Run the ten chunk commands below (each with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v --maxfail=0 --durations=5 --junitxml=.../pytest.xml …`) and archive logs under `reports/2026-01-test-suite-triage/phase_m0/$STAMP/chunks/chunk_##/{commands.txt,pytest.log,pytest.xml}` before compiling the combined triage summary.
 
 Chunk 01 (11 files): `tests/test_at_abs_001.py tests/test_at_cli_009.py tests/test_at_io_002.py tests/test_at_parallel_007.py tests/test_at_parallel_017.py tests/test_at_parallel_028.py tests/test_at_pol_001.py tests/test_at_src_002.py tests/test_cli_scaling.py tests/test_detector_pivots.py tests/test_physics.py`
 
@@ -211,8 +211,8 @@ Exit Criteria: Phase M directory contains targeted + full-suite rerun artifact
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| M1 | Retest detector-config after fix | [ ] | Once MOSFLM offset patch merges, rerun `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; archive under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/detector_config/` with diff vs Attempt #17. |
-| M2 | Full-suite validation sweep | [ ] | Execute `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/<STAMP>/artifacts/pytest_full.xml`; ensure runtime guardrails per testing_strategy §§1.4–1.5. |
+| M1 | Retest detector-config after fix | [ ] | Once MOSFLM offset patch merges, rerun `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py --maxfail=0`; archive under `reports/2026-01-test-suite-triage/phase_m/<STAMP>/detector_config/` with diff vs Attempt #17. |
+| M2 | Full-suite validation sweep | [ ] | Execute `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_m/<STAMP>/artifacts/pytest_full.xml`; ensure runtime guardrails per testing_strategy §§1.4–1.5. |
 | M3 | Tracker + ledger sync | [ ] | Update `[TEST-SUITE-TRIAGE-001]`, `[DETECTOR-CONFIG-001]`, and `remediation_tracker.md` with new pass/fail counts; note residual failing clusters for Sprint 1.4 planning. |
 
 ### Metrics & Reporting Guidelines

@@ -2474,3 +2474,14 @@
 - Reissued input.md steering Ralph to capture collect-only + full-suite runs under phase_m0/$STAMP and refresh triage_summary.md before resuming detector work.
 - Action State: [ready_for_implementation]
 
+### 2025-10-11 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M0 chunk rerun
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-11T15:37:41Z (galph loop - Phase M0 housekeeping recap)
+- Logged Attempt #20 in docs/fix_plan.md capturing the env-prefix failure (artifacts: reports/2026-01-test-suite-triage/phase_m0/chunks/chunk_01/).
+- Refreshed plans/active/test-suite-triage.md runtime guard + chunk commands to require `env CUDA_VISIBLE_DEVICES=-1 ...` and STAMP export before rerunning Phase M0b.
+- Reissued input.md with env-prefixed preflight/chunk commands, explicit STAMP setup, and env capture snippet for Ralph's redo.
+- Action State: [ready_for_implementation]
+
