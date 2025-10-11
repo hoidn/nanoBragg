@@ -1,0 +1,23 @@
+# Phase D Task D2 — c_random.py docstring updates
+# Date: 2025-10-11
+# Task: Refresh module docstring + mosaic_rotation_umat() docstring per docs_updates.md §2.1
+
+# 1. Baseline pytest collection
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > /tmp/collect_baseline.log 2>&1
+
+# 2. Update module-level docstring
+# Edit: src/nanobrag_torch/utils/c_random.py lines 1-5
+# Added: Algorithm overview, seed contract, key functions, determinism requirements, validation, references
+
+# 3. Update mosaic_rotation_umat() function docstring
+# Edit: src/nanobrag_torch/utils/c_random.py lines 230-237
+# Added: RNG consumption (3 values), C equivalent, seed state progression example
+
+# 4. Verify imports
+KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q > "${ARTIFACT_DIR}/collect_only.log" 2>&1
+
+# 5. Generate checksums
+sha256sum src/nanobrag_torch/utils/c_random.py > "${ARTIFACT_DIR}/sha256.txt"
+
+# 6. Capture git diff
+git diff src/nanobrag_torch/utils/c_random.py > "${ARTIFACT_DIR}/c_random.diff"
