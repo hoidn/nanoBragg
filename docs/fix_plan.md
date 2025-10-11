@@ -16,7 +16,7 @@
 | [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | done |
 | [TOOLING-DUAL-RUNNER-001](#tooling-dual-runner-001-restore-dual-runner-parity) | Restore dual-runner parity | High | in_planning |
 | [DEBUG-TRACE-001](#debug-trace-001-debug-flag-support) | Debug flag support | High | in_planning |
-| [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | in_progress |
+| [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | done |
 | [VECTOR-PARITY-001](#vector-parity-001-restore-40962-benchmark-parity) | Restore 4096² benchmark parity | High | in_progress |
 | [VECTOR-GAPS-002](#vector-gaps-002-vectorization-gap-audit) | Vectorization gap audit | High | blocked |
 | [PERF-PYTORCH-004](#perf-pytorch-004-fuse-physics-kernels) | Fuse physics kernels | High | in_progress |
@@ -229,10 +229,10 @@
 ## [DETECTOR-CONFIG-001] Detector defaults audit
 - Spec/AT: `specs/spec-a-core.md` §§68-73 (MOSFLM convention), `tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation`
 - Priority: High
-- Status: done
+- Status: done (archived)
 - Owner/Date: ralph/2025-10-10
 - Completion Date: 2025-10-11
-- Plan Reference: `plans/active/detector-config.md`
+- Plan Reference: `plans/archive/detector-config_20251011_resolved.md` (archived from `plans/active/detector-config.md`)
 - Reproduction: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation`
 - Source: Cluster C8 from `[TEST-SUITE-TRIAGE-001]` Phase M2 rerun (1 failure; explicit MOSFLM beam center shifted by +0.5 px)
 - Attempts History:
