@@ -2386,3 +2386,14 @@
 - Outstanding: spec still reflects legacy per-source weighting wording (must be updated in Phase D3); documentation + tracker sync pending after next loop.
 - <Action State>: [ready_for_implementation]
 
+### 2025-10-11 (galph loop - pre-focus note)
+- Focus issue: [SOURCE-WEIGHT-002] Phase D2 regression delta
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-11 (galph loop - Phase D2 prep)
+- Updated `docs/fix_plan.md` `[SOURCE-WEIGHT-002]` status + Next Actions to focus on Phase D2 regression run and D4 closure (dropping the completed D1/D3 bullets).
+- Reissued `input.md` (Mode: Docs) directing Ralph to capture the Phase D2 full-suite run with timestamped artifacts and tracker updates.
+- No conflicts with existing findings; ready for Ralph to execute the regression sweep and log Attempt #18 follow-up.
+- Action State: [ready_for_implementation]
+

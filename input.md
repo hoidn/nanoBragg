@@ -1,39 +1,37 @@
-Summary: Phase D acceptance + spec/docs updates to finish [SOURCE-WEIGHT-002] and clear C3.
+Summary: Run the Phase D2 full-suite regression to retire the remaining source-weighting failures and prep docs for closure.
 Mode: Docs
 Focus: [SOURCE-WEIGHT-002] Simulator source weighting
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation, tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_weighted_sources_integration, pytest tests/ --maxfail=5
+Mapped tests: pytest tests/ --maxfail=5
 Artifacts: reports/2026-01-test-suite-triage/phase_d/<STAMP>/source_weighting/
-Do Now: [SOURCE-WEIGHT-002] Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py -x`
-If Blocked: Capture the failing log + traceback in the new phase_d/<STAMP>/source_weighting/ folder, then note blockers in docs/fix_plan.md Attempt history before halting.
+Do Now: [SOURCE-WEIGHT-002] Phase D2 regression delta — run `STAMP=$(date -u +%Y%m%dT%H%M%SZ); CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=5 --junitxml=reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/artifacts/pytest_full.xml`
+If Blocked: Capture the partial `pytest_full.log` with the failure/context you reached, store it under the same Phase D stamp, and note the interruption plus reason in the Attempt history before exiting.
 Priorities & Rationale:
-- Align tests + spec (docs/fix_plan.md:155) so Sprint 1 C3 remediation can close cleanly.
-- Follow Phase D checklist (plans/active/source-weighting.md:69) to meet acceptance + documentation gates.
-- Update spec acceptance text (specs/spec-a-core.md:626) to match Option A parity already implemented in code/tests.
-- Refresh runtime guardrail doc (docs/development/pytorch_runtime_checklist.md:1) with dtype reminder per Phase D scope.
-- Record regression delta in remediation tracker once full suite run verifies C3 → 0.
+- docs/fix_plan.md:155 — Next Actions now isolate Phase D2/D4; we need the regression artifact to flip the ledger.
+- plans/active/source-weighting.md:6 — Status snapshot marks D2+D4 as the remaining blockers for Sprint 1.2.
+- docs/development/testing_strategy.md:67 — mandates using the documented full-suite command and env guardrails.
+- specs/spec-a-core.md:496 — AT-SRC-001 acceptance requires confirming the source weighting fixes across the whole suite.
 How-To Map:
-- Create timestamp: `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` then `outdir=reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting` and `mkdir -p "$outdir"`.
-- Phase D1: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py -x | tee "$outdir/pytest_d1.log"`; capture `python -c "import torch;print(torch.cuda.is_available())"` to `$outdir/env.txt`.
-- Phase D2 (after docs tweaks): `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=5 | tee "$outdir/pytest_full.log"`; summarise pass/fail deltas in `$outdir/summary.md` and update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` counts.
-- Phase D3 docs: edit `specs/spec-a-core.md` (AT-SRC-001 expectation) and add dtype reminder to `docs/development/pytorch_runtime_checklist.md`, noting references in summary + fix_plan Attempt entry.
-- Phase D4: Update `plans/active/source-weighting.md` Phase D table and `docs/fix_plan.md` (Attempt #18) with artifact links; refresh remediation tracker/sequence counts.
+- Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; mkdir -p `reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/{logs,artifacts,env}` before running tests.
+- From repo root run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/ --maxfail=5 --junitxml=reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/artifacts/pytest_full.xml | tee reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/logs/pytest_full.log`. The Do Now command already sets `STAMP`; reuse it here.
+- Verify the junit file exists (size >0) and copy the combined log summary into `reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/logs/summary.md` with the headline counts (pass/fail/skip, runtime, top 25 durations).
+- Record environment via `python -m torch.utils.collect_env > reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/env/torch_env.txt` and `pip freeze > reports/2026-01-test-suite-triage/phase_d/$STAMP/source_weighting/env/pip_freeze.txt` once the run finishes.
+- Update `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md` and `reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/classification_overview.md` delta tables with the new pass/fail counts (target: C3 resolved, overall failures drop by ≥4).
+- Append C3 progress to `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` (mark cluster resolved with Attempt #18 follow-up) and `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_sequence.md` Sprint 1 progress table.
+- Log Attempt #18 follow-up in `docs/fix_plan.md` with artifact paths, new failure counts, and confirmation that D2 is complete. Set yourself up to finish Phase D4 next loop.
 Pitfalls To Avoid:
-- Do not reintroduce per-source weighting in simulator; Option A parity must hold.
-- Keep tensors device/dtype neutral; no `.cpu()`/`.numpy()` shortcuts in tests or docs examples.
-- Preserve protected docs listed in docs/index.md; edits limited to scoped files.
-- Archive every command/env file under the new phase_d stamp before updating ledgers.
-- After spec edit, re-run `pytest --collect-only` if parser errors appear.
-- No full-suite rerun without capturing log + summary in `$outdir`.
-- Maintain warning expectations (λ mismatch) as acceptable; document rather than suppress unless spec demands.
-- Update remediation tracker only after confirming new failure counts.
-- Avoid touching vectorization plans; Sprint focus stays on test-suite triage.
-- Include `KMP_DUPLICATE_LIB_OK=TRUE` env on all PyTorch pytest commands.
+- Don’t skip `KMP_DUPLICATE_LIB_OK=TRUE`; PyTorch will crash mid-suite without it.
+- Keep the run CPU-only (`CUDA_VISIBLE_DEVICES=-1`) per plan so results match previous baselines.
+- Do not overwrite earlier Phase D artifacts—use a fresh timestamp directory.
+- No code changes; this loop is evidence + documentation only.
+- Preserve device/dtype neutrality when interpreting failures; note any CUDA-specific skips but don’t re-enable GPU here.
+- Avoid pruning Protected Assets referenced in docs/index.md when tidying artifacts.
+- If the run exceeds 3600s, allow it to finish; only interrupt for real blockers and document them.
 Pointers:
 - docs/fix_plan.md:155
 - plans/active/source-weighting.md:69
-- reports/2026-01-test-suite-triage/phase_j/20251011T064811Z/source_weighting/summary.md:1
-- specs/spec-a-core.md:635
-- docs/development/pytorch_runtime_checklist.md:1
-- docs/development/testing_strategy.md:80
-Next Up: If time remains, prep spec diff notes for review before opening `[TEST-SUITE-TRIAGE-001]` Sprint 1 tracker update.
+- reports/2026-01-test-suite-triage/phase_k/20251011T072940Z/analysis/summary.md
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md
+- docs/development/testing_strategy.md:60
+Next Up:
+1. [SOURCE-WEIGHT-002] Phase D4 closure — sync plan + tracker updates once the regression delta artifacts are logged.
