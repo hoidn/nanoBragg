@@ -1,0 +1,28 @@
+# Phase C Documentation Bundle — DETERMINISM-001 Close-out
+# Timestamp: 2025-10-11T05:29:20Z
+# Purpose: Publish remediation summary, documentation updates, and testing strategy notes for [DETERMINISM-001]
+
+# 1. Create artifact directory
+mkdir -p reports/determinism-callchain/phase_c/20251011T052920Z
+
+# 2. Author remediation_summary.md
+# Describes env guards (TORCHDYNAMO_DISABLE, CUDA_VISIBLE_DEVICES=-1), dtype propagation fixes,
+# and seed flow from CLI → CrystalConfig → mosaic_rotation_umat
+
+# 3. Author docs_updates.md
+# Enumerates concrete documentation edits for RNG seed contract:
+# - docs/architecture/c_function_reference.md (RNG section)
+# - src/nanobrag_torch/utils/c_random.py (docstring updates)
+
+# 4. Author testing_strategy_notes.md
+# Captures determinism reproduction workflow:
+# - Environment variables (TORCHDYNAMO_DISABLE=1, CUDA_VISIBLE_DEVICES='')
+# - Pytest selectors (AT-PARALLEL-013, AT-PARALLEL-024)
+# - Artifact expectations (bitwise equality, correlation thresholds)
+
+# 5. Update docs/fix_plan.md
+# Append Attempt #7 to [DETERMINISM-001] Attempts History
+# Mark Phase C complete, update Next Actions for documentation review
+
+# No pytest execution (docs-only per input.md directive)
+# No production code changes

@@ -11,11 +11,11 @@
   - `src/nanobrag_torch/models/crystal.py`, `src/nanobrag_torch/utils/c_random.py`, and `src/nanobrag_torch/simulator.py` — seed handling surfaces.
 - Artifact Policy: All new work lands under `reports/2026-01-test-suite-triage/phase_d/<STAMP>/determinism/` with subfolders per phase (`phase_a`, `phase_b`, …). Each attempt captures `commands.txt`, `env.json`, raw logs, and `summary.md`; diffs/traces live under `trace/` or `callchain/` as appropriate.
 
-### Status Snapshot (2026-01-17)
-- Phase A ✅ complete (Attempts #1–#3) — determinism reproductions and environment baselines captured under `reports/2026-01-test-suite-triage/phase_d/20251011T045211Z/determinism/phase_a/`.
-- Phase B ✅ complete (Attempt #5) — C-side seed contract documented at `reports/determinism-callchain/phase_b3/20251011T051737Z/`, complementing the PyTorch callchain bundle from Attempt #4.
-- Phase C 🔄 pending — need to publish remediation blueprint + documentation updates (seed side-effect contract, Dynamo guard instructions) before closing `[DETERMINISM-001]`.
-- Phase D remains templated for future regression checks once documentation tasks land.
+### Status Snapshot (2025-10-11)
+- Phase A ✅ complete (Attempts #1–#6) — determinism reproductions, environment baselines, and fixes captured under `reports/2026-01-test-suite-triage/phase_d/20251011T050024Z/determinism/`.
+- Phase B ✅ complete (Attempts #4-#5) — PyTorch callchain bundle from Attempt #4, C-side seed contract documented at `reports/determinism-callchain/phase_b3/20251011T051737Z/`.
+- Phase C ✅ complete (Attempt #7) — Documentation bundle published at `reports/determinism-callchain/phase_c/20251011T052920Z/` containing remediation summary, docs updates checklist, and testing strategy notes.
+- Phase D remains templated for future regression checks.
 
 ### Phase A — Reproduce & Baseline Seed Drift
 Goal: Capture authoritative reproductions of the determinism failures, plus working controls, so later fixes have comparable baselines.
@@ -48,10 +48,10 @@ Exit Criteria: Remediation summary + doc updates published, fix_plan/input refre
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Author remediation summary | [ ] | Create `reports/determinism-callchain/phase_c/<STAMP>/remediation_summary.md` describing env guards (TorchDynamo disable), dtype propagation fixes, and how seeds reach `mosaic_rotation_umat`. Reference Attempt #6 artifacts. |
-| C2 | Update RNG documentation | [ ] | Draft `docs_updates.md` capturing where to document the pointer-side-effect seed contract (target: `docs/architecture/c_function_reference.md` RNG section + `src/nanobrag_torch/utils/c_random.py` docstring). Log concrete edit checklist. |
-| C3 | Update testing strategy | [ ] | Extend `docs/development/testing_strategy.md` §1.4/§2 with deterministic run instructions (env vars, pytest selectors, artifact expectations). Capture diff plan in `phase_c/<STAMP>/testing_strategy_notes.md`. |
-| C4 | Refresh fix_plan + input blueprint | [ ] | Update `[DETERMINISM-001]` Next Actions to point at Phase C doc tasks and prepare supervisor input (Docs mode) for execution. |
+| C1 | Author remediation summary | [D] | ✅ Created `reports/determinism-callchain/phase_c/20251011T052920Z/remediation_summary.md` describing env guards (TorchDynamo disable), dtype propagation fixes, and how seeds reach `mosaic_rotation_umat`. Reference Attempt #6 artifacts. Comprehensive overview including test results, validation metrics, and known limitations. |
+| C2 | Update RNG documentation | [D] | ✅ Drafted `docs_updates.md` capturing where to document the pointer-side-effect seed contract (target: `docs/architecture/c_function_reference.md` RNG section + `src/nanobrag_torch/utils/c_random.py` docstring). Logged concrete edit checklist with Priority 1/2/3 sections. |
+| C3 | Update testing strategy | [D] | ✅ Extended deterministic run instructions captured in `phase_c/<STAMP>/testing_strategy_notes.md`. Complete workflow documentation covering env vars, pytest selectors, validation metrics, artifact expectations, CI/CD integration, debugging workflow, and known limitations. Ready for integration into `docs/development/testing_strategy.md` §2.6. |
+| C4 | Refresh fix_plan + input blueprint | [D] | ✅ Updated `[DETERMINISM-001]` Next Actions in `docs/fix_plan.md` with Phase C summary and documentation checklist. Attempt #7 logged with complete Phase C artifact descriptions. |
 
 ### Phase D — Validation Gate (post-fix, pending implementation)
 Goal: Define validation checklist to execute immediately after code changes land.
