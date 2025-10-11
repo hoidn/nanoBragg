@@ -1,0 +1,3 @@
+PyTorch: 2.7.1+cu126
+CUDA Available: True
+CUDA Version: 12.6

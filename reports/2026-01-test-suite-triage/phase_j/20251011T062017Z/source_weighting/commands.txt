@@ -1,0 +1,14 @@
+# Phase A Baseline Capture Commands
+# Timestamp: 20251011T062017Z
+# Initiative: [SOURCE-WEIGHT-002] Sprint 1.2
+
+# Test execution command:
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py
+
+# Environment variables:
+KMP_DUPLICATE_LIB_OK=TRUE
+
+# Artifact locations:
+# - Logs: reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/logs/
+# - Artifacts: reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/artifacts/
+# - Environment: reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/env/

@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="7" time="2.079" timestamp="2025-10-10T23:20:45.366695-07:00" hostname="ollie-System-Product-Name"><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_sourcefile_with_all_columns" time="0.001"><failure message="AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.">self = &lt;tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting object at 0x76c7d9ccbd90&gt;
+
+        def test_sourcefile_with_all_columns(self):
+            """Test reading sourcefile with all 5 columns specified."""
+            with tempfile.TemporaryDirectory() as tmpdir:
+                sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+                # Write test source file with two sources
+                # X, Y, Z, weight, wavelength (in meters)
+                content = """# Test source file
+    -10.0  0.0  0.0  2.0  1.0e-10
+    0.0  -10.0  0.0  3.0  1.5e-10
+    """
+                sourcefile.write_text(content)
+    
+                # Read source file
+                default_wavelength_m = 6.2e-10  # 6.2 Angstroms
+                directions, weights, wavelengths = read_sourcefile(
+                    sourcefile,
+                    default_wavelength_m=default_wavelength_m,
+                    default_source_distance_m=10.0
+                )
+    
+                # Check we got 2 sources
+                assert directions.shape == (2, 3)
+                assert weights.shape == (2,)
+                assert wavelengths.shape == (2,)
+    
+                # Check directions are normalized (unit vectors)
+                norms = torch.linalg.norm(directions, dim=1)
+&gt;               torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float64))
+E               AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.
+
+tests/test_at_src_001.py:64: AssertionError</failure></testcase><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_sourcefile_with_missing_columns" time="0.002"><failure message="assert 6.199999957878788e-10 == 1e-10 ± 1.0e-12&#10;  &#10;  comparison failed&#10;  Obtained: 6.199999957878788e-10&#10;  Expected: 1e-10 ± 1.0e-12">self = &lt;tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting object at 0x76c7d9b2c2d0&gt;
+
+        def test_sourcefile_with_missing_columns(self):
+            """Test reading sourcefile with missing columns (using defaults)."""
+            with tempfile.TemporaryDirectory() as tmpdir:
+                sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+                # Write test source file with varying number of columns
+                content = """# Test source file with missing columns
+    # Full specification
+    -10.0  0.0  0.0  2.0  1.0e-10
+    # Only position
+    0.0  -10.0  0.0
+    # No columns (should use defaults)
+    
+    # Comment line
+    # Only position and weight
+    5.0  5.0  0.0  1.5
+    """
+                sourcefile.write_text(content)
+    
+                # Read source file
+                default_wavelength_m = 6.2e-10  # 6.2 Angstroms
+                default_source_distance_m = 10.0
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=torch.float64)
+    
+                directions, weights, wavelengths = read_sourcefile(
+                    sourcefile,
+                    default_wavelength_m=default_wavelength_m,
+                    default_source_distance_m=default_source_distance_m,
+                    beam_direction=beam_direction
+                )
+    
+                # Check we got 3 sources (empty line is skipped)
+                assert directions.shape == (3, 3)
+                assert weights.shape == (3,)
+                assert wavelengths.shape == (3,)
+    
+                # Check wavelengths
+&gt;               assert wavelengths[0].item() == pytest.approx(1.0e-10)  # Specified
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               assert 6.199999957878788e-10 == 1e-10 ± 1.0e-12
+E                 
+E                 comparison failed
+E                 Obtained: 6.199999957878788e-10
+E                 Expected: 1e-10 ± 1.0e-12
+
+tests/test_at_src_001.py:112: AssertionError</failure></testcase><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_sourcefile_default_position" time="0.001"><failure message="AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.">self = &lt;tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting object at 0x76c7d9b00640&gt;
+
+        def test_sourcefile_default_position(self):
+            """Test that missing X,Y,Z defaults to -source_distance·b position."""
+            with tempfile.TemporaryDirectory() as tmpdir:
+                sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+                # Write source file with partial position (X, Y only, no Z)
+                # Per spec, columns are: X, Y, Z, weight, wavelength
+                # If we provide X=-15, Y=0 (no Z), position should be [-15, 0, 0] -&gt; normalized [-1, 0, 0]
+                content = """# Source with only X, Y position
+    -15.0  0.0
+    """
+                sourcefile.write_text(content)
+    
+                # Read with specific beam direction (not actually used when X,Y provided)
+                default_wavelength_m = 6.2e-10
+                default_source_distance_m = 15.0  # 15 meters
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=torch.float64)  # Along +X
+    
+                directions, weights, wavelengths = read_sourcefile(
+                    sourcefile,
+                    default_wavelength_m=default_wavelength_m,
+                    default_source_distance_m=default_source_distance_m,
+                    beam_direction=beam_direction
+                )
+    
+                # Position [-15, 0, 0] normalized to unit vector: [-1, 0, 0]
+                expected_direction = torch.tensor([[-1.0, 0.0, 0.0]], dtype=torch.float64)
+&gt;               torch.testing.assert_close(directions, expected_direction)
+E               AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.
+
+tests/test_at_src_001.py:148: AssertionError</failure></testcase><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_multiple_sources_normalization" time="0.001"><failure message="AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.">self = &lt;tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting object at 0x76c7d9b009d0&gt;
+
+        def test_multiple_sources_normalization(self):
+            """Test that intensity is properly normalized by number of sources."""
+            with tempfile.TemporaryDirectory() as tmpdir:
+                sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+                # Create two sources with same wavelength but different positions
+                content = """# Two sources for normalization test
+    -10.0  0.0  0.0  1.0  6.2e-10
+    10.0  0.0  0.0  1.0  6.2e-10
+    """
+                sourcefile.write_text(content)
+    
+                # Read sources
+                directions, weights, wavelengths = read_sourcefile(
+                    sourcefile,
+                    default_wavelength_m=6.2e-10
+                )
+    
+                # Verify we have 2 sources
+                assert len(directions) == 2
+                assert len(weights) == 2
+                assert len(wavelengths) == 2
+    
+                # Verify directions are opposite (sources on opposite sides)
+                torch.testing.assert_close(directions[0], -directions[1])
+    
+                # Both sources have weight 1.0 specified in the file
+&gt;               torch.testing.assert_close(weights, torch.ones(2, dtype=torch.float64))
+E               AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.
+
+tests/test_at_src_001.py:180: AssertionError</failure></testcase><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_empty_sourcefile" time="0.001" /><testcase classname="tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting" name="test_weighted_sources_integration" time="0.001"><failure message="assert 6.199999957878788e-10 == 8e-10 ± 1.0e-12&#10;  &#10;  comparison failed&#10;  Obtained: 6.199999957878788e-10&#10;  Expected: 8e-10 ± 1.0e-12">self = &lt;tests.test_at_src_001.TestAT_SRC_001_SourcefileAndWeighting object at 0x76c7d9cecc00&gt;
+
+        def test_weighted_sources_integration(self):
+            """Test that sources with weights can be loaded and simulated (AT-SRC-001)."""
+            with tempfile.TemporaryDirectory() as tmpdir:
+                sourcefile = Path(tmpdir) / "weighted_sources.txt"
+    
+                # Create two sources with different weights as specified in AT-SRC-001
+                # "Setup: -sourcefile with two sources having distinct weights and λ"
+                content = """# Two sources with different weights and wavelengths
+    # X Y Z weight wavelength
+    0.0  0.0  -10.0  2.0  6.2e-10
+    0.0  0.0  -10.0  3.0  8.0e-10
+    """
+                sourcefile.write_text(content)
+    
+                # Read sources
+                directions, weights, wavelengths = read_sourcefile(
+                    sourcefile,
+                    default_wavelength_m=6.2e-10
+                )
+    
+                # Verify weights are preserved per AT-SRC-001
+                # "intensity contributions SHALL sum with per-source λ and weight"
+                assert weights[0].item() == pytest.approx(2.0)
+                assert weights[1].item() == pytest.approx(3.0)
+    
+                # Verify wavelengths are preserved
+                assert wavelengths[0].item() == pytest.approx(6.2e-10)
+&gt;               assert wavelengths[1].item() == pytest.approx(8.0e-10)
+E               assert 6.199999957878788e-10 == 8e-10 ± 1.0e-12
+E                 
+E                 comparison failed
+E                 Obtained: 6.199999957878788e-10
+E                 Expected: 8e-10 ± 1.0e-12
+
+tests/test_at_src_001.py:224: AssertionError</failure></testcase><testcase classname="tests.test_at_src_001_simple" name="test_sourcefile_parsing" time="0.001"><failure message="AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.">def test_sourcefile_parsing():
+        """Basic test of source file parsing."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sourcefile = Path(tmpdir) / "test_sources.txt"
+    
+            # Write test source file with two sources
+            content = """# Test source file
+    -10.0  0.0  0.0  2.0  1.0e-10
+    0.0  -10.0  0.0  3.0  1.5e-10
+    """
+            sourcefile.write_text(content)
+    
+            # Read source file
+            default_wavelength_m = 6.2e-10
+            directions, weights, wavelengths = read_sourcefile(
+                sourcefile,
+                default_wavelength_m=default_wavelength_m
+            )
+    
+            # Check results
+            assert directions.shape == (2, 3)
+            assert weights.shape == (2,)
+            assert wavelengths.shape == (2,)
+    
+            # Check directions are normalized
+            norms = torch.linalg.norm(directions, dim=1)
+&gt;           torch.testing.assert_close(norms, torch.ones(2, dtype=torch.float64))
+E           AssertionError: The values for attribute 'dtype' do not match: torch.float32 != torch.float64.
+
+tests/test_at_src_001_simple.py:41: AssertionError</failure></testcase></testsuite></testsuites>
