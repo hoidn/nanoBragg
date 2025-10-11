@@ -1,42 +1,27 @@
-Summary: Publish Phase C determinism documentation so we can close the fix-plan before any new code work.
+Summary: Draft Priority 1 determinism documentation updates and capture provenance for Phase D.
 Mode: Docs
-Focus: [DETERMINISM-001] PyTorch RNG determinism
-Branch: feature/spec-based-2
-Mapped tests: none — docs-only
-Artifacts: reports/determinism-callchain/phase_c/<STAMP>/
-Do Now: [DETERMINISM-001] PyTorch RNG determinism — capture the Phase C documentation bundle (remediation_summary/docs_updates/testing_strategy notes)
-If Blocked: Record the obstacle in `reports/determinism-callchain/phase_c/<STAMP>/blocked.md`, note commands in `commands.txt`, and update `docs/fix_plan.md` Attempts before switching tasks.
-
+Focus: [DETERMINISM-001] PyTorch RNG determinism — Phase D docs integration
+Branch: main
+Mapped tests: pytest --collect-only -q
+Artifacts: reports/determinism-callchain/phase_d/<STAMP>/docs_integration/
+Do Now: Carry out Phase D Task D1 (update `docs/architecture/c_function_reference.md` RNG section) and record the change; verify imports with `pytest --collect-only -q` (set `KMP_DUPLICATE_LIB_OK=TRUE`).
+If Blocked: Capture a short blocker note in `reports/determinism-callchain/phase_d/<STAMP>/docs_integration/blockers.md` and ping supervisor via docs/fix_plan Attempts.
 Priorities & Rationale:
-- plans/active/determinism.md:14-55 keeps Phase C open until we publish the doc/blueprint artifacts.
-- docs/fix_plan.md:98-118 lists the new Next Actions that depend on the Phase C bundle.
-- reports/determinism-callchain/phase_b3/20251011T051737Z/c_seed_flow.md captures the C seed contract we need to reference.
-- reports/2026-01-test-suite-triage/phase_d/20251011T050024Z/determinism/phase_a_fix/logs/summary.txt shows the passing determinism tests to summarise.
-
+- Phase D Task D1 is the highest-priority doc edit per `plans/active/determinism.md` and blocks closure.
+- `docs_updates.md` spells out exact content required; aligning early avoids rework on later doc files.
+- Recording provenance under `reports/determinism-callchain/phase_d/` keeps determinism evidence contiguous with prior phases.
 How-To Map:
-1. `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`
-2. `mkdir -p reports/determinism-callchain/phase_c/$STAMP`
-3. `tee reports/determinism-callchain/phase_c/$STAMP/commands.txt <<'CMDS'` and log the executed shell steps.
-4. Draft `remediation_summary.md` describing the env guards (`TORCHDYNAMO_DISABLE`, `CUDA_VISIBLE_DEVICES=-1`), dtype propagation fixes, and how seeds reach `mosaic_rotation_umat` (cite Attempt #6 + c_seed_flow).
-5. Draft `docs_updates.md` enumerating the concrete doc/comment edits needed (target `docs/architecture/c_function_reference.md` RNG section + `src/nanobrag_torch/utils/c_random.py` docstring).
-6. Draft `testing_strategy_notes.md` capturing the determinism reproduction workflow (pytest selectors, env vars, artifact expectations) for updating `docs/development/testing_strategy.md`.
-7. Save everything under the new stamp directory; no production files changed this loop.
-
+- Edit `docs/architecture/c_function_reference.md` to add the Minimal Standard LCG overview, seed domain table, pointer side-effect warning, and invocation-site table (see `reports/determinism-callchain/phase_c/20251011T052920Z/docs_updates.md` §1.1).
+- Log commands and a brief summary to `reports/determinism-callchain/phase_d/<STAMP>/docs_integration/commands.txt`; include file checksums in `sha256.txt` if practical.
+- Run `KMP_DUPLICATE_LIB_OK=TRUE pytest --collect-only -q` after edits; store the output in `collect_only.log` inside the same directory.
 Pitfalls To Avoid:
-- Do not edit src/ code or tests—this loop is documentation only.
-- Keep all new artifacts under the timestamped `reports/determinism-callchain/phase_c/` folder.
-- Reference spec/arch citations when summarising seeds; avoid paraphrasing without citations.
-- Maintain device/dtype neutrality in examples (no `.cpu()`/`.cuda()` shortcuts).
-- Log every command in `commands.txt`; avoid opaque tooling.
-- Leave TorchDynamo mitigation as documentation—no env tweaks in tests yet.
-- Preserve Protected Assets from docs/index.md (input.md, loop.sh, supervisor.sh, etc.).
-- Keep narratives concise; no speculative fixes.
-- Update Attempts History only after artifacts exist.
-
+- Do not touch Protected Assets (`loop.sh`, `input.md`, files referenced in docs/index.md`).
+- Keep doc updates ASCII and cite exact C line ranges (use code fences, no paraphrasing of the C snippet per Rule #11 guidance).
+- Avoid altering determinism code paths this loop—docs only.
+- Preserve device/dtype neutrality examples; no CPU-only assumptions beyond the documented env guard text.
+- Ensure new tables follow existing Markdown style; no HTML tables.
 Pointers:
-- docs/fix_plan.md:98-118
-- plans/active/determinism.md:14-55
-- reports/determinism-callchain/phase_b3/20251011T051737Z/c_seed_flow.md
-- reports/2026-01-test-suite-triage/phase_d/20251011T050024Z/determinism/phase_a_fix/logs/summary.txt
-
-Next Up: Draft the actual doc edits (testing strategy + RNG references) once the Phase C bundle is reviewed.
+- plans/active/determinism.md — Phase D table (D1–D5)
+- reports/determinism-callchain/phase_c/20251011T052920Z/docs_updates.md — Priority 1 checklist
+- docs/architecture/pytorch_design.md §1.1.5 — reference for citing source-weight guardrail context
+Next Up: Phase D Task D2 (update `src/nanobrag_torch/utils/c_random.py` docstrings) once D1 lands.

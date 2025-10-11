@@ -2260,3 +2260,15 @@
 - Refreshed `docs/fix_plan.md` Next Actions/Exit Criteria to call for the Phase C artifact trio before marking the item done.
 - Replaced `input.md` with Docs-mode instructions directing Ralph to create the timestamped Phase C bundle under `reports/determinism-callchain/phase_c/`.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-11 05:39:47Z (galph loop - determinism Phase D planning focus)
+- Focus issue: [DETERMINISM-001] Phase D validation gate
+- Action type: Planning
+- Mode: Parity
+
+- Updated `plans/active/determinism.md` with new Phase D (documentation integration) and Phase E (validation) checklists; status snapshot now flags doc work as the active gate.
+- Refreshed `[DETERMINISM-001]` Next Actions in `docs/fix_plan.md` to align with the new phases (Phase D docs integration, Phase E validation).
+- Issued `input.md` (Docs mode) directing Ralph to execute Phase D Task D1 and capture provenance under `reports/determinism-callchain/phase_d/<STAMP>/docs_integration/`.
+- No code changes; planning only.
+- <Action State>: [ready_for_implementation]
+
