@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 20 items
+
+tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping PASSED [  5%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size PASSED [ 10%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 15%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 20%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency PASSED [ 25%]
+tests/test_detector_config.py::TestDetectorConfig::test_default_values PASSED [ 30%]
+tests/test_detector_config.py::TestDetectorConfig::test_post_init_defaults PASSED [ 35%]
+tests/test_detector_config.py::TestDetectorConfig::test_custom_twotheta_axis PASSED [ 40%]
+tests/test_detector_config.py::TestDetectorConfig::test_xds_convention_defaults PASSED [ 45%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_counts PASSED [ 50%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_distance PASSED [ 55%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_size PASSED [ 60%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_oversample PASSED [ 65%]
+tests/test_detector_config.py::TestDetectorConfig::test_tensor_parameters PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_default_initialization PASSED [ 75%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_initialization PASSED [ 80%]
+tests/test_detector_config.py::TestDetectorInitialization::test_backward_compatibility_check PASSED [ 85%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_not_default PASSED [ 90%]
+tests/test_detector_config.py::TestDetectorInitialization::test_basis_vectors_initialization PASSED [ 95%]
+tests/test_detector_config.py::TestDetectorInitialization::test_device_and_dtype PASSED [100%]
+
+============================== 20 passed in 4.62s ==============================

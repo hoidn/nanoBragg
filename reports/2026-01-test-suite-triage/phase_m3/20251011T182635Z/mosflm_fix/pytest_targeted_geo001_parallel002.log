@@ -1,0 +1,120 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 5 items
+
+tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping PASSED [ 20%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size FAILED [ 40%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 60%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 80%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency FAILED [100%]
+
+=================================== FAILURES ===================================
+__________ TestATParallel002.test_beam_center_scales_with_pixel_size ___________
+
+self = <tests.test_at_parallel_002.TestATParallel002 object at 0x789c19a816d0>
+
+    def test_beam_center_scales_with_pixel_size(self):
+        """Test that beam center in pixels scales inversely with pixel size.
+    
+        AT-PARALLEL-002: With fixed 256x256 detector and beam center at 25.6mm,
+        the beam center in pixels SHALL equal 25.6mm / pixel_size_mm ±0.1 pixels.
+        """
+        pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
+    
+        for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+    
+            # Create detector config with fixed size and varying pixel size
+            detector_config = DetectorConfig(
+                detector_convention=DetectorConvention.MOSFLM,
+                distance_mm=100.0,
+                pixel_size_mm=pixel_size,
+                spixels=256,
+                fpixels=256,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
+            )
+    
+            # Verify that the beam center in mm is preserved
+            assert abs(detector_config.beam_center_s - beam_center_mm) < 0.001, \
+                f"Beam center S (mm) not preserved for pixel_size={pixel_size}mm"
+            assert abs(detector_config.beam_center_f - beam_center_mm) < 0.001, \
+                f"Beam center F (mm) not preserved for pixel_size={pixel_size}mm"
+    
+            # Create detector to verify pixel coordinates
+            detector = Detector(detector_config)
+    
+            # Calculate expected beam center in pixels
+            # When user explicitly provides beam_center in mm, it's converted directly to pixels
+            # (MOSFLM +0.5 offset is only applied when beam_center is auto-calculated in DetectorConfig)
+            expected_beam_pixel = beam_center_mm / pixel_size
+    
+            # The detector internally stores beam centers in pixels
+            # Verify the beam center in pixels scales inversely with pixel size
+>           assert abs(detector.beam_center_s.item() - expected_beam_pixel) < 0.1, \
+                f"Beam center S (pixels) mismatch for pixel_size={pixel_size}mm: {detector.beam_center_s.item()} vs {expected_beam_pixel}"
+E           AssertionError: Beam center S (pixels) mismatch for pixel_size=0.05mm: 128.5 vs 128.0
+E           assert 0.5 < 0.1
+E            +  where 0.5 = abs((128.5 - 128.0))
+E            +    where 128.5 = <built-in method item of Tensor object at 0x789c19a8aee0>()
+E            +      where <built-in method item of Tensor object at 0x789c19a8aee0> = tensor(128.5000).item
+E            +        where tensor(128.5000) = <src.nanobrag_torch.models.detector.Detector object at 0x789c19aa41a0>.beam_center_s
+
+tests/test_at_parallel_002.py:71: AssertionError
+___________ TestATParallel002.test_beam_center_parameter_consistency ___________
+
+self = <tests.test_at_parallel_002.TestATParallel002 object at 0x789c19a16780>
+
+    def test_beam_center_parameter_consistency(self):
+        """Test that beam center parameters are handled consistently across pixel sizes.
+    
+        Additional test to verify parameter handling.
+        """
+        pixel_sizes = [0.05, 0.1, 0.2, 0.4]  # mm
+        # Use detector center (128 pixels for 256x256 detector)
+        fixed_beam_center_pixels = 128  # Center pixel
+    
+        for pixel_size in pixel_sizes:
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+            # Calculate beam center in mm for this pixel size
+            beam_center_mm = fixed_beam_center_pixels * pixel_size
+    
+            # Test that setting beam center in mm is properly converted
+            detector_config = DetectorConfig(
+                detector_convention=DetectorConvention.MOSFLM,
+                distance_mm=100.0,
+                pixel_size_mm=pixel_size,
+                spixels=256,
+                fpixels=256,
+                beam_center_s=beam_center_mm,
+                beam_center_f=beam_center_mm,
+            )
+    
+            detector = Detector(detector_config)
+    
+            # Verify the detector stores beam centers correctly in pixels
+            # When user explicitly provides beam_center, it's converted directly without offset
+            expected_beam_pixel = beam_center_mm / pixel_size
+    
+>           assert abs(detector.beam_center_s.item() - expected_beam_pixel) < 0.01, \
+                f"Detector beam_center_s incorrect for pixel_size={pixel_size}mm"
+E           AssertionError: Detector beam_center_s incorrect for pixel_size=0.05mm
+E           assert 0.5 < 0.01
+E            +  where 0.5 = abs((128.5 - 128.0))
+E            +    where 128.5 = <built-in method item of Tensor object at 0x789c0dad77a0>()
+E            +      where <built-in method item of Tensor object at 0x789c0dad77a0> = tensor(128.5000).item
+E            +        where tensor(128.5000) = <src.nanobrag_torch.models.detector.Detector object at 0x789c0d06b790>.beam_center_s
+
+tests/test_at_parallel_002.py:269: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size
+FAILED tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency
+========================= 2 failed, 3 passed in 4.60s ==========================

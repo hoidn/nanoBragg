@@ -1,0 +1,89 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 20 items
+
+tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping PASSED [  5%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size PASSED [ 10%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 15%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 20%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency PASSED [ 25%]
+tests/test_detector_config.py::TestDetectorConfig::test_default_values FAILED [ 30%]
+tests/test_detector_config.py::TestDetectorConfig::test_post_init_defaults PASSED [ 35%]
+tests/test_detector_config.py::TestDetectorConfig::test_custom_twotheta_axis PASSED [ 40%]
+tests/test_detector_config.py::TestDetectorConfig::test_xds_convention_defaults PASSED [ 45%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_counts PASSED [ 50%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_distance PASSED [ 55%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_size PASSED [ 60%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_oversample PASSED [ 65%]
+tests/test_detector_config.py::TestDetectorConfig::test_tensor_parameters PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_default_initialization PASSED [ 75%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_initialization FAILED [ 80%]
+tests/test_detector_config.py::TestDetectorInitialization::test_backward_compatibility_check PASSED [ 85%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_not_default PASSED [ 90%]
+tests/test_detector_config.py::TestDetectorInitialization::test_basis_vectors_initialization PASSED [ 95%]
+tests/test_detector_config.py::TestDetectorInitialization::test_device_and_dtype PASSED [100%]
+
+=================================== FAILURES ===================================
+____________________ TestDetectorConfig.test_default_values ____________________
+
+self = <tests.test_detector_config.TestDetectorConfig object at 0x779a5db51bd0>
+
+    def test_default_values(self):
+        """Test that default values are set correctly."""
+        config = DetectorConfig()
+    
+        # Basic geometry
+        assert config.distance_mm == 100.0
+        assert config.pixel_size_mm == 0.1
+    
+        # Dimensions
+        assert config.spixels == 1024
+        assert config.fpixels == 1024
+    
+        # Beam center - MOSFLM convention adds 0.5 pixel offset for 1024x1024 detector
+        # beam_center = (1024 * 0.1 + 0.1) / 2.0 = 51.25
+>       assert config.beam_center_s == 51.25
+E       AssertionError: assert 51.2 == 51.25
+E        +  where 51.2 = DetectorConfig(distance_mm=100.0, pixel_size_mm=0.1, close_distance_mm=None, spixels=1024, fpixels=1024, beam_center_s=51.2, beam_center_f=51.2, detector_rotx_deg=0.0, detector_roty_deg=0.0, detector_rotz_deg=0.0, detector_twotheta_deg=0.0, twotheta_axis=tensor([ 0.,  0., -1.]), detector_convention=<DetectorConvention.MOSFLM: 'mosflm'>, detector_pivot=<DetectorPivot.BEAM: 'beam'>, oversample=-1, oversample_omega=False, oversample_polar=False, oversample_thick=False, curved_detector=False, point_pixel=False, pix0_override_m=None, custom_fdet_vector=None, custom_sdet_vector=None, custom_odet_vector=None, custom_beam_vector=None, detector_abs_um=None, detector_thick_um=0.0, detector_thicksteps=1, roi_xmin=0, roi_xmax=1023, roi_ymin=0, roi_ymax=1023, mask_array=None).beam_center_s
+
+tests/test_detector_config.py:29: AssertionError
+_________ TestDetectorInitialization.test_custom_config_initialization _________
+
+self = <tests.test_detector_config.TestDetectorInitialization object at 0x779a5db51f90>
+
+    def test_custom_config_initialization(self):
+        """Test that Detector initializes with custom config."""
+        config = DetectorConfig(
+            distance_mm=200.0,
+            pixel_size_mm=0.2,
+            spixels=2048,
+            fpixels=2048,
+            beam_center_s=204.8,  # 1024 pixels * 0.2 mm
+            beam_center_f=204.8,
+        )
+        detector = Detector(config, dtype=torch.float64)
+    
+        # Check unit conversions (detector uses meters internally)
+        assert detector.distance == 0.2  # 200 mm = 0.2 m
+        assert detector.pixel_size == 0.0002  # 0.2 mm = 0.0002 m
+    
+        # Check dimensions
+        assert detector.spixels == 2048
+        assert detector.fpixels == 2048
+    
+        # Check beam center in pixels
+        # Explicitly-provided beam centers: NO +0.5 offset applied
+        # 204.8 mm / 0.2 mm per pixel = 1024.0 pixels (exact, no offset)
+>       assert detector.beam_center_s == 1024.0
+E       assert tensor(1024.5000, dtype=torch.float64) == 1024.0
+E        +  where tensor(1024.5000, dtype=torch.float64) = <src.nanobrag_torch.models.detector.Detector object at 0x779a51ba6650>.beam_center_s
+
+tests/test_detector_config.py:173: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_detector_config.py::TestDetectorConfig::test_default_values
+FAILED tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_initialization
+========================= 2 failed, 18 passed in 4.70s =========================

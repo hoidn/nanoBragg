@@ -282,38 +282,28 @@ class DetectorConfig:
 
         # Auto-calculate beam centers if not explicitly provided
         # This ensures beam centers scale correctly with detector size
+        # NOTE: We do NOT apply the MOSFLM +0.5 pixel offset here.
+        # The offset is part of the MOSFLM beam-center MAPPING formula and should
+        # be applied when converting beam centers to Fbeam/Sbeam in the Detector class.
         if self.beam_center_s is None or self.beam_center_f is None:
             detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
             detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
-            if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
-                # For MOSFLM: beam_center = (detsize + pixel_size) / 2
-                if self.beam_center_s is None:
-                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
-                if self.beam_center_f is None:
-                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
-            elif self.detector_convention == DetectorConvention.DENZO:
-                # DENZO convention: Same as MOSFLM but NO +0.5 pixel offset
-                # For DENZO: beam_center = detsize / 2
-                if self.beam_center_s is None:
-                    self.beam_center_s = detsize_s / 2.0
-                if self.beam_center_f is None:
-                    self.beam_center_f = detsize_f / 2.0
-            elif self.detector_convention == DetectorConvention.ADXV:
-                # ADXV convention: Different beam center mapping
-                # Per spec: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2
+            # For all conventions: beam_center = detsize / 2 (simple center)
+            # The convention-specific offsets (e.g., MOSFLM +0.5 pixel) will be
+            # applied later in Detector when converting to Fbeam/Sbeam.
+            if self.beam_center_s is None:
+                self.beam_center_s = detsize_s / 2.0
+            if self.beam_center_f is None:
+                self.beam_center_f = detsize_f / 2.0
+
+            # ADXV convention special case: Different default beam center calculation
+            # Per spec-a-core.md §72: "Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2"
+            if self.detector_convention == DetectorConvention.ADXV:
                 if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s - self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
-            else:
-                # XDS, DIALS, and other conventions: center without offset
-                # For XDS: beam_center = detsize / 2
-                if self.beam_center_s is None:
-                    self.beam_center_s = detsize_s / 2.0
-                if self.beam_center_f is None:
-                    self.beam_center_f = detsize_f / 2.0
 
         # Set default twotheta axis if not provided
         if self.twotheta_axis is None:

@@ -1,0 +1,5 @@
+Commands log for Phase M3 MOSFLM fix - 20251011T182635Z
+# Phase M3 MOSFLM Fix Commands - 20251011T182635Z
+1. Fixed Detector.__init__() to remove duplicate +0.5 offset application
+2. Run targeted test AT-PARALLEL-002:
+   env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size

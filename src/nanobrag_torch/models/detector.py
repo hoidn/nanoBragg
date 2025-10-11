@@ -81,10 +81,19 @@ class Detector:
         from ..config import DetectorConvention
 
         # Calculate pixel coordinates from mm values
-        # CRITICAL FIX [DETECTOR-CONFIG-001]: Apply MOSFLM +0.5 pixel offset during mm→pixel conversion
+        # CRITICAL [DETECTOR-CONFIG-001]: MOSFLM +0.5 pixel offset handling
         # Per specs/spec-a-core.md §72: "Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel"
-        # Per arch.md §ADR-03: "MOSFLM: Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel.
-        #                       CUSTOM (when active): spec is silent; ADR decision is to not apply implicit +0.5 offsets"
+        # Per arch.md §ADR-03: "MOSFLM: Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel."
+        #
+        # The MOSFLM +0.5 pixel offset is part of the beam-center MAPPING formula and
+        # must be applied to ALL beam centers (both auto-calculated and explicitly-provided)
+        # when using MOSFLM convention. This is NOT a default value adjustment - it's part
+        # of how MOSFLM convention defines the relationship between Xbeam/Ybeam (user input)
+        # and Fbeam/Sbeam (internal working values).
+        #
+        # The offset is applied here during the mm→pixel conversion to ensure it affects
+        # ALL MOSFLM beam centers consistently, matching the C-code behavior.
+
         # BL-1: Guard against None values (should be set by __post_init__, but defend)
         if config.beam_center_s is None or config.beam_center_f is None:
             raise ValueError(
@@ -97,10 +106,7 @@ class Detector:
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
         # Apply MOSFLM +0.5 pixel offset AFTER mm→pixel conversion
-        # This matches C code behavior (nanoBragg.c lines 1220-1221):
-        #   Fbeam = Ybeam + 0.5*pixel_size (in mm), converted to meters
-        #   Sbeam = Xbeam + 0.5*pixel_size (in mm), converted to meters
-        # Here we work in pixels, so add +0.5 pixels for MOSFLM
+        # This implements the MOSFLM beam-center mapping formula
         if config.detector_convention == DetectorConvention.MOSFLM:
             beam_center_s_pixels = beam_center_s_pixels + 0.5
             beam_center_f_pixels = beam_center_f_pixels + 0.5
@@ -171,13 +177,15 @@ class Detector:
 
         c = self.config
         # Check all basic parameters
+        # Note: default beam_center is now 51.2 mm (detsize/2), not 51.25 mm
+        # The MOSFLM +0.5 offset is applied during mm→pixel conversion in __init__
         basic_check = (
             c.distance_mm == 100.0
             and c.pixel_size_mm == 0.1
             and c.spixels == 1024
             and c.fpixels == 1024
-            and c.beam_center_s == 51.25
-            and c.beam_center_f == 51.25
+            and c.beam_center_s == 51.2
+            and c.beam_center_f == 51.2
         )
 
         # Check detector convention is default (MOSFLM)

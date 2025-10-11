@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 5 items
+
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size PASSED [ 20%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 40%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 60%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency PASSED [ 80%]
+tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation PASSED [100%]
+
+============================== 5 passed in 4.57s ===============================
