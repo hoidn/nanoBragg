@@ -11,7 +11,7 @@
 
 ### Status Snapshot (2026-01-21)
 - Phase A — Evidence & Guardrail Alignment · **[D]** Phase L + M3 artifacts ingested; spec/arch cross-check complete; findings cross-referenced.
-- Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T214422Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T214422Z/mosflm_offset/design.md`.
+- Phase B — Behavior Contract & Blueprint Refresh · **[D]** Option A design complete (STAMP 20251011T214422Z); `beam_center_source` approach ratified with CLI propagation, test/doc impacts, and risk assessment documented in `reports/2026-01-test-suite-triage/phase_m3/20251011T214422Z/mosflm_offset/design.md`. **Verification complete** (STAMP 20251011T220319Z) — design meets all exit criteria, implementation-ready.
 - Phase C — Implementation & Targeted Validation · **[P]** Awaiting supervisor approval and implementation handoff (tasks C1-C7, estimated 3-5 hours).
 - Phase D — Full-Suite Regression & Closure · **[P]** Pending Phase M chunked rerun, tracker sync, and plan archival.
 
