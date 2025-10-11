@@ -2319,3 +2319,17 @@
 - Updated docs/fix_plan.md `[SOURCE-WEIGHT-002]` ledger with new Next Actions/Exit Criteria and noted supervisor approval; top-level Active Focus now targets Phase C implementation.
 - Rewrote input.md (Mode Parity) instructing Ralph to execute Phase C1–C3 with targeted pytest runs and artifact capture under phase_j/<STAMP>/source_weighting/.
 - <Action State>: [ready_for_implementation]
+
+### 2026-01-18 (galph loop - pre-focus note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] full-suite rerun & triage realignment
+- Action type: Review/housekeeping
+- Mode: Parity
+- Note: Recording focus/action/mode before artifact edits; full summary will follow end-of-loop.
+### 2026-01-18 (galph loop - Phase K relaunch prep)
+- Reviewed docs/findings.md for test-suite keywords — no prior findings to reconcile.
+- Updated docs/fix_plan.md (lines 1-160, 152-160) to prioritise Phase K full-suite rerun, pause `[SOURCE-WEIGHT-002]`, and refresh Next Actions with new artifact expectations.
+- Refreshed plans/active/test-suite-triage.md (lines 11-155) with Phase K status + checklist; marked K1–K3 pending.
+- Marked source-weighting plan paused (plans/active/source-weighting.md:3-92) so Ralph stays off that surface until Phase K data lands.
+- Rewrote input.md with Parity-mode Phase K instructions, artifact layout, and tracker update steps.
+- <Action State>: [ready_for_implementation]
+

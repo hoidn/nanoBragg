@@ -3,7 +3,7 @@
 **Initiative:** `[TEST-SUITE-TRIAGE-001]` Sprint 1.2  
 **Owner:** ralph  
 **Priority:** High (Critical Path — Spec Compliance)  
-**Status Snapshot (2026-01-17):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) delivered with Option A approved; delegate Phase C implementation next.
+**Status Snapshot (2026-01-18):** Phase A complete (Attempt #1 @ `20251011T062017Z`). Phase B artifacts (Attempt #15 @ `20251011T062955Z`) delivered with Option A approved; Phase C implementation is paused pending `[TEST-SUITE-TRIAGE-001]` Phase K results.
 
 ---
 
@@ -52,17 +52,17 @@ Exit Criteria: Design memo approved + fix_plan updated with Phase B decisions;
 
 ---
 
-### Phase C — Implementation & Unit Tests (Pending)
+### Phase C — Implementation & Unit Tests (Paused)
 Goal: Implement Option A fixes (dtype neutrality + acceptance test alignment) while maintaining vectorized flows.
 Prereqs: Phase B artifacts accepted; update docs/fix_plan Next Actions accordingly.
 Exit Criteria: Code changes landed with targeted acceptance tests passing locally (no full suite yet).
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Update source parser dtype handling | [ ] | Modify `src/nanobrag_torch/io/source.py` to accept `dtype: Optional[torch.dtype] = None`, resolve via `torch.get_default_dtype()`, and ensure all tensors honour caller `device`/`dtype`. Maintain differentiable normalization. |
-| C2 | Add dtype propagation regression test | [ ] | Extend `tests/test_at_src_001_simple.py` with explicit dtype parametrisation verifying parser outputs match requested dtype and implicit default. |
-| C3 | Align AT-SRC-001 expectations | [ ] | Update `tests/test_at_src_001.py` docstrings and assertions so wavelengths default to CLI λ and weights remain read-only, citing spec §§151-153. |
-| C4 | Targeted validation run | [ ] | Run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py tests/test_at_src_001.py` capturing logs + diffs under Phase C reports directory.
+| C1 | Update source parser dtype handling | [P] | Paused — resume after Phase K triage confirms cluster C3 priority; retain Option A notes for quick restart. |
+| C2 | Add dtype propagation regression test | [P] | Paused — new regression test to be authored once Phase K data confirms dtype fix remains highest leverage. |
+| C3 | Align AT-SRC-001 expectations | [P] | Paused — defer docstring/assertion updates until refreshed classification prevents churn. |
+| C4 | Targeted validation run | [P] | Paused — rerun targeted pytest selectors once Phase C resumes; continue logging under Phase C timestamped directory.
 
 ---
 
@@ -89,4 +89,4 @@ Exit Criteria: Updated docs + passing Tier 1/Tier 2 tests recorded; fix-plan
 
 ---
 
-**Plan Status:** Phase B complete — Option A endorsed; delegate Phase C implementation next.
+**Plan Status:** Phase B complete — Option A endorsed; Phase C paused pending `[TEST-SUITE-TRIAGE-001]` Phase K rerun.

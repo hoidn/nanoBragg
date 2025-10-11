@@ -8,7 +8,7 @@
   - `docs/development/pytorch_runtime_checklist.md` — sanity checklist before executing PyTorch-heavy tests (KMP env, device neutrality).
   - `prompts/callchain.md` — fallback SOP if targeted tracing is required for specific failures (defer until triage completes).
 
-### Status Snapshot (2026-01-17)
+### Status Snapshot (2026-01-18)
 - Phase A ✅ complete (Attempt #1 — `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/`); 692 tests collected, no errors.
 - Phase B ✅ complete (Attempt #5 — `reports/2026-01-test-suite-triage/phase_b/20251010T135833Z/`); full suite executed in 1865 s with 50 failures captured across 18 clusters.
 - Phase C ✅ complete (Attempt #6 — `reports/2026-01-test-suite-triage/phase_c/20251010T135833Z/`); all 50 failures classified across 18 clusters, mapped to 10 existing + 8 new fix-plan IDs.
@@ -19,6 +19,7 @@
 - Phase H ✅ complete (Attempt #10 — `reports/2026-01-test-suite-triage/phase_h/20251011T033418Z/` captured full-suite rerun, 36 failures remaining, gradient checks stable).
 - Phase I ✅ complete (Attempt #11 — `reports/2026-01-test-suite-triage/phase_i/20251011T042127Z/` delivers triage_summary.md + classification_overview.md with 36 failures classified; fix_plan updated accordingly).
 - **Phase J (active)** — draft remediation tracker + execution sequence using Phase I inputs before resuming individual remediation workstreams.
+- **Phase K (pending)** — 2026-01-18 rerun of `pytest tests/` to refresh failure inventory and unblock Sprint 1 remediation sequencing.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -139,8 +140,19 @@ Exit Criteria: `reports/2026-01-test-suite-triage/phase_j/<STAMP>/remediation_tr
 | J2 | Define execution sequence | [D] | Attempt #12 → `remediation_sequence.md` authored with 4-sprint roadmap (Pre-Sprint → Sprint 1 P1 [17 failures] → Sprint 2 P2 [9] → Sprint 3 P3 [5] → Sprint 4 P4 [5]), gating tests, success metrics (36→0 failures), parallel work opportunities. |
 | J3 | Update fix_plan dependencies | [D] | Attempt #12 → `docs/fix_plan.md` Next Actions updated with Pre-Sprint blocker verification + Sprint 1 guidance; Attempt #12 entry logged with artifact paths and sequence highlights. |
 
+### Phase K — 2026 Full-Suite Refresh
+Goal: Capture a fresh `pytest tests/` run and recalibrate failure classification before restarting Sprint 1 remediation.
+Prereqs: Phase J tracker current; confirm runtime checklist via Phase A artifacts; ensure disk budget for new artifacts.
+Exit Criteria: Phase K directory populated with logs + junit XML + env snapshot; updated classification + tracker synced to fix plan; Attempt #13 recorded.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| K1 | Execute full suite (Phase K) | [ ] | Run `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k/$STAMP/artifacts/pytest_full.xml`; capture stdout/stderr to `logs/pytest_full.log`, store durations + `commands.txt`, and record `env/torch_env.txt`. |
+| K2 | Refresh classification | [ ] | Regenerate `triage_summary.md` + `classification_overview.md` using Phase K outputs; include delta vs Phase I counts and implementation-vs-deprecation labels; archive under `phase_k/$STAMP/analysis/`. |
+| K3 | Sync tracker + ledger | [ ] | Update `phase_j/latest/remediation_tracker.md` with new counts + owners; write `phase_k/$STAMP/summary.md` noting cluster priority shifts; add Attempt #13 notes + artifact links to `docs/fix_plan.md`. |
+
 ### Exit Criteria (Plan Completion)
-- Phases A–J marked `[D]` once delivered (Phase H–J newly added for 2026 rerun, classification refresh, and remediation sequencing).
+- Phases A–K marked `[D]` once delivered (Phase H–K added for 2026 rerun, classification refresh, and remediation sequencing).
 - All artifacts stored under `reports/2026-01-test-suite-triage/` with timestamped folders and referenced in `docs/fix_plan.md`.
 - `triage_summary.md` (Phase I) identifies categories for every failing test and maps each to a next action (bug fix, test removal request, infrastructure follow-up).
 - `handoff addendum` plus Phase J tracker are approved (by supervisor) and actively steering remediation; once backlog execution is underway, archive this plan.

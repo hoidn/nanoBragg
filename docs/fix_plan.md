@@ -1,11 +1,11 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-17 (galph loop — Sprint 1 kickoff alignment)
+**Last Updated:** 2026-01-18 (galph loop — Phase K full-suite relaunch prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Sprint 1.2 active. Drive `[SOURCE-WEIGHT-002]` Phase C implementation (dtype fix + AT-SRC-001 expectation alignment) so remediation tracker can advance to code remediation.
-- ACTIVE: `[SOURCE-WEIGHT-002]` — Launch Phase C tasks per Option A brief (Attempt #15) and capture targeted pytest artifacts under `reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/`.
-- MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); keep optional README vignette deferred until Sprint 1 stabilises.
-- `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused; unblock after Sprint 1 remediation tracker signals Source Weighting closure.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Launch Phase K full-suite rerun (`pytest tests/`) and refresh triage artifacts before any remediation resumes.
+- PAUSED: `[SOURCE-WEIGHT-002]` — Hold Phase C implementation until Phase K artifacts land and critical failures are reclassified.
+- MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
+- `[VECTOR-PARITY-001]` Tap 5.3 instrumentation remains paused pending post-Phase K direction from the remediation tracker.
 
 ## Index
 | ID | Title | Priority | Status |
@@ -14,7 +14,7 @@
 | [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | done |
 | [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | done |
 | [DETECTOR-GRAZING-001](#detector-grazing-001-extreme-detector-angles) | Extreme detector angles | High | in_planning |
-| [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | in_planning |
+| [SOURCE-WEIGHT-002](#source-weight-002-simulator-source-weighting) | Simulator source weighting | High | paused |
 | [TOOLING-DUAL-RUNNER-001](#tooling-dual-runner-001-restore-dual-runner-parity) | Restore dual-runner parity | High | in_planning |
 | [DEBUG-TRACE-001](#debug-trace-001-debug-flag-support) | Debug flag support | High | in_planning |
 | [DETECTOR-CONFIG-001](#detector-config-001-detector-defaults-audit) | Detector defaults audit | High | in_planning |
@@ -42,17 +42,15 @@
 - Status: in_progress
 - Owner/Date: galph/2026-01-17
 - Plan Reference: `plans/active/test-suite-triage.md`
-- Reproduction: Phase H command — `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_h/<STAMP>/artifacts/pytest_full.xml`
-- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`)
+- Reproduction: Phase K command — `CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest tests/ -v --durations=25 --maxfail=0 --junitxml=reports/2026-01-test-suite-triage/phase_k/<STAMP>/artifacts/pytest_full.xml`
+- Artifacts Root: `reports/2026-01-test-suite-triage/` (phases `phase_a` … `phase_g`, **new:** `phase_h`, `phase_i`, `phase_j`, `phase_k`)
 - Phase D Handoff Bundle: `reports/2026-01-test-suite-triage/phase_d/20260113T000000Z/handoff.md`
 - Phase G Handoff Addendum: `reports/2026-01-test-suite-triage/phase_g/20251011T030546Z/handoff_addendum.md`
 - Next Actions:
-  1. ✅ Phase I classification complete (Attempt #11) — created triage_summary.md and classification_overview.md with 36 failures classified (35 bugs, 1 deprecation)
-  2. ✅ Ledger sync complete — Attempt #11 recorded with counts and artifact paths
-  3. ✅ Phase J remediation tracker complete (Attempt #12) — authored remediation_tracker.md (cluster→owner mapping), remediation_sequence.md (4-sprint execution order), and commands.txt provenance documentation
-  4. ✅ Pre-Sprint blocker verification complete (Attempt #13) — smoke test confirms dtype blocker CLEARED, Sprint 1 authorized
-  5. 🚀 Sprint 1.2 kickoff — delegate `[SOURCE-WEIGHT-002]` Phase A (plan scaffold + baseline reproductions). Author `plans/active/source-weighting.md` if absent, capture logs under `reports/2026-01-test-suite-triage/phase_j/<STAMP>/source_weighting/`, and record Attempt #14 in this ledger.
-  6. After Sprint 1.2 Attempt landing, refresh `remediation_tracker.md` status row for C3 (counts/owner/progress) before advancing to Sprint 1.3 Detector Config.
+  1. Execute the Phase K full-suite rerun and archive logs, junit XML, durations, and env snapshot beneath `reports/2026-01-test-suite-triage/phase_k/<STAMP>/` (capture shell history in `commands.txt`).
+  2. Rebuild `triage_summary.md` and `classification_overview.md` from Phase K outputs, tagging each failure as implementation bug vs deprecation candidate and noting deltas relative to Phase I.
+  3. Update `phase_j/.../remediation_tracker.md` with refreshed counts/owners and flag any reprioritised clusters (especially `[SOURCE-WEIGHT-002]` dependencies); document changes in a short `phase_k/summary.md`.
+  4. Log Attempt #13 in this ledger with artifact paths and blockers (if any); escalate immediately if the suite cannot complete (timeout, infra failure).
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -154,7 +152,7 @@
 ## [SOURCE-WEIGHT-002] Simulator source weighting
 - Spec/AT: `specs/spec-a-core.md` §§142–166 (Sources, Divergence & Dispersion), AT-SRC-001
 - Priority: High (Sprint 1.2 — Critical Path)
-- Status: in_progress
+- Status: paused — awaiting Phase K triage refresh
 - Owner/Date: ralph/2025-10-11
 - Plan Reference: `plans/active/source-weighting.md`
 - Reproduction: `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py tests/test_at_src_001_simple.py`
@@ -162,12 +160,9 @@
 - Attempts History:
   * [2025-10-11] Attempt #1 — Result: ✅ Phase A baseline COMPLETE (evidence-only). Executed baseline test run capturing 6 failures (1 passed, 85.7% fail rate, runtime 2.08s). **Root causes identified**: (1) dtype mismatch — tests expect float64, implementation returns float32 (affects 5/6 failures); (2) wavelength column parsing missing — sourcefile λ values ignored, contradicts AT-SRC-001 requirement (affects 2/6 failures). Warning confirms "sourcefile wavelengths are ignored" per spec lines 150-151, but AT-SRC-001 requires per-source λ support — spec clarification needed. Weight column appears correctly parsed (no weight-related assertion failures). Artifacts: `reports/2026-01-test-suite-triage/phase_j/20251011T062017Z/source_weighting/{summary.md,logs/pytest.log,artifacts/pytest.xml,env/*}`. Next: Proceed to Phase B implementation once approved — (1) fix dtype consistency in `io/source.py`, (2) implement per-source wavelength support, (3) validate AT-SRC-001 weighted multi-source normalization.
   * [2026-01-17] Attempt #15 — Result: ✅ Phase B COMPLETE (semantics + design artifacts). Docs-only loop per input.md directive (no pytest execution, no production code changes). Authored comprehensive Phase B artifact bundle under `reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/`: (1) `semantics.md` — 10-section brief resolving spec §151-153 vs AT-SRC-001 contradiction; recommends **Option A** (align AT-SRC-001 with current C/PyTorch equal-weighting behavior per validated parity correlation ≥0.999); documents C reference code inspection (`nanoBragg.c:2570-2720`), root cause analysis (dtype mismatch + wavelength column ignored per spec), Option B rejection rationale (breaks C parity, extends timeline), dtype neutrality fix strategy (`dtype: Optional[torch.dtype] = None` with `torch.get_default_dtype()` fallback), spec amendment proposal for AT-SRC-001 text, risk assessment, and supervisor decision point. (2) `implementation_map.md` — Module touchpoints with file:line anchors (`io/source.py:24`, `tests/test_at_src_001.py:67-73,112-114,223-224`, `specs/spec-a-core.md:496-498`), Phase C task sequence (dtype fix → regression test → test expectation updates → spec update), runtime guardrails checklist (vectorization, device/dtype neutrality, differentiability), artifact expectations for Phase C/D. (3) `verification_checklist.md` — Phase C exit criteria (8 targeted pytest selectors, dtype propagation validation, equal-weighting semantics checks), Phase D exit criteria (full suite regression -6 failures, CPU/GPU validation, documentation updates), acceptance test validation matrix (6/6 failures → passing), artifact bundle inventory. (4) `env.json` — Environment snapshot (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6, git SHA 97c410f5). (5) `commands.txt` — Provenance log. **Key Decision:** Option A unblocks Sprint 1.2 immediately with minimal code changes (dtype fix only); defers per-source weighting to spec-b (AT-SRC-002) with explicit feature flag and gradient tests. **Status:** Supervisor approved Option A (2026-01-17); proceed to Phase C implementation next loop. Runtime: docs-only (no test execution per directive). Artifacts: `reports/2026-01-test-suite-triage/phase_j/20251011T062955Z/source_weighting/{semantics.md,implementation_map.md,verification_checklist.md,env.json,commands.txt}`. Next: Launch Phase C implementation per updated plan (parser dtype fix, test alignment, targeted pytest logs).
-- Next Actions:
-  1. Execute Phase C1 parser dtype update (`src/nanobrag_torch/io/source.py` signature change, default via `torch.get_default_dtype()`); capture diff and note guardrails.
-  2. Author Phase C2 dtype regression test in `tests/test_at_src_001_simple.py` and run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation` to confirm the failure disappears.
-  3. Align AT-SRC-001 expectations (Phase C3) by updating `tests/test_at_src_001.py`; run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_src_001.py` to verify updated semantics.
-  4. Archive Phase C artifact bundle under `reports/2026-01-test-suite-triage/phase_j/<C_STAMP>/source_weighting/` (commands, logs, diffs) and log Attempt #16 in this ledger.
-  5. Stage Phase D prep notes summarising required spec/runtime checklist edits so documentation updates can land immediately after targeted tests pass.
+- Next Actions (paused):
+  1. Hold Phase C1–C3 implementation work until `[TEST-SUITE-TRIAGE-001]` Phase K artifacts confirm failure counts and priorities.
+  2. Once resumed, reconfirm Option A assumptions against refreshed triage data before touching parser or tests; update `plans/active/source-weighting.md` accordingly.
 - Exit Criteria:
   - All tests in `tests/test_at_src_001.py` and `tests/test_at_src_001_simple.py` pass with updated expectations
   - Parser respects caller dtype/device (dtype regression test passes) and default behaviour matches `torch.get_default_dtype()`
