@@ -725,7 +725,7 @@ class Crystal:
             # NOTE: The C code passes 90.0 (degrees) but mosaic_rotation_umat treats it as radians!
             # This is a bug in the C code, but we replicate it for exact parity.
             # C code: mosaic_rotation_umat(90.0, umat, &misset_seed)
-            umat = mosaic_rotation_umat(90.0, seed=self.config.misset_seed)
+            umat = mosaic_rotation_umat(90.0, seed=self.config.misset_seed, dtype=self.dtype, device=self.device)
 
             # Extract Euler angles from the rotation matrix
             rotx, roty, rotz = umat2misset(umat)

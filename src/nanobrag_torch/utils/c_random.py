@@ -125,7 +125,7 @@ class CLCG:
 def mosaic_rotation_umat(
     mosaicity: float,
     seed: Optional[int] = None,
-    dtype: torch.dtype = torch.float32,
+    dtype: Optional[torch.dtype] = None,
     device: torch.device = torch.device('cpu')
 ) -> torch.Tensor:
     """Generate a random unitary rotation matrix within a spherical cap.
@@ -186,12 +186,16 @@ def mosaic_rotation_umat(
     Args:
         mosaicity: Maximum rotation angle in radians.
         seed: Random seed for reproducibility.
-        dtype: Data type for output tensor (default: torch.float32)
+        dtype: Data type for output tensor (default: torch.get_default_dtype())
         device: Device for output tensor (default: CPU)
 
     Returns:
         A 3x3 unitary rotation matrix as a torch.Tensor.
     """
+    # Use default dtype if not specified
+    if dtype is None:
+        dtype = torch.get_default_dtype()
+
     rng = CLCG(seed)
 
     # Make three random uniform deviates on [-1:1]

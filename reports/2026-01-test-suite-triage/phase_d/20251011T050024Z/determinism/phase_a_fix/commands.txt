@@ -1,0 +1,5 @@
+# AT-PARALLEL-013 determinism tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_013.py --maxfail=0 --durations=10
+
+# AT-PARALLEL-024 random misset reproducibility tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_024.py --maxfail=0 --durations=10

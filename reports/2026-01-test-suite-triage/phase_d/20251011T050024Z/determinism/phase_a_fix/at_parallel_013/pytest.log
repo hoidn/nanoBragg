@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 6 items
+
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed PASSED [ 16%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds PASSED [ 33%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs PASSED [ 50%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_c_pytorch_equivalence SKIPPED [ 66%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_platform_fingerprint PASSED [ 83%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 PASSED [100%]
+
+============================= slowest 10 durations =============================
+1.90s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs
+1.55s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+0.82s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds
+0.02s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64
+
+(6 durations < 0.005s hidden.  Use -vv to show these durations.)
+========================= 5 passed, 1 skipped in 5.43s =========================
