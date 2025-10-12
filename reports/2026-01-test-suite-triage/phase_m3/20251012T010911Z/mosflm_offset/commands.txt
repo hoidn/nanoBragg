@@ -1,0 +1,36 @@
+# Phase M3 MOSFLM Offset Design — Commands Log
+# STAMP: 20251012T010911Z
+# Mode: Docs (design document creation)
+
+# Step 1: Create STAMP and directory structure
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset
+echo $STAMP
+# Output: 20251012T010911Z
+
+# Step 2: Read normative spec references
+# - specs/spec-a-core.md §§68-73 (MOSFLM convention)
+# - arch.md §79-80 (ADR-03)
+
+# Step 3: Author design.md
+# File: reports/2026-01-test-suite-triage/phase_m3/20251012T010911Z/mosflm_offset/design.md
+# Sections:
+#   - Executive Summary
+#   - Design Rationale
+#   - Normative Specification References
+#   - Implementation Design (Phases B/C/D)
+#   - Test Plan & Acceptance Criteria
+#   - Risk Mitigation
+#   - Artifacts & Deliverables
+#   - Timeline & Effort Estimate
+#   - Appendix: Alternative Designs
+
+# Step 4: Verify file creation
+ls -lh reports/2026-01-test-suite-triage/phase_m3/20251012T010911Z/mosflm_offset/
+# Expected: design.md (~23KB), commands.txt (this file)
+
+# Next Steps (awaiting supervisor approval):
+# 1. Supervisor (galph) reviews design.md
+# 2. If approved: proceed to Phase C implementation (Tasks C1-C7)
+# 3. If changes requested: update design.md and resubmit
+# 4. Once Phase C complete: execute Phase D full-suite validation
