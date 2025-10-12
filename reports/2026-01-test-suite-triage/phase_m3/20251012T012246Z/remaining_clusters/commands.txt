@@ -1,0 +1,18 @@
+# Phase M3 Remaining Clusters Validation Commands
+# STAMP: 20251012T012246Z
+
+# C8: MOSFLM Beam Center Offset (PASSING)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+
+# C15: Mixed Units Comprehensive (FAILING - zero intensity)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive
+
+# C16: Detector Orthogonality Tolerance (FAILING - 1.49e-08 > 1e-10)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts
+
+# C2: Gradient Infrastructure (DOCUMENTED - passes with env flag)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -v tests/test_gradients.py -k "gradcheck" --tb=short
