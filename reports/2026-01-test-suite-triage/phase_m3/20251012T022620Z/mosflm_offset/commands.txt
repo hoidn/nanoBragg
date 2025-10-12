@@ -1,0 +1,26 @@
+# DETECTOR-CONFIG-001 Phase B: Design Artifact Generation
+# STAMP: 20251012T022620Z
+# Mode: Docs-only (no pytest execution, no code changes)
+
+# Step 1: Create timestamped directory
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset
+
+# Step 2: Author design document
+# File: reports/2026-01-test-suite-triage/phase_m3/$STAMP/mosflm_offset/design.md
+# Content: Option A remediation design (B1-B4 task breakdown)
+
+# Step 3: Document provenance
+# File: commands.txt (this file)
+# File: env.json (environment snapshot)
+
+# Spec References Consulted:
+# - specs/spec-a-core.md §68-73 (Geometry & Conventions)
+# - specs/spec-a-core.md §72 (MOSFLM +0.5 pixel offset normative behavior)
+# - arch.md §ADR-03 (Beam-center Mapping)
+# - docs/development/c_to_pytorch_config_map.md (Configuration parity)
+
+# Prior Analysis Referenced:
+# - reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mosflm_offset/summary.md
+
+# No pytest execution in this loop (docs-only per input.md directive)
