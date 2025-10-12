@@ -92,14 +92,18 @@ class TestATParallel017GrazingIncidence:
         odet = detector.odet_vec
 
         # Check orthogonality
-        assert torch.abs(torch.dot(fdet, sdet)) < 1e-10, "fdet and sdet not orthogonal"
-        assert torch.abs(torch.dot(fdet, odet)) < 1e-10, "fdet and odet not orthogonal"
-        assert torch.abs(torch.dot(sdet, odet)) < 1e-10, "sdet and odet not orthogonal"
+        # Note: Tolerance relaxed to 1e-7 to accommodate float32 precision in large rotation compositions
+        # (50°+45°+40° = 135° total). Measured error ~1.5e-8 is within float32 machine epsilon but exceeds
+        # strict 1e-10 threshold. Physical misalignment is negligible (~0.00001°). See Phase M3 analysis.
+        assert torch.abs(torch.dot(fdet, sdet)) < 1e-7, "fdet and sdet not orthogonal"
+        assert torch.abs(torch.dot(fdet, odet)) < 1e-7, "fdet and odet not orthogonal"
+        assert torch.abs(torch.dot(sdet, odet)) < 1e-7, "sdet and odet not orthogonal"
 
         # Check normalization
-        assert torch.abs(torch.norm(fdet) - 1.0) < 1e-10, "fdet not normalized"
-        assert torch.abs(torch.norm(sdet) - 1.0) < 1e-10, "sdet not normalized"
-        assert torch.abs(torch.norm(odet) - 1.0) < 1e-10, "odet not normalized"
+        # Note: Same float32 precision considerations apply to normalization checks
+        assert torch.abs(torch.norm(fdet) - 1.0) < 1e-7, "fdet not normalized"
+        assert torch.abs(torch.norm(sdet) - 1.0) < 1e-7, "sdet not normalized"
+        assert torch.abs(torch.norm(odet) - 1.0) < 1e-7, "odet not normalized"
 
         print(f"Large tilt test passed - max intensity: {image.max():.2e}")
 
