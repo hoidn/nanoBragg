@@ -1,0 +1,50 @@
+# Commands for Verification and Next Steps
+# STAMP: 20251012T004127Z
+# Context: Attempt #66 - Stale input.md directive observation
+
+## Evidence Gathering Commands (Executed)
+
+# Check fix_plan.md DETECTOR-CONFIG-001 status
+grep -A 10 "DETECTOR-CONFIG-001" docs/fix_plan.md | head -20
+
+# Verify archived plan location
+ls -lh plans/archive/detector-config_20251011_resolved.md
+
+# Check active plan directory (should be empty for this item)
+ls plans/active/detector-config.md 2>&1 || echo "File not found (archived as expected)"
+
+# Review Phase D validation results
+ls -lh reports/2026-01-test-suite-triage/phase_m/20251011T223549Z/summary.md
+
+# Check C8 cluster resolution summary
+ls -lh reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mosflm_offset/summary.md
+
+## Verification Commands (Run to Confirm Completion)
+
+# C8 targeted test (should PASS)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+
+# Beam center source tests (should all PASS)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_beam_center_source.py
+
+# Detector config tests (should all PASS)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_detector_config.py
+
+## Expected Results (Verified in Phase D)
+# All tests above: PASSED (verified STAMP 20251011T223549Z)
+# Total runtime: <10s for all three commands combined
+
+## Next Priority: [TEST-SUITE-TRIAGE-001] C15 Cluster
+
+# Reproduce C15 failure (zero intensity bug)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive -x
+
+# Expected: FAILED (AssertionError: Zero maximum intensity)
+# Context: Triclinic crystal with XDS detector, Cu K-alpha, dmin=2.0Å
+# Reference: reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mixed_units/summary.md
+
+## Alternative Priority: [VECTOR-PARITY-001]
+
+# High priority, previously blocked on suite health
+# Now may be unblocked after C8 resolution and suite stabilization
+# No specific reproduction command (scope broader than single test)
