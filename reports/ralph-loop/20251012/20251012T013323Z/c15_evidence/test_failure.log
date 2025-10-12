@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive FAILED [100%]
+
+=================================== FAILURES ===================================
+__________ TestATParallel015MixedUnits.test_mixed_units_comprehensive __________
+tests/test_at_parallel_015.py:274: in test_mixed_units_comprehensive
+    assert intensity.max() > 0, "Zero maximum intensity"
+E   AssertionError: Zero maximum intensity
+E   assert tensor(0.) > 0
+E    +  where tensor(0.) = <built-in method max of Tensor object at 0x7e7570fcb980>()
+E    +    where <built-in method max of Tensor object at 0x7e7570fcb980> = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]]).max
+----------------------------- Captured stderr call -----------------------------
+No CUDA runtime is found, using CUDA_HOME='/usr'
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive
+============================== 1 failed in 3.79s ===============================
