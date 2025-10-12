@@ -1,0 +1,38 @@
+# Phase M2 Ledger Refresh Commands
+# STAMP: 20251012T010425Z
+# Attempt: #40
+# Mode: Docs-only (no pytest execution)
+
+# Step 1: Create STAMP directory
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p "reports/2026-01-test-suite-triage/phase_m2/${STAMP}/ledger_refresh"
+
+# Step 2: Document Phase M2 results (Write tool)
+# Created: summary.md (comprehensive Phase M2 results + 5th redundancy analysis)
+
+# Step 3: Update remediation tracker (Edit tool)
+# Updated: reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md
+# Changes: Executive Summary lines 15-31 (Phase M2 counts + DETECTOR-CONFIG-001 resolution)
+
+# Step 4: Update fix_plan.md Attempts History (Edit tool)
+# Updated: docs/fix_plan.md line 92 (Attempt #40 entry added)
+
+# Step 5: Create commands.txt (Write tool)
+# Created: this file
+
+# Expected artifacts:
+# - reports/2026-01-test-suite-triage/phase_m2/20251012T010425Z/ledger_refresh/summary.md
+# - reports/2026-01-test-suite-triage/phase_m2/20251012T010425Z/ledger_refresh/commands.txt
+# - Updated: reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md
+# - Updated: docs/fix_plan.md (Attempt #40)
+
+# Next Actions (TEST-SUITE-TRIAGE-001):
+# ✅ Item #1 COMPLETE: Log STAMP 20251011T193829Z results
+# ⏳ Item #2: Create Phase M3 evidence bundle (C15/C16)
+# ⏳ Item #3: Update plans/active/test-suite-triage.md status
+
+# Recommendations for supervisor:
+# 1. Update input.md to acknowledge DETECTOR-CONFIG-001 completion
+# 2. Redirect to Phase M3 priorities:
+#    - Option A: C15 mixed-units zero intensity (callchain investigation, 2-3h)
+#    - Option B: C16 orthogonality tolerance (quick win, 30min)

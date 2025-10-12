@@ -12,20 +12,22 @@
 
 This tracker maps all active test failures across clusters to their owning fix-plan items, defines reproduction commands, documents blocking dependencies, and specifies exit criteria. Use this document as the single source of truth for remediation execution order and progress tracking.
 
-**Current Status (Updated 2025-10-11 Phase M2 Complete, STAMP: 20251011T193829Z):**
+**Current Status (Updated 2025-10-12 Phase M2 Ledger Refresh, STAMP: 20251012T010425Z):**
 - **Total Failures:** 13 (down from 46 in Phase M0, -71.7% improvement; down from 31 in Phase K, -58.1% improvement)
-- **Active Clusters:** 4 (C1/C3/C4/C5/C7/C15 resolved; Sprint 0 + Phase M2 complete)
+- **Active Clusters:** 6 (C2, C8, C15, C16, C17, C18 active; C1/C3/C4/C5/C7/C9-C14 resolved)
 - **Implementation Bugs:** 12 (92.3%)
 - **Tolerance Adjustments:** 1 (7.7% — C16 orthogonality)
 - **Pass Rate:** 81.7% (561 passed / 687 collected)
+- **Ledger Updated:** Attempt #40 (20251012T010425Z)
 
 **Phase M2 Closure Notes:**
 - ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
-- ✅ Sprint 0 (C1/C3/C4/C5/C7) **COMPLETE** — 31/31 failures retired (100% success); Phase M1 ledger refresh at 20251011T171454Z
-- ✅ Determinism clusters (C2/C15) **RESOLVED** — Attempt #10 (20251011T060454Z) logged passing selectors + documentation updates
-- ✅ Source weighting (C3) **RESOLVED** — 4→0 failures; Phase D4 closure complete (20251011T101713Z)
-- ✅ Phase M2 (Gradient Compile Guard) **COMPLETE** — Documentation validation at 20251011T172830Z; 10 C2 failures remain (known infrastructure issue with workaround)
-- → Phase M3 evidence bundle ready for 4 remaining clusters (C2 gradient guard harness, C8 MOSFLM offset, C15 mixed units, C16 orthogonality)
+- ✅ Sprint 0 (C1/C3/C4/C5/C7) **COMPLETE** — 35/46 failures retired (76% success); Phase M1 ledger refresh at 20251011T171454Z
+- ✅ Determinism clusters (C2-mosaic/C15-old) **RESOLVED** — Attempt #10 (20251011T060454Z) logged passing selectors + documentation updates
+- ✅ Source weighting (C3-old) **RESOLVED** — 4→0 failures; Phase D4 closure complete (20251011T101713Z)
+- ✅ Phase M2 (Gradient Compile Guard) **COMPLETE** — Documentation validation at 20251011T172830Z; 10 C2 failures remain (known infrastructure issue with `NANOBRAGG_DISABLE_COMPILE=1` workaround documented)
+- ✅ **[DETECTOR-CONFIG-001] RESOLVED** — Attempts #42-57 completed Phase B-C-D (archived to `plans/archive/detector-config_20251011_resolved.md`); C8 MOSFLM test now passing
+- → Phase M3 priorities: C15 mixed-units (zero intensity callchain) OR C16 orthogonality (tolerance adjustment, quick win)
 - [VECTOR-PARITY-001] Tap 5 instrumentation paused pending Phase M3 mixed-units investigation
 
 ---
