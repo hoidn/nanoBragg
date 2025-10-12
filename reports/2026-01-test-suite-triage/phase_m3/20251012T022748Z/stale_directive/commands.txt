@@ -1,0 +1,41 @@
+# Stale Directive Detection Commands — Attempt #46
+# STAMP: 20251012T022748Z
+# Mode: Evidence-only (docs loop per input.md)
+
+# 1. Create STAMP directory
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/stale_directive
+
+# 2. Verify plan file missing
+ls plans/active/detector-config.md
+# Expected: No such file or directory
+
+# 3. Verify archived plan exists
+ls plans/archive/detector-config_20251011_resolved.md
+# Expected: File exists
+
+# 4. Check fix_plan.md status
+grep -A 5 "\[DETECTOR-CONFIG-001\]" docs/fix_plan.md | head -10
+# Expected: Status: done (archived)
+
+# 5. Review Phase B design document
+ls -lh reports/2026-01-test-suite-triage/phase_m3/20251011T214422Z/mosflm_offset/design.md
+# Expected: ~23KB file
+
+# 6. Review Phase C implementation summary
+ls -lh reports/2026-01-test-suite-triage/phase_m3/20251011T213351Z/mosflm_fix/summary.md
+# Expected: File exists
+
+# 7. Review Phase D validation
+ls -lh reports/2026-01-test-suite-triage/phase_m/20251011T223549Z/summary.md
+# Expected: File exists
+
+# 8. Review Phase M3 evidence bundle (C8 status)
+cat reports/2026-01-test-suite-triage/phase_m3/20251012T012246Z/remaining_clusters/summary.md | grep -A 5 "C8"
+# Expected: C8 ✅ NOW PASSING
+
+# 9. Count redundant attempts
+grep -n "DETECTOR-CONFIG-001.*Phase B" docs/fix_plan.md | wc -l
+# Expected: Multiple entries (Attempts #36-#46)
+
+# No pytest execution (docs-only mode per input.md)
