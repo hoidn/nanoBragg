@@ -159,7 +159,7 @@ def compute_physics_for_position(
 
     # Apply dmin culling if specified
     dmin_mask = None
-    if dmin > 0:
+    if dmin is not None and dmin > 0:
         stol = 0.5 * torch.norm(scattering_vector, dim=-1)
         stol_threshold = 0.5 / dmin
         dmin_mask = (stol > 0) & (stol > stol_threshold)
