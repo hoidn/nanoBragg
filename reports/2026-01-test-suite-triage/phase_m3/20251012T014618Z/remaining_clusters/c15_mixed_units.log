@@ -1,0 +1,89 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive FAILED [100%]
+
+=================================== FAILURES ===================================
+__________ TestATParallel015MixedUnits.test_mixed_units_comprehensive __________
+
+self = <tests.test_at_parallel_015.TestATParallel015MixedUnits object at 0x79afd9070b00>
+
+    def test_mixed_units_comprehensive(self):
+        """Test comprehensive mixed unit scenario."""
+        # Configuration with explicit units
+        crystal_config = CrystalConfig(
+            cell_a=75.5,      # Angstroms
+            cell_b=82.3,      # Angstroms
+            cell_c=91.7,      # Angstroms
+            cell_alpha=87.5,  # degrees
+            cell_beta=92.3,   # degrees
+            cell_gamma=95.8,  # degrees
+            default_F=100.0,
+            N_cells=(3, 3, 3),
+            phi_start_deg=0.0,    # degrees
+            osc_range_deg=1.0,    # degrees
+            phi_steps=1,
+        )
+    
+        detector_config = DetectorConfig(
+            distance_mm=150.5,      # millimeters
+            pixel_size_mm=0.172,    # millimeters
+            spixels=128,
+            fpixels=128,
+            detector_convention=DetectorConvention.XDS,
+            detector_rotx_deg=5.0,  # degrees
+            detector_roty_deg=3.0,  # degrees
+            detector_rotz_deg=2.0,  # degrees
+            detector_twotheta_deg=10.0,  # degrees
+        )
+    
+        beam_config = BeamConfig(
+            wavelength_A=1.54,  # Angstroms (Cu K-alpha)
+            fluence=1e23,
+            polarization_factor=0.95,  # dimensionless
+            dmin=2.0,          # Angstroms
+        )
+    
+        # Create models
+        det = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+    
+        # Verify unit conversions happened correctly
+        # Detector distance should be in meters internally
+        assert np.isclose(det.distance, 0.1505, rtol=1e-6), \
+            f"Distance conversion error: {det.distance} != 0.1505"
+    
+        # Pixel size should be in meters internally
+        assert np.isclose(det.pixel_size, 0.000172, rtol=1e-6), \
+            f"Pixel size conversion error: {det.pixel_size} != 0.000172"
+    
+        # Rotations are converted internally but not exposed as attributes
+        # We can verify they work correctly by running the simulation
+    
+        # Wavelength should be in meters internally (used in simulator)
+        # Note: BeamConfig stores in Angstroms, conversion happens in simulator
+        assert beam_config.wavelength_A == 1.54, "Wavelength storage error"
+    
+        # Run simulation
+        sim = Simulator(detector=det, crystal=crystal, beam_config=beam_config)
+        intensity = sim.run(oversample=1)
+    
+        # Comprehensive checks
+        assert intensity.shape == (128, 128), f"Wrong output shape: {intensity.shape}"
+>       assert intensity.max() > 0, "Zero maximum intensity"
+E       AssertionError: Zero maximum intensity
+E       assert tensor(0.) > 0
+E        +  where tensor(0.) = <built-in method max of Tensor object at 0x79afcc7a3ac0>()
+E        +    where <built-in method max of Tensor object at 0x79afcc7a3ac0> = tensor([[0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        ...,\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.],\n        [0., 0., 0.,  ..., 0., 0., 0.]]).max
+
+tests/test_at_parallel_015.py:274: AssertionError
+----------------------------- Captured stderr call -----------------------------
+No CUDA runtime is found, using CUDA_HOME='/usr'
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive
+============================== 1 failed in 3.77s ===============================

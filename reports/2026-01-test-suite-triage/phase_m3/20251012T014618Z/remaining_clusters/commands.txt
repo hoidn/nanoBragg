@@ -1,0 +1,35 @@
+# Phase M3 Evidence Bundle — Commands Log
+# STAMP: 20251012T014618Z
+# Date: 2025-10-12
+
+## Directory Setup
+export STAMP=20251012T014618Z
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/{redundancy,remaining_clusters}
+
+## Cluster Validation Commands
+
+# C8: MOSFLM Beam Center Offset (PASSED ✅)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/remaining_clusters/c8_mosflm.log
+
+# C15: Mixed Units Zero Intensity (FAILED ❌)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/remaining_clusters/c15_mixed_units.log
+
+# C16: Detector Orthogonality Tolerance (PASSED ✅)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v \
+  tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/remaining_clusters/c16_orthogonality.log
+
+## Results Summary
+# C8:  ✅ RESOLVED — Test now passing, prior MOSFLM implementation successful
+# C15: ❌ ACTIVE BUG — Zero intensity issue, requires parallel trace debugging
+# C16: ✅ RESOLVED — Tolerance fix (Attempt #43) successful
+# C2:  ℹ️ DOCUMENTED — Gradient workaround in place, no action needed (10 tests)
+
+## Net Status
+# Active failures: 1 (C15 zero intensity)
+# Infrastructure workarounds: 10 (C2 gradients)
+# Total remaining: 11 failures (vs Phase M0 baseline of 46 = -76% reduction)

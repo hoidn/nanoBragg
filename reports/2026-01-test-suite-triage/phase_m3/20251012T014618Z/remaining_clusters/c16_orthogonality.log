@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts PASSED [100%]
+
+============================== 1 passed in 3.76s ===============================
