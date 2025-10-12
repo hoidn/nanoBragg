@@ -1,0 +1,21 @@
+# Commands for Redundancy Analysis (STAMP 20251011T235046Z)
+
+# 1. Created fresh STAMP directory
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP
+
+# 2. Verified DETECTOR-CONFIG-001 status in fix_plan
+# (Line 232 shows "done (archived)", completion date 2025-10-11)
+
+# 3. Checked archived plan location
+# plans/archive/detector-config_20251011_resolved.md exists
+
+# 4. Verified referenced input.md plan path does not exist
+ls plans/active/detector-config.md
+# Result: No such file or directory
+
+# 5. Cross-referenced Phase D validation results
+# STAMP 20251011T223549Z: 554/13/119 pass/fail/skip, C8 RESOLVED
+
+# 6. Documented redundancy analysis
+# Written to reports/.../phase_m3/20251011T235046Z/redundancy_analysis.md
