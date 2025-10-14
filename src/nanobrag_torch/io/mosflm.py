@@ -76,10 +76,18 @@ def read_mosflm_matrix(filepath: Union[str, Path], wavelength_A: float) -> Tuple
             f"found {len(values)} in {filepath}"
         )
 
-    # Reshape into 3x3 matrix (row-major order)
+    # Reshape into 3x3 matrix (row-major order from file)
     matrix = np.array(values).reshape(3, 3)
 
-    # Extract reciprocal vectors (rows of the matrix)
+    # C-code reads this matrix in column-major order (see lines 26-28 above):
+    # First row  -> a_star[1], b_star[1], c_star[1]  (components of each vector)
+    # Second row -> a_star[2], b_star[2], c_star[2]
+    # Third row  -> a_star[3], b_star[3], c_star[3]
+    # This means C extracts COLUMNS as reciprocal vectors, not rows.
+    # We need to transpose to match C convention.
+    matrix = matrix.T
+
+    # Extract reciprocal vectors (now columns of original, rows after transpose)
     a_star_raw = matrix[0, :]
     b_star_raw = matrix[1, :]
     c_star_raw = matrix[2, :]

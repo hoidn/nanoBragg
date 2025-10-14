@@ -1,0 +1,3 @@
+[console_scripts]
+nanoBragg = nanobrag_torch.__main__:main
+nb-compare = scripts.nb_compare:main

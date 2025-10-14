@@ -126,7 +126,12 @@ def generate_poisson_noise(
     return noisy, overload_count
 
 
-def lcg_random(seed: int, n: int = 1) -> torch.Tensor:
+def lcg_random(
+    seed: int,
+    n: int = 1,
+    dtype: torch.dtype = torch.float32,
+    device: torch.device = torch.device('cpu')
+) -> torch.Tensor:
     """
     Linear Congruential Generator (LCG) for C-compatible random numbers.
 
@@ -149,6 +154,8 @@ def lcg_random(seed: int, n: int = 1) -> torch.Tensor:
     Args:
         seed: Initial seed value
         n: Number of random values to generate
+        dtype: Data type for output tensor (default: torch.float32)
+        device: Device for output tensor (default: CPU)
 
     Returns:
         Tensor of n random values in [0, 1)
@@ -158,7 +165,7 @@ def lcg_random(seed: int, n: int = 1) -> torch.Tensor:
     RAND_MULT = 1103515245
     RAND_ADD = 12345
 
-    values = torch.zeros(n, dtype=torch.float64)
+    values = torch.zeros(n, dtype=dtype, device=device)
     current = seed
 
     for i in range(n):

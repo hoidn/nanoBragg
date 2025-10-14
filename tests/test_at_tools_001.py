@@ -186,9 +186,9 @@ class TestAT_TOOLS_001_DualRunnerComparison:
         # Run the script
         result = subprocess.run(cmd, capture_output=True, text=True)
 
-        # Check that it ran without critical errors
-        # (May still fail comparison if implementations differ)
-        assert result.returncode in [0, 1]  # 0=pass, 1=fail comparison
+        # Check that it ran without critical errors per spec
+        # Exit codes: 0=success, 1=usage error, 2=runner failure, 3=correlation<threshold, 4=shape mismatch, 5=I/O error
+        assert result.returncode in [0, 3]  # 0=pass, 3=correlation below threshold
 
         # Check that output files were created
         outdir = Path('test_comparison')
@@ -200,8 +200,8 @@ class TestAT_TOOLS_001_DualRunnerComparison:
                 summary = json.load(f)
 
             assert 'correlation' in summary
-            assert 'c_runtime_s' in summary
-            assert 'py_runtime_s' in summary
+            assert 'runtime_c_ms' in summary  # Changed to milliseconds per spec
+            assert 'runtime_py_ms' in summary  # Changed to milliseconds per spec
 
             # Clean up
             import shutil

@@ -61,9 +61,10 @@ class TestATParallel003:
                 detector = Detector(detector_config)
 
                 # Expected beam center in pixels
-                # MOSFLM convention adds +0.5 pixel offset
-                expected_s_pixels = beam_s_mm / pixel_size_mm + 0.5
-                expected_f_pixels = beam_f_mm / pixel_size_mm + 0.5
+                # When beam centers are explicitly provided, they are used as-is (no +0.5 offset)
+                # The MOSFLM +0.5 offset is ONLY for auto-calculated defaults
+                expected_s_pixels = beam_s_mm / pixel_size_mm
+                expected_f_pixels = beam_f_mm / pixel_size_mm
 
                 # Verify beam centers in pixels
                 assert abs(detector.beam_center_s.item() - expected_s_pixels) < 0.01, \

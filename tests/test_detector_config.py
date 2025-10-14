@@ -39,8 +39,8 @@ class TestDetectorConfig:
         assert config.detector_convention == DetectorConvention.MOSFLM
         assert config.detector_pivot == DetectorPivot.BEAM
 
-        # Sampling
-        assert config.oversample == 1
+        # Sampling - default is -1 for auto-selection
+        assert config.oversample == -1
         
         # Post_init should set twotheta_axis for MOSFLM convention
         # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
@@ -92,7 +92,7 @@ class TestDetectorConfig:
 
     def test_invalid_oversample(self):
         """Test that invalid oversample raises error."""
-        with pytest.raises(ValueError, match="Oversample must be at least 1"):
+        with pytest.raises(ValueError, match="Oversample must be -1 \\(auto-select\\) or >= 1"):
             DetectorConfig(oversample=0)
 
     def test_tensor_parameters(self):
@@ -123,7 +123,7 @@ class TestDetectorInitialization:
 
     def test_default_initialization(self):
         """Test that Detector initializes with default config."""
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
 
         # Check that config was created
         assert detector.config is not None
@@ -156,7 +156,7 @@ class TestDetectorInitialization:
             beam_center_s=204.8,  # 1024 pixels * 0.2 mm
             beam_center_f=204.8,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Check unit conversions (detector uses meters internally)
         assert detector.distance == 0.2  # 200 mm = 0.2 m
@@ -175,7 +175,7 @@ class TestDetectorInitialization:
         """Test that _is_default_config works correctly."""
         # The _is_default_config method checks for specific "golden" values
         # Now that MOSFLM defaults to 51.25, a default detector WILL match
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
         assert detector._is_default_config()  # Default now has 51.25 for MOSFLM
 
         # Create a config with different values that should NOT match
@@ -197,7 +197,7 @@ class TestDetectorInitialization:
 
     def test_basis_vectors_initialization(self):
         """Test that basis vectors are initialized correctly."""
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
 
         # Check default basis vectors (use correct dtype)
         torch.testing.assert_close(
@@ -219,7 +219,11 @@ class TestDetectorInitialization:
 
         detector = Detector(device=device, dtype=torch.float32)
 
-        assert detector.device == device
+        # Normalize device for comparison (cuda -> cuda:0)
+        temp = torch.zeros(1, device=device)
+        expected_device = temp.device
+
+        assert detector.device == expected_device
         assert detector.dtype == torch.float32
-        assert detector.fdet_vec.device == device
+        assert detector.fdet_vec.device == expected_device
         assert detector.fdet_vec.dtype == torch.float32
