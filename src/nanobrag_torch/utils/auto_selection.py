@@ -258,102 +258,114 @@ def generate_sources_from_divergence_dispersion(
     if polarization_axis is None:
         polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)  # Default vertical
 
-    # Generate divergence grid
-    hdiv_angles = []
-    vdiv_angles = []
-
+    # Generate divergence angle grids using vectorized operations
     # Horizontal divergence angles
     if hdiv_params.count == 1:
-        hdiv_angles = [0.0]
+        hdiv_angles = torch.tensor([0.0], dtype=dtype)
     else:
-        for i in range(hdiv_params.count):
-            angle = -hdiv_params.range/2 + i * hdiv_params.step
-            hdiv_angles.append(angle)
+        # Use manual arithmetic to avoid torch.linspace gradient issues
+        start = -hdiv_params.range / 2
+        hdiv_angles = start + torch.arange(hdiv_params.count, dtype=dtype) * hdiv_params.step
 
     # Vertical divergence angles
     if vdiv_params.count == 1:
-        vdiv_angles = [0.0]
+        vdiv_angles = torch.tensor([0.0], dtype=dtype)
     else:
-        for i in range(vdiv_params.count):
-            angle = -vdiv_params.range/2 + i * vdiv_params.step
-            vdiv_angles.append(angle)
+        start = -vdiv_params.range / 2
+        vdiv_angles = start + torch.arange(vdiv_params.count, dtype=dtype) * vdiv_params.step
 
-    # Create divergence grid
-    divergence_points = []
-    for h_angle in hdiv_angles:
-        for v_angle in vdiv_angles:
-            # Elliptical trimming if requested
-            if round_div and (hdiv_params.count > 1 or vdiv_params.count > 1):
-                # Normalize to unit square
-                h_norm = h_angle / (hdiv_params.range/2) if hdiv_params.range > 0 else 0
-                v_norm = v_angle / (vdiv_params.range/2) if vdiv_params.range > 0 else 0
-                # Check if point is outside ellipse
-                if h_norm**2 + v_norm**2 > 1.0:
-                    continue
+    # Create 2D meshgrid of divergence angles: (H, V)
+    h_grid, v_grid = torch.meshgrid(hdiv_angles, vdiv_angles, indexing='ij')
+    # Flatten to 1D arrays
+    h_flat = h_grid.reshape(-1)
+    v_flat = v_grid.reshape(-1)
 
-            divergence_points.append((h_angle, v_angle))
+    # Apply elliptical trimming if requested
+    if round_div and (hdiv_params.count > 1 or vdiv_params.count > 1):
+        # Normalize to unit square
+        h_norm = h_flat / (hdiv_params.range/2) if hdiv_params.range > 0 else torch.zeros_like(h_flat)
+        v_norm = v_flat / (vdiv_params.range/2) if vdiv_params.range > 0 else torch.zeros_like(v_flat)
+        # Create mask for points inside ellipse
+        inside_mask = (h_norm**2 + v_norm**2) <= 1.0
+        h_flat = h_flat[inside_mask]
+        v_flat = v_flat[inside_mask]
 
-    # Generate wavelengths
-    wavelengths = []
+    n_div = h_flat.shape[0]
+
+    # Generate wavelengths using vectorized operations
     if disp_params.count == 1:
-        wavelengths = [central_wavelength_m]
+        wavelengths = torch.tensor([central_wavelength_m], dtype=dtype)
     else:
         lambda_min = central_wavelength_m * (1 - disp_params.range/2)
         lambda_max = central_wavelength_m * (1 + disp_params.range/2)
-        for i in range(disp_params.count):
-            if disp_params.count == 1:
-                wavelength = central_wavelength_m
-            else:
-                wavelength = lambda_min + i * (lambda_max - lambda_min) / (disp_params.count - 1)
-            wavelengths.append(wavelength)
+        # Use manual arithmetic for gradient preservation
+        wavelengths = lambda_min + torch.arange(disp_params.count, dtype=dtype) * (lambda_max - lambda_min) / (disp_params.count - 1)
 
-    # Combine divergence and dispersion to create sources
-    directions = []
-    weights_list = []
-    wavelengths_list = []
+    n_wave = wavelengths.shape[0]
 
-    # Compute vertical axis (perpendicular to beam and polarization)
+    # Broadcast divergence and wavelengths: each divergence point gets all wavelengths
+    # Shape: (n_div, n_wave)
+    h_angles_expanded = h_flat.unsqueeze(1).expand(n_div, n_wave).reshape(-1)  # (n_div * n_wave,)
+    v_angles_expanded = v_flat.unsqueeze(1).expand(n_div, n_wave).reshape(-1)  # (n_div * n_wave,)
+    wavelengths_expanded = wavelengths.unsqueeze(0).expand(n_div, n_wave).reshape(-1)  # (n_div * n_wave,)
+
+    n_sources = h_angles_expanded.shape[0]
+
+    # Compute vertical axis (perpendicular to beam and polarization) once
     vertical_axis = torch.linalg.cross(beam_direction, polarization_axis)
     vertical_axis = vertical_axis / torch.linalg.norm(vertical_axis)
 
-    for h_angle, v_angle in divergence_points:
-        for wavelength in wavelengths:
-            # Start from -source_distance·b
-            direction = -beam_direction.clone()
+    # Start with -beam_direction for all sources: (n_sources, 3)
+    directions = -beam_direction.unsqueeze(0).expand(n_sources, 3).clone()
 
-            # Apply vertical rotation (about polarization axis)
-            if abs(v_angle) > 1e-10:
-                # Rodrigues' rotation formula
-                k = polarization_axis
-                theta = v_angle
-                direction = (direction * math.cos(theta) +
-                           torch.linalg.cross(k, direction) * math.sin(theta) +
-                           k * (torch.dot(k, direction)) * (1 - math.cos(theta)))
+    # Batch apply vertical rotation (about polarization axis) using Rodrigues' formula
+    # Only apply where |v_angle| > 1e-10
+    v_mask = torch.abs(v_angles_expanded) > 1e-10
+    if v_mask.any():
+        k = polarization_axis.unsqueeze(0)  # (1, 3)
+        theta = v_angles_expanded[v_mask].unsqueeze(1)  # (n_active, 1)
+        dirs_to_rotate = directions[v_mask]  # (n_active, 3)
 
-            # Apply horizontal rotation (about vertical axis)
-            if abs(h_angle) > 1e-10:
-                k = vertical_axis
-                theta = h_angle
-                direction = (direction * math.cos(theta) +
-                           torch.linalg.cross(k, direction) * math.sin(theta) +
-                           k * (torch.dot(k, direction)) * (1 - math.cos(theta)))
+        cos_theta = torch.cos(theta)
+        sin_theta = torch.sin(theta)
+        k_dot_d = (k * dirs_to_rotate).sum(dim=1, keepdim=True)  # (n_active, 1)
 
-            # Normalize to unit vector
-            direction = direction / torch.linalg.norm(direction)
+        # Rodrigues: v' = v*cos(θ) + (k×v)*sin(θ) + k*(k·v)*(1-cos(θ))
+        cross_term = torch.linalg.cross(k.expand_as(dirs_to_rotate), dirs_to_rotate)
+        directions[v_mask] = (
+            dirs_to_rotate * cos_theta +
+            cross_term * sin_theta +
+            k.expand_as(dirs_to_rotate) * k_dot_d * (1 - cos_theta)
+        )
 
-            directions.append(direction)
-            weights_list.append(1.0)  # Equal weighting per spec
-            wavelengths_list.append(wavelength)
+    # Batch apply horizontal rotation (about vertical axis)
+    h_mask = torch.abs(h_angles_expanded) > 1e-10
+    if h_mask.any():
+        k = vertical_axis.unsqueeze(0)  # (1, 3)
+        theta = h_angles_expanded[h_mask].unsqueeze(1)  # (n_active, 1)
+        dirs_to_rotate = directions[h_mask]  # (n_active, 3)
 
-    # Convert to tensors
-    if len(directions) == 0:
-        # No sources generated (shouldn't happen with proper defaults)
+        cos_theta = torch.cos(theta)
+        sin_theta = torch.sin(theta)
+        k_dot_d = (k * dirs_to_rotate).sum(dim=1, keepdim=True)  # (n_active, 1)
+
+        cross_term = torch.linalg.cross(k.expand_as(dirs_to_rotate), dirs_to_rotate)
+        directions[h_mask] = (
+            dirs_to_rotate * cos_theta +
+            cross_term * sin_theta +
+            k.expand_as(dirs_to_rotate) * k_dot_d * (1 - cos_theta)
+        )
+
+    # Batch normalize all directions
+    directions = directions / torch.linalg.norm(directions, dim=1, keepdim=True)
+
+    # Create weights (all equal per spec)
+    weights = torch.ones(n_sources, dtype=dtype)
+
+    # Handle edge case of no sources
+    if n_sources == 0:
         directions = torch.tensor([[0.0, 0.0, 1.0]], dtype=dtype)
-        weights_list = torch.tensor([1.0], dtype=dtype)
-        wavelengths_list = torch.tensor([central_wavelength_m], dtype=dtype)
-    else:
-        directions = torch.stack(directions)
-        weights_list = torch.tensor(weights_list, dtype=dtype)
-        wavelengths_list = torch.tensor(wavelengths_list, dtype=dtype)
+        weights = torch.tensor([1.0], dtype=dtype)
+        wavelengths_expanded = torch.tensor([central_wavelength_m], dtype=dtype)
 
-    return directions, weights_list, wavelengths_list
+    return directions, weights, wavelengths_expanded

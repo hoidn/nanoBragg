@@ -148,11 +148,6 @@ class CrystalConfig:
     shape: CrystalShape = CrystalShape.SQUARE  # Crystal shape model for F_latt calculation
     fudge: float = 1.0  # Shape parameter scaling factor
 
-    # Phi rotation behavior mode (CLI-FLAGS-003 Phase L3k.3c.4)
-    # "spec": Fresh rotation each φ step (default, spec-compliant)
-    # "c-parity": φ=0 reuses previous pixel's final φ vectors (C-PARITY-001 bug emulation)
-    phi_carryover_mode: str = "spec"
-
     # Sample size in meters (calculated from N_cells and unit cell dimensions)
     # These are computed in __post_init__ and potentially clipped by beam size
     sample_x: Optional[float] = None  # Sample size along a-axis (meters)
@@ -161,12 +156,6 @@ class CrystalConfig:
 
     def __post_init__(self):
         """Calculate sample dimensions from unit cell and N_cells."""
-        # Validate phi_carryover_mode
-        if self.phi_carryover_mode not in ["spec", "c-parity"]:
-            raise ValueError(
-                f"phi_carryover_mode must be 'spec' or 'c-parity', got '{self.phi_carryover_mode}'"
-            )
-
         # Calculate sample dimensions in meters (cell parameters are in Angstroms)
         # For simplicity, assume orthogonal axes for sample size calculation
         # This matches the C code behavior
@@ -293,34 +282,37 @@ class DetectorConfig:
 
         # Auto-calculate beam centers if not explicitly provided
         # This ensures beam centers scale correctly with detector size
+        # NOTE: We do NOT apply the MOSFLM +0.5 pixel offset here.
+        # The offset is part of the MOSFLM beam-center MAPPING formula and should
+        # be applied when converting beam centers to Fbeam/Sbeam in the Detector class.
         if self.beam_center_s is None or self.beam_center_f is None:
             detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
             detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
+            # Per spec-a-core.md §71-72:
+            # MOSFLM/DENZO: Default Xbeam = Ybeam = (detsize + pixel)/2
+            # ADXV: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2
+            # Others: beam_center = detsize / 2 (simple center)
             if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
-                # For MOSFLM: beam_center = (detsize + pixel_size) / 2
+                # Per spec-a-core.md §71: "Default Xbeam = (detsize_s + pixel)/2, Ybeam = (detsize_f + pixel)/2"
                 if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             elif self.detector_convention == DetectorConvention.DENZO:
-                # DENZO convention: Same as MOSFLM but NO +0.5 pixel offset
-                # For DENZO: beam_center = detsize / 2
+                # DENZO uses same defaults as MOSFLM (per spec-a-core.md §73)
                 if self.beam_center_s is None:
-                    self.beam_center_s = detsize_s / 2.0
+                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
-                    self.beam_center_f = detsize_f / 2.0
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             elif self.detector_convention == DetectorConvention.ADXV:
-                # ADXV convention: Different beam center mapping
-                # Per spec: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2
+                # Per spec-a-core.md §66-67: "Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2"
                 if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s - self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             else:
-                # XDS, DIALS, and other conventions: center without offset
-                # For XDS: beam_center = detsize / 2
+                # XDS, DIALS, CUSTOM: simple center (detsize / 2)
                 if self.beam_center_s is None:
                     self.beam_center_s = detsize_s / 2.0
                 if self.beam_center_f is None:
@@ -539,6 +531,9 @@ class BeamConfig:
 
         Per spec: fluence SHALL be recomputed as flux·exposure/beamsize^2 whenever
         flux != 0 and exposure > 0 and beamsize ≥ 0.
+
+        SOURCE-WEIGHT-001 Phase C2: Validate source_weights edge cases.
+        Ensures physical correctness for weighted multi-source simulations.
         """
         if self.flux != 0 and self.exposure > 0 and self.beamsize_mm >= 0:
             # Convert beamsize from mm to meters for fluence calculation
@@ -551,6 +546,17 @@ class BeamConfig:
         elif self.exposure > 0 and self.beamsize_mm > 0 and self.fluence > 0:
             beamsize_m = self.beamsize_mm / 1000.0
             self.flux = self.fluence * (beamsize_m * beamsize_m) / self.exposure
+
+        # SOURCE-WEIGHT-001 Phase C1 resolution: Source weights are read but ignored per spec
+        # Per spec-a-core.md line 151: "The weight column is read but ignored (equal weighting results)"
+        # No validation needed since weights don't affect simulation output
+
+        # SOURCE-WEIGHT-001 Phase E: Sourcefile + divergence validation guard
+        # NOTE: BeamConfig doesn't have a source_file field since it's a CLI-level concept.
+        # The validation guard SHALL be implemented in __main__.py when parsing CLI arguments:
+        # When both -sourcefile and any divergence parameters (-hdivrange/-vdivrange/-dispersion)
+        # are provided, a UserWarning SHALL be emitted per Option B design
+        # (see reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md)
 
 
 @dataclass

@@ -373,17 +373,6 @@ Examples:
                         default='cpu',
                         help='Device for computation (cpu or cuda)')
 
-    # Phi rotation behavior (CLI-FLAGS-003 Phase C2)
-    parser.add_argument('--phi-carryover-mode', type=str,
-                        default='spec',
-                        choices=['spec', 'c-parity'],
-                        help=(
-                            'Phi rotation behavior mode. '
-                            '"spec": Fresh rotation each φ step (default, spec-compliant). '
-                            '"c-parity": φ=0 reuses stale vectors (C-PARITY-001 bug emulation for validation). '
-                            'See docs/bugs/verified_c_bugs.md for details.'
-                        ))
-
     # Explicitly handle unsupported flags from the spec
     parser.add_argument('-dispstep', dest='_unsupported_dispstep',
                         action=UnsupportedFlagAction,
@@ -451,7 +440,6 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         config['cell_params'] = args.cell
 
     # Load HKL data
-    config['hkl_data'] = None
     config['default_F'] = args.default_F
     if args.hkl:
         config['hkl_data'] = read_hkl_file(args.hkl, default_F=args.default_F)
@@ -729,6 +717,28 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     if args.sourcefile:
         config['sourcefile'] = args.sourcefile
 
+        # SOURCE-WEIGHT-001 Phase E: CLI warning guard (Option B)
+        # Per specs/spec-a-core.md:150-162, source weights are read but ignored.
+        # Warn if divergence/dispersion parameters are also provided, as they will be ignored
+        # when -sourcefile is specified (sources loaded from file only).
+        divergence_params_present = any([
+            args.hdivrange is not None,
+            args.vdivrange is not None,
+            args.divergence is not None,
+            args.dispersion is not None
+        ])
+
+        if divergence_params_present:
+            # SOURCE-WEIGHT-001 Phase E: Emit Python warning per Option B design
+            # This warning appears when both -sourcefile and divergence/dispersion params are provided
+            # Per specs/spec-a-core.md:151, source weights and generated sources are mutually exclusive
+            warnings.warn(
+                "Divergence/dispersion parameters ignored when sourcefile is provided. "
+                "Sources are loaded from file only (see specs/spec-a-core.md:151-162).",
+                UserWarning,
+                stacklevel=2
+            )
+
     # S(Q) auxiliary files (read but not used per spec)
     if args.stol:
         # Check if file exists
@@ -854,9 +864,7 @@ def main():
                 # Phase G1: Pass MOSFLM orientation if provided
                 mosflm_a_star=config.get('mosflm_a_star'),
                 mosflm_b_star=config.get('mosflm_b_star'),
-                mosflm_c_star=config.get('mosflm_c_star'),
-                # CLI-FLAGS-003 Phase C2: Phi carryover mode
-                phi_carryover_mode=args.phi_carryover_mode
+                mosflm_c_star=config.get('mosflm_c_star')
             )
 
             if 'misset_deg' in config:
@@ -993,7 +1001,7 @@ def main():
             # Report source loading
             n_sources = len(source_directions)
             print(f"Loaded {n_sources} sources from {config['sourcefile']}")
-        elif 'sources' not in config:
+        elif 'sourcefile' not in config:
             # Auto-select divergence parameters
             hdiv_params, vdiv_params = auto_select_divergence(
                 hdivsteps=config.get('hdivsteps'),
@@ -1078,8 +1086,9 @@ def main():
         crystal = Crystal(crystal_config, beam_config=beam_config)
 
         # Set HKL data if available
-        if 'hkl_data' in config and config['hkl_data'] is not None:
-            hkl_array, hkl_metadata = config['hkl_data']
+        hkl_entry = config.get('hkl_data')
+        if hkl_entry is not None:
+            hkl_array, hkl_metadata = hkl_entry
             # Check if we actually got data (not just (None, None))
             if hkl_array is not None:
                 if isinstance(hkl_array, torch.Tensor):
