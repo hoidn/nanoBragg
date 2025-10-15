@@ -1,0 +1,30 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestAdvancedGradients.test_gradient_flow_simulation ______________
+tests/test_gradients.py:447: in test_gradient_flow_simulation
+    assert any(
+E   AssertionError: At least one gradient should be non-zero
+E   assert False
+E    +  where False = any(<generator object TestAdvancedGradients.test_gradient_flow_simulation.<locals>.<genexpr> at 0x76e6a91fe0c0>)
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-gradient-flow/phase_a/pytest.xml -
+============================= slowest 25 durations =============================
+1.58s call     tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+0.00s setup    tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+0.00s teardown tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+=========================== short test summary info ============================
+FAILED tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation - AssertionError: At least one gradient should be non-zero
+assert False
+ +  where False = any(<generator object TestAdvancedGradients.test_gradient_flow_simulation.<locals>.<genexpr> at 0x76e6a91fe0c0>)
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+============================== 1 failed in 2.47s ===============================

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2.470" timestamp="2025-10-14T22:20:29.420030-07:00" hostname="ollie-System-Product-Name"><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_gradient_flow_simulation" time="1.585"><failure message="AssertionError: At least one gradient should be non-zero&#10;assert False&#10; +  where False = any(&lt;generator object TestAdvancedGradients.test_gradient_flow_simulation.&lt;locals&gt;.&lt;genexpr&gt; at 0x76e6a91fe0c0&gt;)">tests/test_gradients.py:447: in test_gradient_flow_simulation
+    assert any(
+E   AssertionError: At least one gradient should be non-zero
+E   assert False
+E    +  where False = any(&lt;generator object TestAdvancedGradients.test_gradient_flow_simulation.&lt;locals&gt;.&lt;genexpr&gt; at 0x76e6a91fe0c0&gt;)</failure></testcase></testsuite></testsuites>

@@ -708,10 +708,12 @@
 - Plan Reference: `plans/active/gradient-flow-regression.md`
 - Reproduction: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation --maxfail=1 --durations=25`
 - First Divergence (if known): Autograd graph break observed in `triage_summary.md` §C17.
-- Attempts History: none — pending gradient audit.
+- Attempts History:
+  * [2025-10-15] Attempt #1 — Result: ✅ **Phase A COMPLETE** (baseline failure captured). Executed targeted pytest run per `plans/active/gradient-flow-regression.md` Phase A1-A3. **Results:** Test FAILED as expected (2.47s runtime, exit code 1), assertion: "At least one gradient should be non-zero". **Critical finding:** Loss = 0.0, all cell parameter gradients exactly zero (cell_a/b/c/alpha/beta/gamma = 0.0). **Root cause hypothesis:** Simulation produces zero-intensity image (no structure factors provided in test fixture — missing `-default_F` or `-hkl`). **Environment:** Python 3.13.5, PyTorch 2.7.1+cu126, CPU-only (CUDA_VISIBLE_DEVICES=-1), NANOBRAGG_DISABLE_COMPILE=1, dtype=float64. **Artifacts:** `reports/2026-01-gradient-flow/phase_a/20251015T052020Z/{pytest.log,pytest.xml,exit_code.txt,gradients.json,summary.md}`. **Phase A exit criteria met:** A1 (targeted test reproduced failure), A2 (gradient snapshot recorded), A3 (summary document complete). **Two-level problem identified:** (1) Primary: zero intensity output; (2) Secondary: zero gradients (consequence of zero loss). **Next:** Investigate zero-intensity root cause (check test fixture for missing `-default_F`/`-hkl`), then proceed to Phase B callchain tracing once intensity issue resolved.
 - Next Actions:
-  1. Execute Phase A of the gradient-flow plan: targeted pytest rerun, gradient magnitude capture, and baseline summary under `reports/2026-01-gradient-flow/phase_a/$STAMP/`.
-  2. Proceed to plan Phase B callchain + hook instrumentation once Phase A artifacts confirm zero gradients.
+  1. ✅ COMPLETE — Phase A baseline evidence bundle stored under `reports/2026-01-gradient-flow/phase_a/20251015T052020Z/`.
+  2. 🆕 TODO (Phase B prep) — Investigate zero-intensity root cause in `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`: check test fixture for missing structure factor inputs (`-default_F` or `-hkl`).
+  3. 🆕 TODO (Phase B) — Once intensity issue resolved, execute callchain tracing per `prompts/callchain.md` workflow (analysis_question: "Why do cell parameters have zero gradients?", scope: Crystal→Simulator, focus: reciprocal_vectors/rotated_real_vectors/structure_factors).
 - Risks/Assumptions:
   - Ensure gradcheck uses float64 + double precision tolerances; may need CPU run first.
 - Exit Criteria:
