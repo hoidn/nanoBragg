@@ -1,0 +1,43 @@
+CHUNK 05 RESULTS SUMMARY
+========================
+
+Execution Details:
+- Timestamp: 20251015T082955Z
+- Exit Code: 0 (SUCCESS)
+- Total Runtime: 37.15 seconds
+- Environment: CUDA_VISIBLE_DEVICES=-1 (CPU only), NANOBRAGG_DISABLE_COMPILE=1
+
+Test Results:
+- Total Tests: 44
+- Passed: 38
+- Failed: 0
+- Skipped: 6
+- Errors: 0
+
+Test Files Executed:
+1. tests/test_at_cli_003.py - CLI configuration tests (5 passed)
+2. tests/test_at_geo_002.py - Geometry setup tests (5 passed)
+3. tests/test_at_parallel_001.py - Beam center and scaling tests (8 passed)
+4. tests/test_at_parallel_011.py - Polarization factor tests (2 passed, 1 skipped)
+5. tests/test_at_parallel_022.py - Detector rotation tests (3 skipped - C binary not available)
+6. tests/test_at_perf_003.py - Memory bandwidth performance tests (5 passed)
+7. tests/test_at_sam_001.py - Steps normalization test (1 passed)
+8. tests/test_at_str_002.py - Tricubic interpolation tests (3 passed)
+9. tests/test_custom_vectors.py - Custom vector tests (5 passed)
+10. tests/test_multi_source_integration.py - Multi-source integration test (1 passed)
+11. tests/test_trace_pixel.py - Scaling trace tests (3 passed, 2 skipped - CUDA)
+
+Slowest Tests (Top 5):
+1. test_float32_vs_float64_performance - 7.51s
+2. test_cli_beam_center_calculation - 5.82s
+3. test_peak_memory_usage - 5.68s
+4. test_convention_header_keys_consistency - 5.31s
+5. test_memory_bandwidth_utilization - 1.88s
+
+Skip Reasons:
+- 3 tests: C binary not available (test_at_parallel_022.py)
+- 2 tests: CUDA not available (test_trace_pixel.py)
+- 1 test: NB_RUN_PARALLEL=1 not set (test_at_parallel_011.py)
+
+Status: ALL TESTS PASSED ✓
+No failures or errors detected. All skips are expected due to environment configuration.

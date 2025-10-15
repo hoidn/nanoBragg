@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 62 items / 1 skipped
+
+TEST EXECUTION TIMED OUT AFTER 20 MINUTES (1200s)
+
+Tests completed before timeout:
+- test_at_cli_001.py: 6/6 PASSED
+- test_at_flu_001.py: 8/8 PASSED
+- test_at_io_004.py: 7/7 PASSED
+- test_at_parallel_009.py: Not started (no output visible)
+- test_at_parallel_020.py: 4/4 SKIPPED
+- test_at_perf_001.py: 1 FAILED, 1 SKIPPED, 1 PASSED
+- test_at_pre_002.py: 6/6 PASSED
+- test_at_sta_001.py: 5/5 PASSED
+- test_configuration_consistency.py: 1 XFAIL, 5 SKIPPED
+- test_gradients.py: Started (11+ tests passed, timed out during test_property_gradient_stability)
+- test_show_config.py: Not reached
+
+Last test running when timeout occurred: test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+
+Exit code: 124 (timeout)

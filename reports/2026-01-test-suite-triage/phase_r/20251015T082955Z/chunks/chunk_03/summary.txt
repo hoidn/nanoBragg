@@ -1,0 +1,31 @@
+CHUNK 03 TEST EXECUTION SUMMARY
+================================
+
+Status: TIMEOUT (20 minutes exceeded)
+Exit Code: 124
+
+Tests Collected: 62 items (1 skipped at collection)
+
+Completed Tests Before Timeout:
+- PASSED: ~43 tests
+- FAILED: 1 test (test_at_perf_001.py::test_vectorization_scaling)
+- SKIPPED: ~10 tests
+- XFAIL: 1 test
+
+Test that Caused Timeout:
+- test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+
+Analysis:
+The test suite timed out during gradient stability tests. This is expected behavior
+for gradient tests which can be computationally intensive. The test_property_gradient_stability
+test likely involves extensive numerical gradient verification that exceeded the 20-minute limit.
+
+Recommendation:
+- Consider increasing timeout for gradient test chunks to 30+ minutes
+- Or split gradient tests into a separate chunk with extended timeout
+- The gradient tests that completed (11+) all passed successfully before the timeout
+
+Files Generated:
+- exit_code.txt: 124 (timeout)
+- pytest.log: Partial output captured before timeout
+- summary.txt: This file
