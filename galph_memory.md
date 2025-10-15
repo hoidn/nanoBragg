@@ -2720,3 +2720,13 @@
 - Rewrote `input.md` to direct the full 10-chunk ladder with STAMP scaffolding, refreshed commands, and tracker/summary expectations.
 - Focus issue remains Phase O rerun; awaiting Ralph to execute the ladder and publish the new baseline.
 - <Action State> [ready_for_implementation]
+### 2025-10-15T01:58:07Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O post-guard baseline refresh
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-15T02:06:10Z (galph loop recap)
+- Logged Attempt #69 in docs/fix_plan.md and rewrote Next Actions so O5=chunk 03 rerun and O6=ledger cleanup; added artifact consolidation note for the stray $(date …) directory.
+- Updated plans/active/test-suite-triage.md Phase O table (O4–O6), status snapshot, and Next focus to call for the guarded chunk rerun before C18 review.
+- Issued new input.md directing Ralph to run chunk 03 with NANOBRAGG_DISABLE_COMPILE=1, capture artifacts, move the orphan pytest.xml, and refresh summary/tracker counts.
+- <Action State>: [ready_for_implementation]
