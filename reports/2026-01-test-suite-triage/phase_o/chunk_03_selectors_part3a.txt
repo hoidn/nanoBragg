@@ -1,0 +1,2 @@
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency

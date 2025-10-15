@@ -1,0 +1,101 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 2 items
+
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability PASSED [ 50%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation FAILED [100%]
+
+=================================== FAILURES ===================================
+_____________ TestAdvancedGradients.test_gradient_flow_simulation ______________
+
+self = <tests.test_gradients.TestAdvancedGradients object at 0x79771d5eb950>
+
+    def test_gradient_flow_simulation(self):
+        """Verify end-to-end gradient flow through full simulation pipeline."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        # Create differentiable cell parameters
+        cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_b = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_c = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_alpha = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+        cell_beta = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+        cell_gamma = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+    
+        # Create config with tensor parameters
+        config = CrystalConfig(
+            cell_a=cell_a,
+            cell_b=cell_b,
+            cell_c=cell_c,
+            cell_alpha=cell_alpha,
+            cell_beta=cell_beta,
+            cell_gamma=cell_gamma,
+            mosaic_spread_deg=0.0,
+            mosaic_domains=1,
+            N_cells=(5, 5, 5),
+        )
+    
+        # Create objects
+        crystal = Crystal(config=config, device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+    
+        # Run simulation
+        simulator = Simulator(
+            crystal, detector, crystal_config=config, device=device, dtype=dtype
+        )
+        image = simulator.run()
+    
+        # Compute loss
+        loss = image.sum()
+    
+        # Verify image requires grad
+        assert image.requires_grad, "Output image should require gradients"
+    
+        # Backward pass
+        loss.backward()
+    
+        # Verify all parameters have gradients
+        assert cell_a.grad is not None, "cell_a should have gradient"
+        assert cell_b.grad is not None, "cell_b should have gradient"
+        assert cell_c.grad is not None, "cell_c should have gradient"
+        assert cell_alpha.grad is not None, "cell_alpha should have gradient"
+        assert cell_beta.grad is not None, "cell_beta should have gradient"
+        assert cell_gamma.grad is not None, "cell_gamma should have gradient"
+    
+        # Verify gradients are non-zero (at least one should be)
+        grad_magnitudes = [
+            cell_a.grad.abs().item(),
+            cell_b.grad.abs().item(),
+            cell_c.grad.abs().item(),
+            cell_alpha.grad.abs().item(),
+            cell_beta.grad.abs().item(),
+            cell_gamma.grad.abs().item(),
+        ]
+>       assert any(
+            mag > 1e-10 for mag in grad_magnitudes
+        ), "At least one gradient should be non-zero"
+E       AssertionError: At least one gradient should be non-zero
+E       assert False
+E        +  where False = any(<generator object TestAdvancedGradients.test_gradient_flow_simulation.<locals>.<genexpr> at 0x79771456d080>)
+
+tests/test_gradients.py:447: AssertionError
+----------------------------- Captured stdout call -----------------------------
+auto-selected 2-fold oversampling
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part3b.xml -
+============================= slowest 25 durations =============================
+845.68s call     tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+1.59s call     tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+0.00s setup    tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+0.00s teardown tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+0.00s teardown tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+0.00s setup    tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+=========================== short test summary info ============================
+FAILED tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation - AssertionError: At least one gradient should be non-zero
+assert False
+ +  where False = any(<generator object TestAdvancedGradients.test_gradient_flow_simulation.<locals>.<genexpr> at 0x79771456d080>)
+=================== 1 failed, 1 passed in 848.12s (0:14:08) ====================

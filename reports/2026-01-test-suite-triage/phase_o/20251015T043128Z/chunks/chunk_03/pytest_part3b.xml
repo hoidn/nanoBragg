@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="848.117" timestamp="2025-10-14T21:34:08.837301-07:00" hostname="ollie-System-Product-Name"><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_gradient_stability" time="845.678" /><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_gradient_flow_simulation" time="1.591"><failure message="AssertionError: At least one gradient should be non-zero&#10;assert False&#10; +  where False = any(&lt;generator object TestAdvancedGradients.test_gradient_flow_simulation.&lt;locals&gt;.&lt;genexpr&gt; at 0x79771456d080&gt;)">self = &lt;tests.test_gradients.TestAdvancedGradients object at 0x79771d5eb950&gt;
+
+    def test_gradient_flow_simulation(self):
+        """Verify end-to-end gradient flow through full simulation pipeline."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+    
+        # Create differentiable cell parameters
+        cell_a = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_b = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_c = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        cell_alpha = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+        cell_beta = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+        cell_gamma = torch.tensor(90.0, dtype=dtype, requires_grad=True)
+    
+        # Create config with tensor parameters
+        config = CrystalConfig(
+            cell_a=cell_a,
+            cell_b=cell_b,
+            cell_c=cell_c,
+            cell_alpha=cell_alpha,
+            cell_beta=cell_beta,
+            cell_gamma=cell_gamma,
+            mosaic_spread_deg=0.0,
+            mosaic_domains=1,
+            N_cells=(5, 5, 5),
+        )
+    
+        # Create objects
+        crystal = Crystal(config=config, device=device, dtype=dtype)
+        detector = Detector(device=device, dtype=dtype)
+    
+        # Run simulation
+        simulator = Simulator(
+            crystal, detector, crystal_config=config, device=device, dtype=dtype
+        )
+        image = simulator.run()
+    
+        # Compute loss
+        loss = image.sum()
+    
+        # Verify image requires grad
+        assert image.requires_grad, "Output image should require gradients"
+    
+        # Backward pass
+        loss.backward()
+    
+        # Verify all parameters have gradients
+        assert cell_a.grad is not None, "cell_a should have gradient"
+        assert cell_b.grad is not None, "cell_b should have gradient"
+        assert cell_c.grad is not None, "cell_c should have gradient"
+        assert cell_alpha.grad is not None, "cell_alpha should have gradient"
+        assert cell_beta.grad is not None, "cell_beta should have gradient"
+        assert cell_gamma.grad is not None, "cell_gamma should have gradient"
+    
+        # Verify gradients are non-zero (at least one should be)
+        grad_magnitudes = [
+            cell_a.grad.abs().item(),
+            cell_b.grad.abs().item(),
+            cell_c.grad.abs().item(),
+            cell_alpha.grad.abs().item(),
+            cell_beta.grad.abs().item(),
+            cell_gamma.grad.abs().item(),
+        ]
+&gt;       assert any(
+            mag &gt; 1e-10 for mag in grad_magnitudes
+        ), "At least one gradient should be non-zero"
+E       AssertionError: At least one gradient should be non-zero
+E       assert False
+E        +  where False = any(&lt;generator object TestAdvancedGradients.test_gradient_flow_simulation.&lt;locals&gt;.&lt;genexpr&gt; at 0x79771456d080&gt;)
+
+tests/test_gradients.py:447: AssertionError</failure></testcase></testsuite></testsuites>

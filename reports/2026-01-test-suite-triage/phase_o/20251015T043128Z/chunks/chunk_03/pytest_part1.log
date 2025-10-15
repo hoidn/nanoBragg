@@ -34,14 +34,14 @@ tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_minimal_fea
 
 - generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part1.xml -
 ============================= slowest 25 durations =============================
-1.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms
-1.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples
-1.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms
-0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag
-0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag
+1.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag
+0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms
+0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms
+0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples
+0.98s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag
 0.01s call     tests/test_at_io_004.py::TestAT_IO_004::test_all_formats_produce_same_pattern
-0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning
 0.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_invocable
+0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning
 0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats
 0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats
 0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format
@@ -50,14 +50,13 @@ tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_minimal_fea
 0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling
 0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_five_column_with_phase
 0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_from_flux_exposure_beamsize
-0.00s setup    tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning
 0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling
-0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling
-0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_larger
+0.00s setup    tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning
 0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling
+0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_larger
 0.00s setup    tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag
 0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_all_formats_produce_same_pattern
+0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling
+0.00s setup    tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms
 0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format
-0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_five_column_with_phase
-======================== 21 passed, 5 skipped in 6.19s =========================
-elapsed=0:06.71
+======================== 21 passed, 5 skipped in 6.14s =========================

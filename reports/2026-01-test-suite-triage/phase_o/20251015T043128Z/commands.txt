@@ -1,0 +1,67 @@
+# Phase O5 Chunk 03 Quad-Shard Execution
+# STAMP: 20251015T043128Z
+# Date: 2025-10-14 UTC
+# Attempt: #75
+
+## Setup
+export STAMP=20251015T043128Z
+mkdir -p reports/2026-01-test-suite-triage/phase_o/${STAMP}/{gradients,chunks/chunk_03}
+cp -r reports/2026-01-test-suite-triage/phase_o/20251015T014403Z/grad_guard/* reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/
+
+## Selector manifests created:
+# - chunk_03_selectors_part1.txt (5 CLI/parallel modules)
+# - chunk_03_selectors_part2.txt (5 perf/pre/config modules)
+# - chunk_03_selectors_part3a.txt (2 fast gradient properties - CORRECTED)
+# - chunk_03_selectors_part3b.txt (2 slow gradient workloads - CORRECTED)
+
+## Part 1: Quick CLI/parallel modules
+timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt \
+  -k "not gradcheck" --maxfail=0 --durations=25 \
+  --junitxml reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part1.xml \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part1.log
+# Exit code: 0
+# Runtime: 6.14s
+# Results: 21 passed, 5 skipped
+
+## Part 2: Perf/pre/config sweep
+timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part2.txt \
+  -k "not gradcheck" --maxfail=0 --durations=25 \
+  --junitxml reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part2.xml \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part2.log
+# Exit code: 0
+# Runtime: 17.51s
+# Results: 18 passed, 4 skipped, 1 xfailed
+
+## Part 3a: Fast gradient properties
+timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3a.txt \
+  --maxfail=0 --durations=25 \
+  --junitxml reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part3a.xml \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part3a.log
+# Exit code: 0
+# Runtime: 0.96s
+# Results: 2 passed
+
+## Part 3b: Slow gradient workloads
+timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3b.txt \
+  --maxfail=0 --durations=25 \
+  --junitxml reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part3b.xml \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part3b.log
+# Exit code: 1
+# Runtime: 848.12s (14m 8s)
+# Results: 1 passed, 1 failed
+# FAILURE: test_gradient_flow_simulation (zero gradients - C19)
+# SLOW: test_property_gradient_stability (845.68s - C18)
+
+## Aggregation
+# Moved artifacts from phase_o/chunks/chunk_03/ to phase_o/20251015T043128Z/chunks/chunk_03/
+# Total: 53 tests, 42 passed, 1 failed, 0 errors, 10 skipped
+# Total runtime: 872.71s (~14.5 min)
+
+## Key Findings
+# - test_property_gradient_stability: 845.68s (validates C18 slow-test classification)
+# - test_gradient_flow_simulation: FAILED with zero gradients (C19)
+# - Selector correction applied: TestPropertyBasedGradients, TestAdvancedGradients

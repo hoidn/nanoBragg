@@ -33,30 +33,29 @@ tests/test_show_config.py::TestShowConfig::test_echo_config_alias PASSED [100%]
 
 - generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/chunks/chunk_03/pytest_part2.xml -
 ============================= slowest 25 durations =============================
-2.59s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
-2.01s call     tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults
+2.60s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
 2.01s call     tests/test_at_pre_002.py::test_explicit_pivot_override
-2.00s call     tests/test_at_pre_002.py::test_convention_default_pivots
-1.01s call     tests/test_show_config.py::TestShowConfig::test_show_config_with_rotations
-1.01s call     tests/test_show_config.py::TestShowConfig::test_show_config_basic
+2.00s call     tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults
+1.99s call     tests/test_at_pre_002.py::test_convention_default_pivots
+1.02s call     tests/test_show_config.py::TestShowConfig::test_show_config_with_rotations
 1.01s call     tests/test_at_pre_002.py::test_xbeam_ybeam_forces_beam_pivot
-1.01s call     tests/test_show_config.py::TestShowConfig::test_show_config_with_divergence
-1.01s call     tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot
 1.00s call     tests/test_show_config.py::TestShowConfig::test_echo_config_alias
-1.00s call     tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot
-0.77s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
-0.13s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
+1.00s call     tests/test_show_config.py::TestShowConfig::test_show_config_with_divergence
+1.00s call     tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot
+1.00s call     tests/test_show_config.py::TestShowConfig::test_show_config_basic
+0.99s call     tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot
+0.75s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
+0.12s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
 0.07s call     tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_defaults_equal_implicit
-0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic
 0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_roi
+0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic
 0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_last_max_location
 0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_empty_roi
 0.00s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_mask
 0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
 0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
 0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
-0.00s teardown tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
 0.00s teardown tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
-0.00s teardown tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
-================== 18 passed, 4 skipped, 1 xfailed in 17.58s ===================
-elapsed=0:18.02
+0.00s teardown tests/test_show_config.py::TestShowConfig::test_show_config_basic
+0.00s teardown tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
+================== 18 passed, 4 skipped, 1 xfailed in 17.51s ===================

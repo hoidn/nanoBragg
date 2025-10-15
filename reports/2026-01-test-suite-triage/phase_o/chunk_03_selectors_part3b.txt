@@ -1,0 +1,2 @@
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
