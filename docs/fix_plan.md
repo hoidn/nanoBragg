@@ -1,6 +1,6 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop, Next Action 8 handoff)
+**Last Updated:** 2025-10-15 (galph loop, Next Action 10 closure)
 **Active Focus:**
 - CRITICAL: `[TEST-SUITE-TRIAGE-002]` — Relaunch full `pytest tests/` execution, capture failures, and stage remediation sequencing before any new feature work.
 - CRITICAL: `[VECTOR-PARITY-001]` — Tap 5.3 accumulation instrumentation must land to unblock full-frame parity (Phase E16–E18 capture + synthesis).
@@ -41,7 +41,7 @@
 - Priority: Critical
 - Status: in_progress
 - Owner/Date: galph/2025-10-15 (Attempt #0 baseline)
-- Plan Reference: `plans/active/test-suite-triage-rerun.md`
+- Plan Reference: `plans/archive/test-suite-triage-rerun.md`
 - Reproduction: Guarded full suite per Phase B — `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/`
 - Artifacts Root: `reports/2026-01-test-suite-refresh/phase_<phase>/<STAMP>/`
 - Attempts History:
@@ -64,7 +64,8 @@
   7. ✅ COMPLETE (Attempt #8) — CLUSTER-GRAD-001 resolved: gradient stability test passed in 844.94s (14:04.94) with exit code 0, well within 905s approved tolerance (60.06s = 6.6% margin). Runtime consistent with Phase Q baseline (839.14s, +0.69% variance within measurement noise). No timeout regression detected; Phase B triage flag was stale. Profiling metrics: 1294% CPU utilization (13-core parallelism), 8.44 GB peak RSS, zero major page faults. No code changes required. Artifacts: `reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-GRAD-001/20251015T134434Z/{summary.md,pytest.log,time.txt,exit_code.txt,env.txt,torch_env.txt,commands.txt}`. Infrastructure gap cleared.
   8. ✅ COMPLETE (Attempt #9) — CLUSTER-PERF-001 diagnostic: Test `test_memory_bandwidth_utilization` PASSED with exit code 0 in 3.15s wall-clock time. Performance metrics captured via `/usr/bin/time -v`: 337% CPU, 1.3 GB peak RSS, zero major page faults. Fast runtime (1.84s test call) indicates no memory bottleneck; efficient vectorized operations confirmed. Phase B triage flag was transient. Artifacts: `reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-PERF-001/20251015T141417Z/` with summary.md, pytest_and_time.log, exit_code.txt, env.txt, torch_env.txt, commands.txt. Baseline memory bandwidth metrics captured for downstream `[PERF-PYTORCH-004]` remediation. Infrastructure gap cleared; no code changes required.
   9. ✅ COMPLETE (Attempt #10) — CLUSTER-VEC-001 diagnostic: Both tricubic vectorization tests PASSED on CPU (1.93s) and GPU (2.06s) with exit code 0. Dtype snapshot confirmed correct coercion behavior—float64 inputs produce float32 outputs via `crystal.dtype` (expected per device/dtype neutrality guidelines). No float/double mismatch detected. Phase B failure appears to have been transient (test collection order or environmental state). Artifacts: `reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-VEC-001/20251015T143055Z/{summary.md,pytest_cpu.log,pytest_gpu.log,dtype_snapshot.json,torch_env.txt,env.txt,commands.txt}`. **Cluster RESOLVED:** tests pass on both CPU/GPU, dtype neutrality confirmed, no implementation bug detected. Infrastructure gap cleared; no code changes required.
- 10. NEXT — All six Phase D clusters resolved. Full suite stable at 540 passed / 8 failed / 143 skipped. Update `plans/active/test-suite-triage-rerun.md` with Phase D completion summary and archive plan.
+ 10. ✅ COMPLETE (Attempt #11) — Phase D closure noted in `plans/archive/test-suite-triage-rerun.md`; plan moved to archive after logging cluster status updates (STAMP 20251015T144534Z). Fix_plan now points at archived plan; monitor next full-suite rerun scheduling separately.
+ 11. NEXT — Draft Phase E rerun brief outlining conditions for a guarded `pytest tests/` confirmation run once remediation evidence is consolidated (reference `plans/archive/test-suite-triage-rerun.md` Closure Status).
 
 ## [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 - Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `specs/spec-a-core.md` (Acceptance Tests), `docs/development/pytorch_runtime_checklist.md` (runtime guardrails).

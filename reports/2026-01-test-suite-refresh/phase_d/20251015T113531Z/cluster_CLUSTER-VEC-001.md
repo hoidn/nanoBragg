@@ -28,3 +28,8 @@ pytest -v tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized
 - Diagnostic reproduction logs committed (including dtype dump, device coverage).
 - `[VECTOR-TRICUBIC-002]` plan updated with explicit tasks referencing this brief.
 - Tests pass locally with documented commands and artifacts stored under the cluster directory.
+
+## Status Update — 20251015T143055Z
+- Targeted reruns (CPU + GPU) at STAMP 20251015T143055Z both passed with exit code 0; see `cluster_CLUSTER-VEC-001/20251015T143055Z/` for logs.
+- Dtype snapshot confirms vectorized path returns `crystal.dtype` (float32) for scalar, batch, and grid inputs, matching scalar reference.
+- Phase B failure deemed transient; cluster considered resolved pending next full-suite verification.

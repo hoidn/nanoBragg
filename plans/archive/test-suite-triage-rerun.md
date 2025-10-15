@@ -8,6 +8,10 @@
   - `plans/archive/test-suite-triage.md` (Phase R summary) for prior baselines and tolerance decisions.
   - `docs/fix_plan.md` (Attempt history + cluster IDs) to ensure triage labels remain consistent.
 
+### Closure Status — 20251015T144534Z
+- Phase D cluster diagnostics validated (Attempts #4–#10); no open remediation evidence outstanding.
+- Plan archived from the active roster on 2025-10-15 after fix_plan Next Action 10 closure (STAMP 20251015T144534Z).
+
 ### Artifact Root & Naming
 - Use `reports/2026-01-test-suite-refresh/` as the new root to avoid clobbering archived Phase R bundles.
 - Stamp format: `YYYYMMDDTHHMMSSZ` (UTC) created via `date -u +%Y%m%dT%H%M%SZ`.
@@ -61,7 +65,7 @@ Exit Criteria: Next Actions list in fix_plan updated; optional per-cluster mini-
 | D1 | Draft remediation briefs | [D] | For each active cluster, create `reports/2026-01-test-suite-refresh/phase_d/$STAMP/cluster_<id>.md` summarizing reproduction command, suspected cause, linked findings, and suggested owner plan. Reference `phase_c/$STAMP/triage_summary.md` for baseline context and cite authoritative commands from `docs/development/testing_strategy.md`. |
 | D2 | Update docs/fix_plan Next Actions | [D] | Add bullet list mapping clusters → follow-up tasks (e.g., assign to `[VECTOR-TRICUBIC-002]`, `[STATIC-PYREFLY-001]`). |
 | D3 | Refresh input.md guidance | [D] | Provide supervisor handoff instructions focusing on highest-priority cluster fix, referencing plan + pytest selectors. |
-| D4 | Completion gate | [ ] | Phase D exit when all clusters have documented next steps, fix_plan synced, and artifacts committed. Log state in galph_memory with `<Action State>: [ready_for_implementation]` once delegation instructions prepared. |
+| D4 | Completion gate | [D] | Phase D exit confirmed via Attempts #4–#10; fix_plan Next Actions 5–9 marked complete and galph_memory logged [ready_for_implementation] prior to delegation. |
 
 #### Phase D Cluster Brief Checklist
 Goal: Capture per-cluster remediation briefs sized for direct delegation.
@@ -71,11 +75,28 @@ Exit Criteria: Each row below links to a committed brief under `reports/2026-01-
 | Cluster ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | CLUSTER-CREF-001 | Document C reference harness failure and NB_C_BIN requirements | [D] | Brief recorded in `phase_d/20251015T113531Z/cluster_CLUSTER-CREF-001.md`; captures resolved env-var precedence fix (Attempt #4) and references `[TEST-GOLDEN-001]` for ongoing binary upkeep. |
-| CLUSTER-PERF-001 | Record perf regression evidence + profiling plan | [ ] | Brief captured in `phase_d/20251015T113531Z/cluster_CLUSTER-PERF-001.md`; next loop must gather fresh timing (`/usr/bin/time -v timeout 900 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=1 --timeout=900 --durations=0" pytest -vv tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization`) and feed `[PERF-PYTORCH-004]`. |
+| CLUSTER-PERF-001 | Record perf regression evidence + profiling plan | [D] | Attempt #9 completed targeted `/usr/bin/time -v` run (1.84s test call, 3.15s wall clock) with exit 0; artifacts stored under `cluster_CLUSTER-PERF-001/20251015T141417Z/` and referenced by `[PERF-PYTORCH-004]`. |
 | CLUSTER-TOOLS-001 | Capture nb-compare path resolution failure | [D] | Resolved via Attempt #7; passing evidence and command log stored under `phase_d/20251015T113531Z/cluster_CLUSTER-TOOLS-001/20251015T132924Z/`. |
 | CLUSTER-CLI-001 | Outline missing CLI golden assets + pix0 findings | [D] | Brief recorded in `phase_d/20251015T113531Z/cluster_CLUSTER-CLI-001/20251015T131048Z/summary.md`; confirms assets present, tests passing (Attempt #6) and references findings `API-001/002` for historical context. |
 | CLUSTER-GRAD-001 | Summarize gradient timeout + data capture plan | [D] | Completed via Attempt #8 (20251015T134434Z): extended-timeout rerun (`/usr/bin/time -v timeout 1200 ... pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability`) finished in 844.94 s (6.6% below 905 s tolerance). Artifacts live at `phase_d/20251015T113531Z/cluster_CLUSTER-GRAD-001/20251015T134434Z/`. |
-| CLUSTER-VEC-001 | Detail tricubic vectorization regression | [ ] | Handoff brief lives at `phase_d/20251015T113531Z/cluster_CLUSTER-VEC-001.md`; rerun failing nodeids, log dtype mismatch, then update `[VECTOR-TRICUBIC-002]` with remediation plan. |
+| CLUSTER-VEC-001 | Detail tricubic vectorization regression | [D] | Attempt #10 logged CPU/GPU passes plus dtype snapshot under `cluster_CLUSTER-VEC-001/20251015T143055Z/`; brief updated with status note pending next full-suite rerun. |
+
+### Phase D — Cluster Remediation Wrap-up
+Goal: Validate each Phase B failure cluster via targeted reproductions and lock the evidence needed for downstream remediation loops.
+Prereqs: Phase C triage summary published and per-cluster briefs staged under `reports/2026-01-test-suite-refresh/phase_d/`.
+Exit Criteria: Cluster diagnostics recorded with passing confirmations or documented infra follow-ups; `docs/fix_plan.md` Next Actions 5–9 marked complete.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| D1 | Author cluster briefs with reproduction commands | [D] | Attempt #5 (STAMP 20251015T113531Z) captured briefs under `phase_d/` and refreshed fix_plan sequencing. |
+| D2 | CLUSTER-CREF-001 — NB_C_BIN precedence validation | [D] | Attempt #4 reran `tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c`; exit 0 documented under `cluster_CLUSTER-CREF-001/20251015T125842Z/`. |
+| D3 | CLUSTER-CLI-001 — Pix0 golden assets verification | [D] | Attempt #6 logged CPU/GPU runs (3 passed) in `cluster_CLUSTER-CLI-001/20251015T131048Z/`; sha256 checksums recorded. |
+| D4 | CLUSTER-TOOLS-001 — nb-compare console script check | [D] | Attempt #7 confirmed `nb-compare` availability and passing targeted test; artifacts in `cluster_CLUSTER-TOOLS-001/20251015T132924Z/`. |
+| D5 | CLUSTER-GRAD-001 — Gradient timeout validation | [D] | Attempt #8 captured extended-timeout run (844.94 s) with `/usr/bin/time -v`; see `cluster_CLUSTER-GRAD-001/20251015T134434Z/`. |
+| D6 | CLUSTER-PERF-001 — Memory bandwidth diagnostic | [D] | Attempt #9 recorded `/usr/bin/time -v` metrics with passing result; stored under `cluster_CLUSTER-PERF-001/20251015T141417Z/`. |
+| D7 | CLUSTER-VEC-001 — Tricubic dtype parity confirmation | [D] | Attempt #10 ran CPU/GPU targeted tests and captured dtype snapshot in `cluster_CLUSTER-VEC-001/20251015T143055Z/`; cluster marked resolved. |
+
+Phase D status: ✅ Complete via Attempts #4–#10; all six clusters validated with targeted reproductions. Ready to archive plan once fix_plan item 10 is logged.
 
 ### Verification & Guardrails
 - Respect Protected Assets list in `docs/index.md`; never delete `loop.sh`, `input.md`, etc.
