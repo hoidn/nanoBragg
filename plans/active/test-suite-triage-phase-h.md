@@ -27,10 +27,10 @@ Exit Criteria: Runtime measurements captured under `reports/2026-01-test-suite-r
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| I1 | Time isolated gradient test (CPU) | [ ] | `/usr/bin/time -v -o analysis/gradient_cpu_time.txt timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_gradients.py::test_property_gradient_stability -vv`. Capture pytest log + exit status. |
-| I2 | Collect system load diagnostics | [ ] | During run, record `lscpu`, `cpupower frequency-info` (if available), and `sensors` output into `env/system_load.txt` to diagnose throttling. |
-| I3 | Optional GPU comparison | [ ] | If CUDA available, repeat test once with `CUDA_VISIBLE_DEVICES=0` to gauge spread; store outputs in `analysis/gradient_gpu_time.txt`. |
-| I4 | Draft timeout decision memo | [ ] | Summarise timings, variance, and recommend either raising timeout (specify value with rationale) or splitting test into guarded chunk. Reference `docs/development/testing_strategy.md` §4.1 and Phase F metrics (`reports/2026-01-test-suite-refresh/phase_f/20251015T160436Z/analysis/summary.md`). |
+| I1 | Time isolated gradient test (CPU) | [D] | `/usr/bin/time -v -o analysis/gradient_cpu_time.txt timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_gradients.py::test_property_gradient_stability -vv`. Capture pytest log + exit status. **COMPLETE (STAMP 20251015T173309Z):** Runtime 846.13s (6.5% margin below 905s), exit code 0. |
+| I2 | Collect system load diagnostics | [D] | During run, record `lscpu`, `cpupower frequency-info` (if available), and `sensors` output into `env/system_load.txt` to diagnose throttling. **COMPLETE:** Captured at `env/system_load.txt`, no throttling detected. |
+| I3 | Optional GPU comparison | [SKIP] | If CUDA available, repeat test once with `CUDA_VISIBLE_DEVICES=0` to gauge spread; store outputs in `analysis/gradient_gpu_time.txt`. **DEFERRED:** CPU measurement sufficient; Phase I validates 905s ceiling. |
+| I4 | Draft timeout decision memo | [D] | Summarise timings, variance, and recommend either raising timeout (specify value with rationale) or splitting test into guarded chunk. Reference `docs/development/testing_strategy.md` §4.1 and Phase F metrics (`reports/2026-01-test-suite-refresh/phase_f/20251015T160436Z/analysis/summary.md`). **COMPLETE:** Memo at `analysis/timeout_decision.md` recommends ✅ **RETAIN 905s timeout** (no adjustment needed). |
 
 ### Phase J — Collection-Time Guard Rails
 Goal: Implement and validate pytest-level guards that enforce infrastructure readiness and gradient policy before suite execution resumes.
