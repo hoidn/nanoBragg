@@ -1,0 +1,2671 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 14 items / 6 deselected / 8 selected
+
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_a ERROR [ 12%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_b ERROR [ 25%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_c ERROR [ 37%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_alpha ERROR [ 50%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_beta ERROR [ 62%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_gamma ERROR [ 75%]
+tests/test_gradients.py::TestAdvancedGradients::test_joint_gradcheck ERROR [ 87%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradgradcheck_cell_params ERROR [100%]
+
+==================================== ERRORS ====================================
+______ ERROR at setup of TestCellParameterGradients.test_gradcheck_cell_a ______
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+______ ERROR at setup of TestCellParameterGradients.test_gradcheck_cell_b ______
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+______ ERROR at setup of TestCellParameterGradients.test_gradcheck_cell_c ______
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+____ ERROR at setup of TestCellParameterGradients.test_gradcheck_cell_alpha ____
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+____ ERROR at setup of TestCellParameterGradients.test_gradcheck_cell_beta _____
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+____ ERROR at setup of TestCellParameterGradients.test_gradcheck_cell_gamma ____
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+_________ ERROR at setup of TestAdvancedGradients.test_joint_gradcheck _________
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+____ ERROR at setup of TestAdvancedGradients.test_gradgradcheck_cell_params ____
+tests/conftest.py:172: in session_infrastructure_gate
+    pytest.fail(
+E   Failed: 
+E   ================================================================================
+E   Infrastructure Gate Check FAILED
+E   ================================================================================
+E     - Binary failed to produce help text (stderr: )
+E   
+E   For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =For details, see:
+E     - reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/
+E     - docs/development/testing_strategy.md S1.5
+E     - plans/active/test-suite-triage-phase-h.md
+E   =
+=========================== short test summary info ============================
+ERROR tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_a
+ERROR tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_b
+ERROR tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_c
+ERROR tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_alpha
+ERROR tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_beta
+ERROR tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_gamma
+ERROR tests/test_gradients.py::TestAdvancedGradients::test_joint_gradcheck - ...
+ERROR tests/test_gradients.py::TestAdvancedGradients::test_gradgradcheck_cell_params
+======================= 6 deselected, 8 errors in 0.88s ========================

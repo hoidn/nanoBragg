@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: True
+collected 14 items
+
+<Dir nanoBragg>
+  <Package tests>
+    <Module test_gradients.py>
+      <Class TestCellParameterGradients>
+        <Function test_gradcheck_cell_a>
+        <Function test_gradcheck_cell_b>
+        <Function test_gradcheck_cell_c>
+        <Function test_gradcheck_cell_alpha>
+        <Function test_gradcheck_cell_beta>
+        <Function test_gradcheck_cell_gamma>
+      <Class TestAdvancedGradients>
+        <Function test_joint_gradcheck>
+        <Function test_gradgradcheck_cell_params>
+        <Function test_gradient_flow_simulation>
+      <Class TestPropertyBasedGradients>
+        <Function test_property_metric_duality>
+        <Function test_property_volume_consistency>
+        <Function test_property_gradient_stability>
+      <Class TestOptimizationRecovery>
+        <Function test_optimization_recovers_cell>
+        <Function test_multiple_optimization_scenarios>
+
+========================= 14 tests collected in 0.82s ==========================

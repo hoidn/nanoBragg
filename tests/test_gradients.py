@@ -14,19 +14,41 @@ from torch.autograd import gradcheck, gradgradcheck
 # Set environment variables before importing nanobrag_torch
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# Disable torch.compile for gradient tests to avoid PyTorch compilation issues
-# The torch.inductor backend has bugs with:
-#   1. C++ array declarations in backward passes (conflicting tmp_acc* arrays)
-#   2. Donated buffers in backward functions that break gradcheck
-# Since gradcheck is testing numerical gradient correctness (not performance),
-# disabling compilation is safe and appropriate.
-os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"
+# Preserve external NANOBRAGG_DISABLE_COMPILE if set, otherwise default to '0'
+# This allows the gradient_policy_guard fixture to enforce the requirement
+os.environ["NANOBRAGG_DISABLE_COMPILE"] = os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0")
 
 # Import the core components
 from nanobrag_torch.config import CrystalConfig
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
+
+
+# ============================================================================
+# Phase K Task K2: Gradient Policy Guard
+# ============================================================================
+
+@pytest.fixture(scope="module", autouse=True)
+def gradient_policy_guard():
+    """
+    Enforce NANOBRAGG_DISABLE_COMPILE=1 for gradient tests.
+
+    See: reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/gradient_policy_guard.md
+    """
+    if os.environ.get('NANOBRAGG_DISABLE_COMPILE') != '1':
+        pytest.skip(
+            "Gradient tests require NANOBRAGG_DISABLE_COMPILE=1 environment variable.\n\n"
+            "This guard prevents torch.compile donated buffer interference with "
+            "torch.autograd.gradcheck.\n\n"
+            "To run gradient tests, use:\n"
+            "  env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE \\\n"
+            "    NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py\n\n"
+            "For details, see:\n"
+            "  - docs/development/testing_strategy.md S4.1\n"
+            "  - arch.md S15 (Differentiability Guidelines)\n"
+            "  - reports/2026-01-test-suite-refresh/phase_m2/20251011T172830Z/"
+        )
 
 
 class GradientTestHelper:
