@@ -1,0 +1,35 @@
+# Phase L Full Suite Rerun — Commands Log
+
+STAMP=20251015T190350Z
+BASE=reports/2026-01-test-suite-refresh/phase_l/$STAMP
+
+## Setup
+mkdir -p $BASE/{env,logs,artifacts,analysis}
+env > $BASE/env/env.txt
+python - > $BASE/env/torch_env.txt <<'PY'
+import torch, json, platform
+info = {
+    "python": platform.python_version(),
+    "torch": torch.__version__,
+    "cuda_available": torch.cuda.is_available(),
+}
+print(json.dumps(info, indent=2))
+PY
+
+## Full Suite Execution
+timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ --junitxml=$BASE/artifacts/pytest.junit.xml 2>&1 | tee $BASE/logs/pytest_full.log
+EXIT_CODE=${PIPESTATUS[0]}
+echo $EXIT_CODE > $BASE/artifacts/exit_code.txt
+
+## Results
+# Collected: 692 tests (1 skipped during collection)
+# Passed: 540 (78.0%)
+# Failed: 8 (1.2%)
+# Skipped: 143
+# XFailed: 2
+# Runtime: 1661.37s (27:41)
+# Exit Code: 1
+
+## Analysis
+# Created $BASE/analysis/summary.md — comprehensive Phase L findings
+# Created $BASE/analysis/fixtures.md — infrastructure guard validation
