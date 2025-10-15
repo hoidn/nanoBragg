@@ -12,23 +12,22 @@
 
 This tracker maps all active test failures across clusters to their owning fix-plan items, defines reproduction commands, documents blocking dependencies, and specifies exit criteria. Use this document as the single source of truth for remediation execution order and progress tracking.
 
-**Current Status (Updated 2025-10-15 Attempt #45, STAMP: 20251015T002610Z):**
-- **Total Failures:** 12 (down from 46 in Phase M0, -73.9% improvement; down from 31 in Phase K, -61.3% improvement)
-- **Active Clusters:** 4 (C2, C8, C17, C18 active; C1/C3/C4/C5/C7/C15/C16 resolved)
-- **Implementation Bugs:** 11 (91.7%)
-- **Tolerance Adjustments:** 0 (C16 resolved via tolerance relaxation)
-- **Pass Rate:** 82.0% (estimated, pending full suite rerun)
-- **Ledger Updated:** Attempt #45 (20251015T002610Z)
+**Current Status (Updated 2025-10-15 Phase O Baseline, STAMP: 20251015T003950Z):**
+- **Total Failures:** 14 (down from 46 in Phase M0, -69.6% improvement; +2 vs Phase M2 due to C17 regression)
+- **Active Clusters:** 3 (C2, C17, C18 active; C1/C3/C4/C5/C7/C8/C15/C16 resolved)
+- **Implementation Bugs:** 12 (85.7%); 2 polarization regressions (14.3%)
+- **Tolerance/Infrastructure:** C2 gradient workaround documented; C18 performance flaky
+- **Pass Rate:** 77.1% (467/606 collected), 97.1% excl. skipped (467/481)
+- **Ledger Updated:** Phase O (20251015T003950Z)
 
-**Phase M2 Closure Notes:**
-- ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
-- ✅ Sprint 0 (C1/C3/C4/C5/C7) **COMPLETE** — 35/46 failures retired (76% success); Phase M1 ledger refresh at 20251011T171454Z
-- ✅ Determinism clusters (C2-mosaic/C15-old) **RESOLVED** — Attempt #10 (20251011T060454Z) logged passing selectors + documentation updates
-- ✅ Source weighting (C3-old) **RESOLVED** — 4→0 failures; Phase D4 closure complete (20251011T101713Z)
-- ✅ Phase M2 (Gradient Compile Guard) **COMPLETE** — Documentation validation at 20251011T172830Z; 10 C2 failures remain (known infrastructure issue with `NANOBRAGG_DISABLE_COMPILE=1` workaround documented)
-- ✅ **[DETECTOR-CONFIG-001] RESOLVED** — Attempts #42-57 completed Phase B-C-D (archived to `plans/archive/detector-config_20251011_resolved.md`); C8 MOSFLM test now passing
-- → Phase M3 priorities: C15 mixed-units (zero intensity callchain) OR C16 orthogonality (tolerance adjustment, quick win)
-- [VECTOR-PARITY-001] Tap 5 instrumentation paused pending Phase M3 mixed-units investigation
+**Phase O Baseline Notes:**
+- ✅ Sprint 1 (C8/C15/C16) **COMPLETE** — MOSFLM offset, mixed-units, orthogonality all cleared
+- ✅ C8 [DETECTOR-CONFIG-001] **RESOLVED** — MOSFLM +0.5 pixel offset now passing (20251011T223549Z)
+- ✅ C15 [UNIT-CONV-001] **RESOLVED** — dmin=None fix cleared zero-intensity bug (20251012, commit f2a720ba)
+- ✅ C16 [DETECTOR-ORTHOGONALITY-001] **RESOLVED** — Tolerance relaxed 1e-10→1e-7 (20251015T001345Z)
+- ❌ **NEW REGRESSION: C17 Polarization** — 2 failures introduced (physics_intensity_pre_polar_flat=None in single-source oversample path, simulator.py:983)
+- ⚠️ C18 Performance tests flaky (thread scaling 0.95x, vectorization 15.1x) - tolerance adjustment recommended
+- → **CRITICAL:** Fix C17 polarization regression before Phase 1.5
 
 ---
 
@@ -43,11 +42,11 @@ This tracker maps all active test failures across clusters to their owning fix-p
 | C5 | Simulator API Kwargs | 0 | ralph | [SIMULATOR-API-KWARGS-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #26 (20251011T165255Z) |
 | C6 | MOSFLM Offset (retired) | 0 | - | - | ✅ SUBSUMED | done | - | Merged into C8 per Phase M2 triage |
 | C7 | Lattice Shape Fixtures | 0 | ralph | [SIMULATOR-DETECTOR-REQUIRED-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #27 (20251011T170539Z) |
-| C8 | MOSFLM Beam Center | 1 | ralph | [DETECTOR-CONFIG-001] | P2.1 | → Phase M3 | - | Phase M3a summary at 20251011T175917Z |
+| C8 | MOSFLM Beam Center | 0 | ralph | [DETECTOR-CONFIG-001] | ✅ RESOLVED | done | - | Phase D (20251011T223549Z): MOSFLM +0.5 pixel offset implemented, all detector_config tests passing |
 | C15 | Mixed Units Zero Intensity | 0 | ralph | [UNIT-CONV-001] | ✅ RESOLVED | done | - | Attempt #45 (20251015T002610Z): dmin=2.0Å → dmin=None per commit f2a720ba (2025-10-12), 5/5 tests passing |
 | C16 | Detector Orthogonality | 0 | ralph | [DETECTOR-ORTHOGONALITY-001] | ✅ RESOLVED | done | - | Sprint 1.2 (20251015T001345Z): tolerance relaxed 1e-10→1e-7, 25/25 geometry tests passing |
-| C17 | Polarization Semantics | 2 | ralph | [POLARIZATION-OVERSAMPLE-001] | P3.2 | in_planning | - | Spec clarification needed |
-| C18 | Performance Expectations | 1 | ralph | [PERF-THREAD-SCALING-001] | P4.1 | in_planning | - | Test expectation adjustment needed |
+| C17 | Polarization Pre-Polar | 2 | ralph | [POLARIZATION-PREPOLAR-001] | **P1.1 CRITICAL** | **active** | - | **NEW REGRESSION** (Phase O): physics_intensity_pre_polar_flat=None in single-source oversample path (simulator.py:983) |
+| C18 | Performance Thresholds | 2 | ralph | [PERF-THRESHOLD-001] | P4.1 | in_planning | - | Flaky tolerance tests (thread scaling 0.95x < 1.15x, vectorization 15.1x inefficiency) |
 | ~~C9~~ | ~~DENZO Convention~~ | - | - | - | ✅ RESOLVED | - | - | Cleared in Phase M post-fix validation |
 | ~~C10~~ | ~~Detector Pivots~~ | - | - | - | ✅ RESOLVED | - | - | Cleared in Phase M post-fix validation |
 | ~~C11~~ | ~~CUDA Graphs~~ | - | - | - | ✅ RESOLVED | - | - | Cleared in Phase M post-fix validation |

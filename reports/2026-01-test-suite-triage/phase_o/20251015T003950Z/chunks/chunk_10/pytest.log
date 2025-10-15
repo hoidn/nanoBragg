@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... ERROR: file or directory not found: tests/test_at_geo_007.py
+
+collected 0 items
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/chunks/chunk_10/pytest.xml -
+============================ no tests ran in 0.01s =============================
