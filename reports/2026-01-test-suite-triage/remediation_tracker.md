@@ -1,6 +1,6 @@
 # Test Suite Remediation Tracker
 
-**Last Updated:** 2025-10-15 (Phase O chunk 03 guard rerun - STAMP 20251015T023954Z)
+**Last Updated:** 2025-10-15 (Phase O chunk 03 guard rerun - STAMP 20251015T030233Z)
 **Initiative:** [TEST-SUITE-TRIAGE-001]
 **Active Baseline:** Phase O (12 → 2 failures after C2 resolution)
 
@@ -10,26 +10,26 @@
 - **Total Failures:** 2 (down from 12 in Phase O baseline 20251015T011629Z)
 - **Active Clusters:** 1 (C18 performance tolerances)
 - **Pass Rate:** ~98.7% (estimated from partial chunk stats)
-- **Latest Validation:** Phase O STAMP 20251015T023954Z (partial, timeout after 10 minutes)
+- **Latest Validation:** Phase O STAMP 20251015T030233Z (partial, timeout after 10 minutes)
 
 **Major Milestone:** ✅ **C2 Gradient Donated Buffer Cluster RESOLVED**
 - All 8 gradcheck tests passed with `NANOBRAGG_DISABLE_COMPILE=1` guard
 - Reduction: -10 failures (12 → 2)
-- Evidence: `phase_o/20251015T023954Z/gradients/summary.md`
+- Evidence: `phase_o/20251015T030233Z/gradients/summary.md`
 
 ## Cluster Status Table
 
 | Cluster | Title | Tests | Priority | Status | Owner | Phase O Evidence |
 |---------|-------|-------|----------|--------|-------|------------------|
-| C2 | Gradient Donated Buffer | 0 (was 10) | Critical | ✅ RESOLVED | galph | 20251015T023954Z |
+| C2 | Gradient Donated Buffer | 0 (was 10) | Critical | ✅ RESOLVED | galph | 20251015T030233Z |
 | C18 | Performance Tolerances | 2 | Medium | ❌ ACTIVE | TBD | 20251015T011629Z |
-| C19 | Gradient Flow Assertion | 1 | Medium | ℹ️ NEW | TBD | 20251015T023954Z |
+| C19 | Gradient Flow Assertion | 1 | Medium | ℹ️ NEW | TBD | 20251015T030233Z |
 
 ## Detailed Cluster Summaries
 
 ### C2: Gradient Donated Buffer (✅ RESOLVED)
 
-**Status:** ✅ RESOLVED (Phase O STAMP 20251015T023954Z)
+**Status:** ✅ RESOLVED (Phase O STAMP 20251015T030233Z)
 **Tests Affected:** 0 (was 10 gradcheck tests)
 **Priority:** Critical
 **Resolution:** `NANOBRAGG_DISABLE_COMPILE=1` environment guard
@@ -45,7 +45,8 @@ torch.compile creates donated buffers that break gradient computation during num
 - Phase M2 Attempt #29 (20251011T172830Z): Initial validation (8/8 gradcheck passed, 491.54s)
 - Phase O Attempt #69 (20251015T014403Z): Targeted rerun (8/8 gradcheck passed, 489.35s)
 - Phase O Attempt #70 (20251015T020729Z): Chunk 03 partial (8/8 gradcheck passed, early exit)
-- Phase O Current (20251015T023954Z): Chunk 03 full guard rerun (8/8 gradcheck passed, timeout on tail)
+- Phase O Attempt #71 (20251015T023954Z): Chunk 03 guard rerun (8/8 gradcheck passed, timeout at 88%)
+- Phase O Attempt #72 (20251015T030233Z): Chunk 03 rerun with corrected paths (8/8 gradcheck passed, timeout at 88%)
 
 **Gradcheck Tests (All Passing):**
 1. test_gradcheck_cell_a ✅
@@ -69,6 +70,7 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=
 - `docs/development/pytorch_runtime_checklist.md` §3 (Gradient Test Guard)
 
 **Artifacts:**
+- `reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/gradients/summary.md`
 - `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/gradients/summary.md`
 - `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/gradient_guard/`
 
@@ -139,7 +141,8 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=
 5. Determine if separate fix-plan item needed
 
 **Artifacts:**
-- `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/chunks/chunk_03/summary.md` (line 85% observation)
+- `reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/chunks/chunk_03/summary.md` (88% completion observation)
+- `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/chunks/chunk_03/summary.md` (prior attempt)
 
 ---
 
@@ -183,13 +186,20 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=
 **Result:** 8/8 gradcheck passed, early exit on assertion failure
 **Artifacts:** `reports/2026-01-test-suite-triage/phase_o/20251015T020729Z/gradients/summary.md`
 
-### Current Rerun (STAMP 20251015T023954Z)
+### Chunk 03 Timeout (STAMP 20251015T023954Z)
 
-**Date:** 2025-10-15 (ralph loop per input.md Next Action 9)
-**Command:** Full chunk 03 with guard (`--maxfail=0` to continue past failures)
-**Result:** ⚠️ TIMEOUT (600s hard limit), 8/8 gradcheck passed, 1 assertion failure, tail unreported
-**Key Finding:** C2 cluster definitively resolved
+**Date:** 2025-10-15 (ralph Attempt #71 per fix_plan.md)
+**Command:** Chunk 03 with guard (`--maxfail=0` to continue past failures), 600s timeout
+**Result:** ⚠️ TIMEOUT (600s), 8/8 gradcheck passed, tee path bug (double slash)
 **Artifacts:** `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/{chunks/chunk_03/,gradients/}`
+
+### Current Rerun (STAMP 20251015T030233Z)
+
+**Date:** 2025-10-15 (ralph Attempt #72 per input.md Next Action 9)
+**Command:** Chunk 03 with guard, 1200s timeout requested (600s actual Bash limit)
+**Result:** ⚠️ TIMEOUT (600s hard limit), 8/8 gradcheck passed, 1 assertion failure (C19), tail unreported
+**Key Finding:** C2 cluster definitively resolved across multiple attempts
+**Artifacts:** `reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/{chunks/chunk_03/,gradients/}`
 
 ## Next Actions
 
