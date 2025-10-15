@@ -3002,3 +3002,14 @@
 - Relevant findings cross-checked: API-001/API-002 (pix0 CLI), CONVENTION-004..006 (vectorization parity).
 - Next step: stand up Phase D cluster briefs prioritising CREF/TOOLS/CLI unblockers before GRAD/VEC remediation.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T12:52:22Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase D remediation scheduling
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T13:05:27Z (galph loop recap)
+- Documented Phase D1 output: updated `plans/active/test-suite-triage-rerun.md` with cluster checklist (CLUSTER-CREF-001 marked done) and authored six briefs under `reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/`.
+- Synced `docs/fix_plan.md` Attempts (#4/#5) and refreshed Next Actions 5–8 to queue CLI → Tools → Grad → Vec remediation with explicit commands.
+- Rewrote `input.md` handing Ralph the CLI asset regeneration task (Parity mode) with asset provenance + pytest selector guidance.
+- <Action State>: [ready_for_implementation]

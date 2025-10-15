@@ -58,10 +58,24 @@ Exit Criteria: Next Actions list in fix_plan updated; optional per-cluster mini-
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Draft remediation briefs | [ ] | For each active cluster, create `reports/2026-01-test-suite-refresh/phase_d/$STAMP/cluster_<id>.md` summarizing reproduction command, suspected cause, and suggested owner plan. |
-| D2 | Update docs/fix_plan Next Actions | [ ] | Add bullet list mapping clusters → follow-up tasks (e.g., assign to `[VECTOR-TRICUBIC-002]`, `[STATIC-PYREFLY-001]`). |
-| D3 | Refresh input.md guidance | [ ] | Provide supervisor handoff instructions focusing on highest-priority cluster fix, referencing plan + pytest selectors. |
+| D1 | Draft remediation briefs | [D] | For each active cluster, create `reports/2026-01-test-suite-refresh/phase_d/$STAMP/cluster_<id>.md` summarizing reproduction command, suspected cause, linked findings, and suggested owner plan. Reference `phase_c/$STAMP/triage_summary.md` for baseline context and cite authoritative commands from `docs/development/testing_strategy.md`. |
+| D2 | Update docs/fix_plan Next Actions | [D] | Add bullet list mapping clusters → follow-up tasks (e.g., assign to `[VECTOR-TRICUBIC-002]`, `[STATIC-PYREFLY-001]`). |
+| D3 | Refresh input.md guidance | [D] | Provide supervisor handoff instructions focusing on highest-priority cluster fix, referencing plan + pytest selectors. |
 | D4 | Completion gate | [ ] | Phase D exit when all clusters have documented next steps, fix_plan synced, and artifacts committed. Log state in galph_memory with `<Action State>: [ready_for_implementation]` once delegation instructions prepared. |
+
+#### Phase D Cluster Brief Checklist
+Goal: Capture per-cluster remediation briefs sized for direct delegation.
+Prereqs: `triage_summary.md` complete; reproduction commands verified against authoritative docs/tests references.
+Exit Criteria: Each row below links to a committed brief under `reports/2026-01-test-suite-refresh/phase_d/$STAMP/` with reproduction command, suspected cause, downstream plan owner, and immediate next steps.
+
+| Cluster ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| CLUSTER-CREF-001 | Document C reference harness failure and NB_C_BIN requirements | [D] | Brief recorded in `phase_d/20251015T113531Z/cluster_CLUSTER-CREF-001.md`; captures resolved env-var precedence fix (Attempt #4) and references `[TEST-GOLDEN-001]` for ongoing binary upkeep. |
+| CLUSTER-PERF-001 | Record perf regression evidence + profiling plan | [ ] | Include bandwidth numbers from `phase_b/$STAMP/pytest.log`, mark dependency on `[PERF-PYTORCH-004]`, and define profiler command (`pytest -k ATPERF003` with `/usr/bin/time -v`). |
+| CLUSTER-TOOLS-001 | Capture nb-compare path resolution failure | [ ] | Reproduce CLI invocation, tie to `[TOOLING-DUAL-RUNNER-001]`, and list expected script path contract from `scripts/validation/README.md`. |
+| CLUSTER-CLI-001 | Outline missing CLI golden assets + pix0 findings | [ ] | Note absent `pix0_expected.json`/`scaled.hkl`, cross-reference findings `API-001/002`, and specify regeneration commands from `docs/development/testing_strategy.md §2.3`. |
+| CLUSTER-GRAD-001 | Summarize gradient timeout + data capture plan | [ ] | Quote 905 s timeout from Phase B run, highlight `[PERF-PYTORCH-004]` linkage, and propose targeted `pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability` rerun with extended timeout + profiler. |
+| CLUSTER-VEC-001 | Detail tricubic vectorization regression | [ ] | Record dtype mismatch symptoms, connect to `[VECTOR-TRICUBIC-002]` + findings `CONVENTION-004..006`, and provide reproduction command covering both failing nodeids. |
 
 ### Verification & Guardrails
 - Respect Protected Assets list in `docs/index.md`; never delete `loop.sh`, `input.md`, etc.
