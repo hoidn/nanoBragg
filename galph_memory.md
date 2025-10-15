@@ -2827,3 +2827,15 @@
 - Reviewed Ralph commits 7360e9a4 and 30b9a065 — both doc-focused, no regressions observed.
 - <Action State>: [ready_for_implementation]
 
+
+### 2025-10-15T06:30:00Z (galph loop - focus selection note)
+- Focus issue: [GRADIENT-FLOW-001] Phase B callchain prep
+- Action type: Evidence collection
+- Mode: Parity
+
+### 2025-10-15T06:45:00Z (galph loop recap)
+- Updated plans/active/gradient-flow-regression.md Phase A table to [D] with Attempt #1 evidence; added note highlighting zero-intensity finding.
+- Refreshed docs/fix_plan.md header + Active Focus and Next Actions to point at Phase B (zero-intensity probe, callchain, autograd hooks).
+- Reissued input.md directing Phase B prep/B1 workflow (zero-intensity probe + callchain deliverables + hook scrape) under reports/2026-01-gradient-flow/phase_b/$STAMP/.
+- Heads review: Ralph commit 7c5c79b2 cleanly captured Phase A artifacts; hypothesis about missing structure factors matches our zero-intensity probe plan.
+- <Action State>: [ready_for_implementation]

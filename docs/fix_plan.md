@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop — Phase O guard validation & chunk 03 refresh prep)
+**Last Updated:** 2025-10-15 (galph loop — Phase B callchain prep for gradient flow)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — With Phase O6 cleanup complete, drive `[GRADIENT-FLOW-001]` Phase A baseline capture and queue C18 tolerance review using the 845.68 s timing anchor.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — With Phase O6 cleanup complete, drive `[GRADIENT-FLOW-001]` Phase B callchain tracing (analysis + hooks) and queue C18 tolerance review using the 845.68 s timing anchor.
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -713,7 +713,8 @@
 - Next Actions:
   1. ✅ COMPLETE — Phase A baseline evidence bundle stored under `reports/2026-01-gradient-flow/phase_a/20251015T052020Z/`.
   2. 🆕 TODO (Phase B prep) — Investigate zero-intensity root cause in `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`: check test fixture for missing structure factor inputs (`-default_F` or `-hkl`).
-  3. 🆕 TODO (Phase B) — Once intensity issue resolved, execute callchain tracing per `prompts/callchain.md` workflow (analysis_question: "Why do cell parameters have zero gradients?", scope: Crystal→Simulator, focus: reciprocal_vectors/rotated_real_vectors/structure_factors).
+  3. 🆕 TODO (Phase B) — Execute callchain tracing per `prompts/callchain.md` workflow (analysis_question: "Why do cell parameters have zero gradients?", scope: Crystal→Simulator, focus: reciprocal_vectors/rotated_real_vectors/structure_factors); capture outputs under `reports/2026-01-gradient-flow/phase_b/$STAMP/`.
+  4. 🆕 TODO (Phase B) — Augment evidence with autograd hook scrape of key intermediates (reciprocal & real vectors, structure factors) recorded to `hook_gradients.txt` in the same STAMP directory.
 - Risks/Assumptions:
   - Ensure gradcheck uses float64 + double precision tolerances; may need CPU run first.
 - Exit Criteria:

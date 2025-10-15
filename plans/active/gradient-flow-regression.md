@@ -16,9 +16,11 @@ Exit Criteria: Targeted pytest log + gradient snapshot stored under new phase di
 
 | ID | Task Description | State | How/Why & Guidance (including commands) |
 | --- | --- | --- | --- |
-| A1 | Reproduce failure via targeted pytest run | [ ] | `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`;<br>`mkdir -p reports/2026-01-gradient-flow/phase_a/$STAMP/`; <br>`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \`<br>`  pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation \`<br>`  --maxfail=1 --durations=25 --tb=short \`<br>`  | tee reports/2026-01-gradient-flow/phase_a/$STAMP/pytest.log`. Capture exit code in `exit_code.txt` and store XML via `--junitxml`. |
-| A2 | Record per-parameter gradient magnitudes | [ ] | Run a standalone inline script mirroring the test to serialize gradients (see supervisor `input.md` snippet) and write `gradients.json` under the same directory. Log values for a,b,c,α,β,γ and confirm they are ≤1e-10. |
-| A3 | Summarise baseline findings | [ ] | Draft `summary.md` in same directory noting command, runtime, gradient magnitudes, and assertion message. Reference chunk_03 summary for historical context. |
+| A1 | Reproduce failure via targeted pytest run | [D] | Attempt #1 (20251015T052020Z) — artifacts stored under `reports/2026-01-gradient-flow/phase_a/20251015T052020Z/` with pytest log, XML, and exit code. |
+| A2 | Record per-parameter gradient magnitudes | [D] | Attempt #1 captured `gradients.json`; all cell parameter gradients = 0.0 with loss 0.0. |
+| A3 | Summarise baseline findings | [D] | `summary.md` in the same bundle documents zero-intensity observation and identifies missing structure-factor inputs as leading hypothesis. |
+
+> Phase A exit criteria satisfied on 2025-10-15 (Attempt #1). Baseline evidence confirmed the simulation returns a zero-intensity image and zero gradients when the gradient-flow test uses default configuration values.
 
 ### Phase B — Gradient Path Audit (Callchain + Hooks)
 Goal: Map where gradients are severed between `CrystalConfig` tensors and the simulator output using instrumentation without modifying production code.
