@@ -383,7 +383,12 @@ class TestAdvancedGradients:
         )
 
     def test_gradient_flow_simulation(self):
-        """Verify end-to-end gradient flow through full simulation pipeline."""
+        """Verify end-to-end gradient flow through full simulation pipeline.
+
+        Note: Requires non-zero structure factors (default_F) to generate
+        non-zero intensity, ensuring gradients can be validated. Zero intensity
+        produces zero gradients mathematically (∂(0)/∂θ = 0).
+        """
         device = torch.device("cpu")
         dtype = torch.float64
 
@@ -396,6 +401,8 @@ class TestAdvancedGradients:
         cell_gamma = torch.tensor(90.0, dtype=dtype, requires_grad=True)
 
         # Create config with tensor parameters
+        # NOTE: default_F=100.0 ensures non-zero intensity for gradient validation
+        # (see Phase B findings: reports/2026-01-gradient-flow/phase_b/20251015T053254Z/)
         config = CrystalConfig(
             cell_a=cell_a,
             cell_b=cell_b,
@@ -406,6 +413,7 @@ class TestAdvancedGradients:
             mosaic_spread_deg=0.0,
             mosaic_domains=1,
             N_cells=(5, 5, 5),
+            default_F=100.0,
         )
 
         # Create objects

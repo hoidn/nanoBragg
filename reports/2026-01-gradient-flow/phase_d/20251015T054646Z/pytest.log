@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 1 item
+
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation PASSED [100%]
+
+============================= slowest 25 durations =============================
+1.55s call     tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+0.00s setup    tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+0.00s teardown tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation
+============================== 1 passed in 2.43s ===============================
