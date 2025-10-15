@@ -32,7 +32,7 @@
 | [PIVOT-MODE-001](#pivot-mode-001-detector-pivot-modes) | Detector pivot modes | High | in_planning |
 | [DTYPE-NEUTRAL-001](#dtype-neutral-001-dtype-neutrality-guardrail) | dtype neutrality guardrail | High | done |
 | [LEGACY-SUITE-001](#legacy-suite-001-legacy-translation-suite-upkeep) | Legacy translation suite upkeep | Low | in_planning |
-| [GRADIENT-FLOW-001](#gradient-flow-001-gradient-flow-regression) | Gradient flow regression | High | in_planning |
+| [GRADIENT-FLOW-001](#gradient-flow-001-gradient-flow-regression) | Gradient flow regression | High | in_progress |
 | [TRICLINIC-PARITY-001](#triclinic-parity-001-triclinic-parity-alignment) | Triclinic parity alignment | High | in_planning |
 
 ## [TEST-SUITE-TRIAGE-001] Full pytest run and triage
