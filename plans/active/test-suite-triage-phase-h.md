@@ -39,9 +39,9 @@ Exit Criteria: Prototype fixtures/tests committed to feature branch (after imple
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| J1 | Author infrastructure fixture design | [ ] | Map fixture scope (`session` recommended) and failure messaging; ensure compatibility with existing `conftest.py`. Reference Phase H analysis and `pytest` docs for `pytest_sessionstart` hooks. |
-| J2 | Draft gradient policy fixture plan | [ ] | Outline how to check `NANOBRAGG_DISABLE_COMPILE` and skip/xfail gradient tests when policy unmet. Tie to Phase I memo outcomes. |
-| J3 | Validation strategy | [ ] | Define targeted pytest selectors to exercise new fixtures (e.g., `pytest -k infrastructure_gate --collect-only`). Plan to capture artifacts under `reports/2026-01-test-suite-refresh/phase_j/<STAMP>/`. |
+| J1 | Author infrastructure fixture design | [D] | Map fixture scope (`session` recommended) and failure messaging; ensure compatibility with existing `conftest.py`. Reference Phase H analysis and `pytest` docs for `pytest_sessionstart` hooks. **COMPLETE (STAMP 20251015T180301Z):** Authored `analysis/session_fixture_design.md` with complete implementation pseudocode, failure messaging, remediation steps, testing strategy, and 5 open questions for implementation loop. |
+| J2 | Draft gradient policy fixture plan | [D] | Outline how to check `NANOBRAGG_DISABLE_COMPILE` and skip/xfail gradient tests when policy unmet. Tie to Phase I memo outcomes. **COMPLETE (STAMP 20251015T180301Z):** Delivered `analysis/gradient_policy_guard.md` with module-scoped fixture design, skip/xfail analysis (recommends skip), environment enforcement logic, integration notes, and 5 open questions. |
+| J3 | Validation strategy | [D] | Define targeted pytest selectors to exercise new fixtures (e.g., `pytest -k infrastructure_gate --collect-only`). Plan to capture artifacts under `reports/2026-01-test-suite-refresh/phase_j/<STAMP>/`. **COMPLETE (STAMP 20251015T180301Z):** Created `analysis/validation_plan.md` with 9 targeted validation selectors (V1-V9) covering positive/negative/bypass/integration scenarios, expected artifacts, exit criteria, and summary template. |
 
 ## Exit & Handoff
 - Phase H completion is required before revisiting any cluster-specific remediation to avoid repeating transient "fixes".
