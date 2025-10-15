@@ -1,0 +1,3 @@
+STAMP=20251015T141417Z
+OUT=reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-PERF-001/20251015T141417Z
+/usr/bin/time -v timeout 900 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=1 --timeout=900 --durations=0" pytest -vv tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
