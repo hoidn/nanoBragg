@@ -2766,3 +2766,14 @@
 - Created reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors.txt for Ralph; input.md now directs the chunk remainder command with env guards.
 - <Action State>: [ready_for_implementation] (await chunk 03 remainder + ledger sync)
 
+
+### 2025-10-15T03:41:44Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O chunk 03 remainder rerun plan update
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T03:44:34Z (galph loop recap)
+- Refreshed `plans/active/test-suite-triage.md` Phase O table with split-run tasks (O5a–O5e) and aggregation helper; clarified O6 ledger cleanup expectations.
+- Updated `docs/fix_plan.md` Next Actions 9–10 to require the part1/part2 workflow and documented Attempt #73 blockage context.
+- Rewrote `input.md` directing Ralph to export one STAMP, create selector shards, run part1/part2, aggregate XML totals, and sync trackers before moving to C18.
+- <Action State>: [ready_for_implementation]
