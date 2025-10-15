@@ -3148,3 +3148,15 @@
 - Updated `docs/fix_plan.md` to mark Next Action 18 READY with explicit tasks/commands, refreshed `open_questions.md` to record sign-off, and rewrote `input.md` with the Phase K execution playbook.
 - Ralph’s next loop: implement fixtures + run V1–V9 validations under `reports/2026-01-test-suite-refresh/phase_k/$STAMP/`.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T18:34:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase L guarded full-suite rerun planning
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T18:49:51Z (galph loop recap)
+- Added Phases L and M to `plans/active/test-suite-triage-phase-h.md` (lines 60-82) so the guarded rerun and post-run synthesis have explicit checklists.
+- Updated `docs/fix_plan.md` Next Actions 18-20 (lines 74-80) to mark Phase K complete and queue the Phase L rerun + Phase M synthesis.
+- Rewrote `input.md` directing Ralph to execute the full-suite rerun with fixtures active and capture deltas under `reports/2026-01-test-suite-refresh/phase_l/$STAMP/`.
+- No code edits; focus remains on evidence collection for the suite rerun.
+- <Action State>: [ready_for_implementation]
