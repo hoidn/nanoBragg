@@ -29,9 +29,12 @@ Exit Criteria: Callchain bundle + hook-based tap notes pinpointing candidate bre
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Run callchain tracing per SOP | [ ] | `analysis_question="Why do cell parameters have zero gradients in test_gradient_flow_simulation?"`; `initiative_id="grad-flow"`; `scope_hints=["Crystal", "Simulator", "reciprocal_vectors"]`; execute prompts/callchain.md workflow storing outputs under `reports/2026-01-gradient-flow/phase_b/$STAMP/`. Focus on `Crystal.build_state` → `Simulator.run`. |
-| B2 | Instrument autograd hooks | [ ] | Write throwaway script in `reports/2026-01-gradient-flow/phase_b/$STAMP/hooks.py` that registers `tensor.register_hook` on key intermediates (reciprocal vectors, rotated real vectors, structure factors) to capture gradient tensors during backward. Persist outputs to `hook_gradients.txt`. Avoid editing `src/` — rely on helper functions or monkeypatch via script. |
-| B3 | Consolidate findings | [ ] | Update `summary.md` (Phase B) highlighting first node where gradients become zero or `None`. Link to specific tap outputs and callchain paths (file:line). |
+| B0 | Zero-intensity probe | [D] | Attempt #2 (20251015T053254Z) — executed control experiment comparing `default_F=0.0` vs `default_F=100.0`. Control case proves gradient graph **intact** (all six cell parameters have non-zero gradients when intensity > 0). Artifacts: `zero_intensity_probe.json`, `zero_intensity.md`, `summary.md`. |
+| B1 | Run callchain tracing per SOP | [S] | SKIPPED — zero-intensity probe confirmed root cause without need for callchain instrumentation. Gradient path is not broken; zero gradients are mathematical result of zero intensity input. |
+| B2 | Instrument autograd hooks | [S] | SKIPPED — no gradient break to instrument. Control experiment validated gradient graph integrity. |
+| B3 | Consolidate findings | [D] | Completed in `summary.md` (20251015T053254Z). Root cause: missing structure factors (`default_F=0`) in test fixture. Gradient graph confirmed functional via control case. |
+
+> Phase B exit criteria satisfied on 2025-10-15 (Attempt #2). Root cause identified (missing structure factors), gradient integrity validated (control case), environment captured. Callchain/hooks unnecessary — zero-intensity probe provided decisive evidence.
 
 ### Phase C — Hypothesis Testing & Fix Design
 Goal: Validate leading hypotheses (e.g., cached `.detach()`, `.item()` use, tensor cloning without grad) and outline minimal remediation.
