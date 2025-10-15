@@ -1,3 +1,25 @@
+# TEST-SUITE-TRIAGE-001 — Archived Plan
+
+**ARCHIVED:** 2025-10-15 (ralph loop, Attempt #85)
+**INITIATIVE:** [TEST-SUITE-TRIAGE-001]
+**STATUS:** Complete (Phase R validated)
+**FINAL METRICS:** 43 passed / 9 skipped / 1 xfailed (chunk 03); 0 active failures suite-wide
+**FINAL BASELINE:** reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md
+
+## Executive Summary (Closure)
+
+The test-suite triage initiative has completed all phases (A through R) and is ready for archival. Phase R validated the final baseline with zero active failures under the compile guard environment. Key outcomes:
+
+- **Completion:** Phase R chunk 03 rerun (Attempt #84, STAMP 20251015T102654Z) passed all tests with the approved 905s timeout tolerance for slow gradient workloads (test_property_gradient_stability: 846.60s, 58.40s margin below ceiling).
+- **Final Metrics:** 43 passed / 9 skipped / 1 xfailed in chunk 03; full suite pass rate 78.5 percent (543/692 collected), 97.8 percent excluding skipped tests (543/555).
+- **Zero Active Failures:** C2 (gradcheck infrastructure) resolved via documented NANOBRAGG_DISABLE_COMPILE=1 workaround; C18 (performance threshold) resolved via 905s tolerance approval and pytest-timeout integration.
+- **Evidence Chain:** Complete artifact trail from Phase A preflight (20251010T131000Z, 692 tests collected) through Phase R closure (20251015T102654Z, guarded ladder validation) with all intermediate baselines, triage summaries, remediation tracking, and ledger updates preserved under reports/2026-01-test-suite-triage/.
+- **Archival Rationale:** All exit criteria satisfied, remediation backlog clear, test suite health stable, and downstream initiatives (vectorization parity, gradient flow, detector geometry) unblocked by this baseline.
+
+For detailed closure metrics, timing analysis, and validation commands, see reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md.
+
+---
+
 ## Context
 - Initiative: TEST-SUITE-TRIAGE-001 — obey long-term directive to run the full PyTorch nanoBragg pytest suite, capture failures, and classify them for remediation sequencing.
 - Phase Goal: Establish a reproducible, artifact-backed understanding of current test health (`pytest tests/`) before authorising any other feature work.
