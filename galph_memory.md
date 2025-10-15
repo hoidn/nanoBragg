@@ -2942,3 +2942,14 @@
 - Updated plans/active/test-suite-triage.md Phase R table: R1/R2 → [P] with guidance to capture commands.txt and rerun chunk 03; R3 left pending.
 - Reissued input.md directing Ralph to rerun chunk 03 under guard env, capture junit/logs, and refresh ledger artifacts.
 - <Action State>: [ready_for_implementation]
+### 2025-10-15T09:49:59Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase R chunk 03 tolerance plan
+- Action type: Planning
+- Mode: Perf
+
+### 2025-10-15T09:58:42Z (galph loop recap)
+- Refreshed `plans/active/test-suite-triage.md` Phase R table with the 905 s timeout uplift workflow (R1–R4) and noted the 20251015T091543Z evidence.
+- Logged Attempt #82 and rewrote docs/fix_plan.md Next Actions 16–18 to stage tolerance uplift → rerun → ledger sync; updated Q6 tolerance row to 905 s.
+- Reissued `input.md` directing Ralph to perform Next Action 16 (timeout uplift + doc updates + guarded selector rerun) with artifact and command guidance.
+- <Action State>: [ready_for_implementation]
+
