@@ -19,7 +19,7 @@ Find all other cases of incomplete vectorization not covered by <1> and resolve 
 </current long-term goals>
 <past long term goals>
 <0>
-housekeep docs/fix_plan.md, reducing it length to <1000 lines
+Run portions of the test suite that were skipped in recent phases; clarify and fix any failures
 </0>
 <3>
 delegate to ralph: using parallel subagents, index the test suite and write the new reference doc to a .md under docs/. this doc should be discoverable and help streamline test discovery / selection in future iterations
