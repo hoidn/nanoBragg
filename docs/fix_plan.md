@@ -2,7 +2,7 @@
 
 **Last Updated:** 2025-10-15 (galph loop — Phase O guard validation & chunk 03 refresh prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — Land Phase O6 ledger refresh (552/3/137 baseline), retire legacy STAMP artifacts, and queue remediation tracks for C18 tolerances + C19 gradient flow.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — With Phase O6 cleanup complete, drive `[GRADIENT-FLOW-001]` Phase A baseline capture and queue C18 tolerance review using the 845.68 s timing anchor.
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -54,7 +54,9 @@
 6. ✅ COMPLETE (Attempt #48) — Phase O chunk rerun delivered the refreshed baseline (`reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/`): 692 collected / 543 passed / 12 failed / 137 skipped / 2 xfailed. Failures now limited to C2 gradchecks (10 donated-buffer errors) and C18 performance tolerances (2 marginal thresholds). Chunk selectors 09/10 validated; C17 cluster confirmed resolved.
 7. ✅ COMPLETE (Attempt #69) — Gradcheck compile guard already lands in `tests/test_gradients.py:23`; reran the targeted grad suite (489.35s total) with `NANOBRAGG_DISABLE_COMPILE=1` and all 8/8 tests passed. Evidence bundle: `reports/2026-01-test-suite-triage/phase_o/20251015T014403Z/grad_guard/summary.md` + `exit_code.txt`; due to quoting, `pytest.xml` fell under `reports/2026-01-test-suite-triage/phase_o/$(date -u +%Y%m%dT%H%M%SZ)/grad_guard/pytest.xml` awaiting consolidation.
 8. ✅ COMPLETE (Attempt #75) — Quad-shard guarded chunk 03 rerun (STAMP `20251015T043128Z`) finished all four shards, captured timing data, and produced refreshed summaries under `phase_o/20251015T043128Z/`. C2 remains resolved; C18 tolerances + C19 gradient flow are the only surviving failures.
-9. 🆕 TODO — Phase O6 ledger + artifact cleanup: update `reports/2026-01-test-suite-triage/remediation_tracker.md` + plan snapshot with the 552/3/137 baseline, record Attempt #75 in Next Actions/Attempts history, consolidate guard artifacts (retire old timeout STAMP bundles), and pivot Next Actions toward C18 tolerance review + C19 gradient-flow investigation.
+9. ✅ COMPLETE (Attempt #76) — Phase O6 ledger + artifact cleanup landed: `remediation_tracker.md` now references STAMP 20251015T043128Z (552/3/137 baseline), timeout bundles archived under `phase_o/archive/`, and grad guard artifacts consolidated. Ready to pivot into C18 tolerance review + C19 gradient-flow remediation.
+10. ✅ COMPLETE (2025-10-15 galph loop) — Authored `plans/active/gradient-flow-regression.md` to steer `[GRADIENT-FLOW-001]`; established `reports/2026-01-gradient-flow/` root for new evidence and cross-referenced plan from this ledger.
+11. 🆕 TODO — Delegate Phase A (baseline failure capture) from the new gradient-flow plan: rerun `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation` with guard env vars, record gradients under `reports/2026-01-gradient-flow/phase_a/$STAMP/`, and summarise findings before moving to Phase B instrumentation.
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
@@ -701,14 +703,15 @@
 ## [GRADIENT-FLOW-001] Gradient flow regression
 - Spec/AT: `arch.md` §15, `docs/development/lessons_in_differentiability.md`, `tests/test_gradients.py`
 - Priority: High
-- Status: in_planning
+- Status: in_progress
 - Owner/Date: ralph/2025-10-10
-- Reproduction: `pytest -v tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`
+- Plan Reference: `plans/active/gradient-flow-regression.md`
+- Reproduction: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation --maxfail=1 --durations=25`
 - First Divergence (if known): Autograd graph break observed in `triage_summary.md` §C17.
 - Attempts History: none — pending gradient audit.
 - Next Actions:
-  1. Reproduce failure with `requires_grad=True` tensors and capture stack trace + intermediate gradients.
-  2. Trace computation graph to locate `.detach()`/`.item()` misuse; patch per ADR-08 guidelines.
+  1. Execute Phase A of the gradient-flow plan: targeted pytest rerun, gradient magnitude capture, and baseline summary under `reports/2026-01-gradient-flow/phase_a/$STAMP/`.
+  2. Proceed to plan Phase B callchain + hook instrumentation once Phase A artifacts confirm zero gradients.
 - Risks/Assumptions:
   - Ensure gradcheck uses float64 + double precision tolerances; may need CPU run first.
 - Exit Criteria:

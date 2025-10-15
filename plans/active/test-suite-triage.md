@@ -342,3 +342,14 @@ PY
 ```
 
 Capture `xfail` counts manually from the part logs (`pytest_part*.log`) and note slowest tests in the summary.
+
+### Phase P — Gradient & Performance Remediation Kickoff
+Goal: Transition from baseline capture to active remediation for the remaining C18/C19 clusters.
+Prereqs: Phase O6 ledger complete (Attempt #76), gradient-flow plan published.
+Exit Criteria: Gradient-flow Phase A evidence captured, C18 tolerance review staged with documented timing thresholds.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| P1 | Publish gradient-flow remediation plan | [D] | Completed 2025-10-15 (galph loop). `plans/active/gradient-flow-regression.md` + fix_plan Next Action 10 now reference the plan and reporting root. |
+| P2 | Execute gradient-flow plan Phase A | [ ] | Delegate to Ralph: follow plan A1–A3, capture pytest log, gradient magnitudes, and summary under `reports/2026-01-gradient-flow/phase_a/$STAMP/`. Update fix_plan Next Action 11 once artifacts land. |
+| P3 | Stage C18 tolerance review packet | [ ] | After Phase A, compile timing analysis (using 845.68 s baseline from chunk_03 summary) into `reports/2026-01-test-suite-triage/phase_p/$STAMP/c18_timing.md` before negotiating threshold adjustments. |

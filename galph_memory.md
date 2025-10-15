@@ -2814,3 +2814,16 @@
 - Reissued input.md directing the artifact cleanup + archive tasks (no pytest).
 - <Action State>: [ready_for_implementation]
 
+
+### 2025-10-15T05:13:35Z (galph loop - focus selection note)
+- Focus issue: [GRADIENT-FLOW-001] Gradient flow regression plan
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T05:17:39Z (galph loop recap)
+- Authored gradient-flow remediation plan at `plans/active/gradient-flow-regression.md` and cross-linked it from `docs/fix_plan.md` Next Actions 10-11.
+- Marked Phase O6 cleanup complete in `docs/fix_plan.md` and introduced Phase P checklist in `plans/active/test-suite-triage.md` to delegate Phase A evidence + C18 timing prep.
+- Reissued `input.md` (Mode: Parity) directing Ralph to capture pytest + gradient snapshots under `reports/2026-01-gradient-flow/phase_a/$STAMP/`.
+- Reviewed Ralph commits 7360e9a4 and 30b9a065 — both doc-focused, no regressions observed.
+- <Action State>: [ready_for_implementation]
+
