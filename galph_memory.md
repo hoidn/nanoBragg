@@ -3114,3 +3114,20 @@
 - Rewrote `input.md` targeting Next Action 18 with explicit command chain to capture NB_C_BIN + golden asset checks; Mode remains Parity, mapped as evidence-only.
 - Focus now waits on Ralph to execute the infrastructure gate evidence loop before we revisit Phase I.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T17:25:44Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase H infrastructure gate
+- Action type: Evidence collection
+- Mode: Parity
+
+### 2025-10-15T17:27:50Z (galph loop - focus selection note update)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase I gradient timeout study
+- Action type: Evidence collection
+- Mode: Perf
+
+### 2025-10-15T17:31:24Z (galph loop recap)
+- Confirmed Phase H evidence already landed (docs/fix_plan.md:74-79), so advanced focus to Phase I gradient timeout study (Next Action 19).
+- Reviewed Phase F vs Phase G artifacts highlighting isolated run success (844.15s) and full-suite timeout breach; pulled authoritative commands from plans/active/test-suite-triage-phase-h.md.
+- Probed local tools: `cpupower` present, `sensors` missing (documented via input.md fallback). Reinforced need for system load capture ahead of rerun.
+- Rewrote input.md directing reports/2026-01-test-suite-refresh/phase_i/$STAMP workflow: environment snapshots, /usr/bin/time profile, gradient runtime summary, optional GPU check, and follow-up memo/log updates.
+- <Action State>: [gathering_evidence]
