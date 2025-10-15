@@ -234,15 +234,41 @@ def validate_executable_exists(executable_path: str) -> bool:
         True if executable exists and is executable
     """
     path = Path(executable_path)
+    # Resolve symlinks before checking executable status
+    if path.exists():
+        path = path.resolve()
     return path.exists() and os.access(path, os.X_OK)
 
 
 def get_default_executable_path() -> str:
     """Get the default path to the nanoBragg executable.
 
+    Resolution order per docs/development/testing_strategy.md §2.5:
+    1. NB_C_BIN environment variable (if set)
+    2. ./golden_suite_generator/nanoBragg (if exists)
+    3. ./nanoBragg (fallback)
+    4. Error with guidance (handled by caller)
+
     Returns:
         Default executable path relative to project root
     """
+    # Check NB_C_BIN environment variable first
+    nb_c_bin = os.environ.get('NB_C_BIN')
+    if nb_c_bin:
+        return nb_c_bin
+
+    # Check golden_suite_generator binary next
+    golden_path = Path("golden_suite_generator/nanoBragg")
+    if golden_path.exists():
+        return str(golden_path)
+
+    # Fallback to root binary
+    root_path = Path("nanoBragg")
+    if root_path.exists():
+        return str(root_path)
+
+    # Return golden path as default even if it doesn't exist
+    # (allows caller to provide helpful error message)
     return "golden_suite_generator/nanoBragg"
 
 
