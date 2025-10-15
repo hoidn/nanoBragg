@@ -3173,3 +3173,15 @@
 - Reviewed Ralph commit b9cb9c36 (env snapshot only, PWD=/home/ollie/Documents/tmp/nanoBragg); no test execution occurred, prompting above corrections.
 - Follow-up: Ralph must rerun Phase L (`pytest -vv tests/` with tee + junit/time) and populate `analysis/fixtures.md` + `analysis/summary.md`; expect new Attempt entry afterward.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T20:08:53+00:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase M synthesis kickoff
+- Action type: Review/housekeeping
+- Mode: Docs
+### 2025-10-15T20:14:30+00:00Z (galph loop recap)
+- Marked Phase L rerun complete via STAMP 20251015T190350Z (540/8/143, identical to Phase G) and pivoted Active Focus to Phase M synthesis.
+- Updated `plans/active/test-suite-triage-phase-h.md` Phase L table to [D] with 905s policy note; Phase M prereqs now cite the L-STAMP bundle.
+- Refreshed `docs/fix_plan.md` header + Next Action 20 to direct failure parsing/tracker refresh, removing the stale Phase L blocker note.
+- Rewrote `input.md` (Docs mode) to delegate Phase M tasks M1–M4, including failure parser command, tracker delta, and next-steps brief expectations.
+- <Action State>: [ready_for_implementation]
+

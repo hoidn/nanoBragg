@@ -59,24 +59,24 @@ Exit Criteria: Fixtures committed with validation evidence under `reports/2026-0
 ### Phase L — Guarded Full-Suite Rerun
 Goal: Validate the new infrastructure and gradient fixtures under a full `pytest tests/` run and capture the authoritative baseline before remediation restarts.
 Prereqs: ✅ Phase K fixtures merged & validated (STAMP 20251015T182108Z); NB_C_BIN accessible (per Phase H checks); gradient timeout tolerance + documentation refreshed in Phase Q; repo clean with editable install current.
-Exit Criteria: Full-suite execution captured under `reports/2026-01-test-suite-refresh/phase_l/<STAMP>/` with logs, fixture observations, environment snapshot, and summary comparing against the Phase G baseline (20251015T163131Z); fix_plan Next Action 19 updated with artifact links.
+Exit Criteria: ✅ COMPLETE — Full-suite execution captured under `reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/` (logs, fixtures, env, summary) and fix_plan Next Action 19 updated with artifact links; focus now shifts to Phase M.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| L1 | Prepare rerun STAMP + brief | [ ] | `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-refresh/phase_l/$STAMP/{env,logs,artifacts,analysis}`. Record env guard (`env/env.txt`), copy fixture validation notes (`phase_k/20251015T182108Z/validation/summary.md`), and stage commands in `analysis/rerun_plan.md`. |
-| L2 | Execute guarded full suite | [ ] | From repo root (`/home/ollie/Documents/nanoBragg4/nanoBragg`), run `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ | tee logs/pytest_full.log`. Capture `/usr/bin/time -v` to `artifacts/time.txt`, exit code to `artifacts/exit_code.txt`, and `--junitxml=artifacts/pytest.junit.xml`. Do not set `NB_SKIP_INFRA_GATE`; verify the session fixtures report in stdout and document in L3. |
-| L3 | Capture fixture diagnostics | [ ] | Collect `session_infrastructure_gate` / `gradient_policy_guard` outputs into `analysis/fixtures.md`. Document guard outcomes and remediation steps if either guard blocks collection. |
-| L4 | Summarize run vs prior baselines | [ ] | Draft `analysis/summary.md` listing pass/fail/skip counts, runtime, guard messaging, and deltas vs Phase G STAMP 20251015T163131Z (new/resolved failures, runtime shift). |
-| L5 | Update ledgers & trackers | [ ] | Log Attempt in `docs/fix_plan.md` (Next Action 19) referencing `phase_l/$STAMP`. Note results in galph_memory and append delta notes to the remediation tracker bundle. |
+| L1 | Prepare rerun STAMP + brief | [D] | ✅ STAMP `20251015T190350Z` created under `phase_l/20251015T190350Z` (commands.txt + env snapshot) with mkdir/env prep captured. |
+| L2 | Execute guarded full suite | [D] | ✅ Full-suite run executed from repo root (runtime 1661.37s, exit code 1) with log tee + junit + `/usr/bin/time -v`; artifacts at `reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/`. |
+| L3 | Capture fixture diagnostics | [D] | ✅ `analysis/fixtures.md` summarises `session_infrastructure_gate` + `gradient_policy_guard` outputs (both PASS, CWD gap noted). |
+| L4 | Summarize run vs prior baselines | [D] | ✅ `analysis/summary.md` compares Phase L vs Phase G baselines (identical failure set, +0.28% runtime drift). |
+| L5 | Update ledgers & trackers | [D] | ✅ docs/fix_plan.md Attempt #20 recorded; galph_memory + tracker pending Phase M follow-up. |
 
 ### Phase M — Failure Synthesis & Remediation Hand-off
 Goal: Translate the Phase L failure set into actionable remediation work, aligning clusters and priorities before delegating fixes.
-Prereqs: Phase L artifacts available; remediation tracker bundle (`reports/2026-01-test-suite-triage/phase_j/20251015T043327Z/`) accessible; stakeholders aligned on the approved 900s gradient timeout policy.
+Prereqs: Phase L STAMP `20251015T190350Z` available; remediation tracker bundle (`reports/2026-01-test-suite-triage/phase_j/20251015T043327Z/`) accessible; stakeholders aligned on the approved 905s gradient timeout policy.
 Exit Criteria: Classification bundle under `reports/2026-01-test-suite-refresh/phase_m/<STAMP>/` (failures.json, cluster mapping, tracker delta, next-step memo) plus fix_plan Next Action 20 recorded; plan ready to hand off implementation tasks.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M1 | Parse failure list | [ ] | Extract nodeids/stack traces from `phase_l/$STAMP/logs/pytest_full.log` into `analysis/failures.json` (use `scripts/validation/pytest_failure_parser.py` if available). |
+| M1 | Parse failure list | [ ] | Extract nodeids/stack traces from `phase_l/20251015T190350Z/logs/pytest_full.log` into `analysis/failures.json` (use `scripts/validation/pytest_failure_parser.py` if available). |
 | M2 | Map to clusters & flag regressions | [ ] | Compare vs Phase G triage and remediation tracker; record results in `analysis/cluster_mapping.md` with cluster IDs (e.g., C2, C18) and supporting evidence links. Highlight new or cleared failures. |
 | M3 | Refresh remediation tracker | [ ] | Update `reports/2026-01-test-suite-triage/phase_j/20251015T043327Z/remediation_tracker.md` (or add an addendum at `phase_m/$STAMP/tracker_update.md`) with new counts, owners, and statuses. |
 | M4 | Publish next-step brief | [ ] | Draft `analysis/next_steps.md` summarizing recommended remediation order, gating requirements, and targeted selectors. Update `docs/fix_plan.md` (Next Action 20) and galph_memory entry with the hand-off. |

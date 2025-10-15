@@ -1,56 +1,52 @@
-Summary: Capture the full Phase L guarded pytest rerun with complete artifacts to unblock remediation synthesis.
-Mode: Parity
-Focus: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage (Next Action 19 — Phase L guarded full-suite rerun)
+Summary: Synthesize the Phase L failure set into Phase M artifacts (failures.json, cluster mapping, tracker delta, next-steps brief).
+Mode: Docs
+Focus: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage (Next Action 20 — Phase M failure synthesis & remediation hand-off)
 Branch: feature/spec-based-2
-Mapped tests: timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/
-Artifacts: reports/2026-01-test-suite-refresh/phase_l/$STAMP/{env,logs,artifacts,analysis}
-Do Now: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage — Run `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/` from repo root while teeing to `logs/pytest_full.log`, then capture `/usr/bin/time -v` to `artifacts/time.txt`, exit code to `artifacts/exit_code.txt`, and `--junitxml=artifacts/pytest.junit.xml`.
-If Blocked: Capture the failing setup or fixture output under `reports/2026-01-test-suite-refresh/phase_l/$STAMP/analysis/blockers.md` and notify galph in Attempts History.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-test-suite-refresh/phase_m/$STAMP/{analysis,notes}
+Do Now: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage — Execute Phase M tasks M1–M4 using Phase L STAMP `reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/` as input. Capture failures.json, cluster_mapping.md, tracker update, and next_steps.md under a new Phase M STAMP, then record the attempt in docs/fix_plan.md and galph_memory.
+If Blocked: Document the blocker (e.g., missing scripts, parsing failure) in `reports/2026-01-test-suite-refresh/phase_m/$STAMP/analysis/blockers.md` with log snippets and notify galph via fix_plan Attempts History.
 Priorities & Rationale:
-- plans/active/test-suite-triage-phase-h.md:65 — Phase L tasks L1-L5 require full artifact bundle before Phase M synthesis can start.
-- docs/fix_plan.md:19 — Next Action 19 is blocked until a complete rerun with logs/JUnit/summary exists; Attempt #85 only captured env files.
-- docs/development/testing_strategy.md:Section 1.4 — Must honour device/dtype guardrails and gradient timeout policy during full-suite execution.
-- arch.md:Section 2 — Run from canonical workspace to ensure fixtures and NB_C_BIN resolution fire correctly.
-- reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/analysis/summary.md — Use as prior baseline when writing Phase L `analysis/summary.md` deltas.
+- plans/active/test-suite-triage-phase-h.md: Phase M table (M1–M4) requires synthesis artifacts before remediation can resume.
+- docs/fix_plan.md: Active Focus now targets Phase M; Next Action 20 flagged READY pending classification bundle.
+- reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/analysis/summary.md: Provides authoritative failure counts and deltas to reference in the mapping.
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md: Baseline tracker that must be refreshed with Phase L counts.
+- docs/development/testing_strategy.md §1.4: Reference for environment/timeouts when describing gradient timeout remediation options in next steps.
 How-To Map:
 - `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`
-- `BASE=reports/2026-01-test-suite-refresh/phase_l/$STAMP`
-- `mkdir -p $BASE/{env,logs,artifacts,analysis}`
-- `python - <<'PY'
-import os
+- `BASE=reports/2026-01-test-suite-refresh/phase_m/$STAMP`
+- `mkdir -p "$BASE"/analysis "$BASE"/notes`
+- `INPUT=reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z`
+- Parse failures: `python - <<'PY2'
+import json, sys
 from pathlib import Path
-print(Path.cwd())
-PY` (expect `/home/ollie/Documents/nanoBragg4/nanoBragg`; abort if different)
-- `env > $BASE/env/env.txt`
-- `python - <<'PY'
-import torch, json, platform
-info = {
-    "python": platform.python_version(),
-    "torch": torch.__version__,
-    "cuda_available": torch.cuda.is_available(),
-}
-print(json.dumps(info, indent=2))
-PY > $BASE/env/torch_env.txt`
-- `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ --junitxml=$BASE/artifacts/pytest.junit.xml | tee $BASE/logs/pytest_full.log`
-- `echo $? > $BASE/artifacts/exit_code.txt`
-- `(/usr/bin/time -v env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ > $BASE/artifacts/time.txt) 2>&1` (capture after main run to measure runtime; stop if >3600s)
-- Parse fixture output from the tee’d log and summarise in `$BASE/analysis/fixtures.md` (note session fixtures, guardrails, NB_C_BIN resolution).
-- Write `$BASE/analysis/summary.md` comparing pass/fail/skip counts and runtime against Phase G STAMP 20251015T163131Z; highlight new/resolved clusters.
+failures = []
+for line in Path(sys.argv[1]).read_text().splitlines():
+    if line.startswith('FAILED '):
+        parts = line.split()
+        failures.append({"nodeid": parts[1], "summary": ' '.join(parts[2:])})
+Path(sys.argv[2]).write_text(json.dumps(failures, indent=2) + '\n')
+PY2" "$INPUT"/logs/pytest_full.log "$BASE"/analysis/failures.json`
+- Map clusters: create `$BASE/analysis/cluster_mapping.md` summarising each failure group (CREF, PERF, TOOLS, CLI, GRAD, VEC) with links to Phase G + Phase L summaries; flag any new regressions.
+- Tracker refresh: either edit `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` in-place with new counts or author `$BASE/analysis/tracker_update.md` detailing deltas and owner assignments; note whichever path you take in the doc header.
+- Next steps brief: draft `$BASE/analysis/next_steps.md` with remediation ordering, required decisions (e.g., gradient timeout policy), and selectors/commands per cluster.
+- Update documentation: append Attempt entry to `docs/fix_plan.md` (Next Action 20) citing `$BASE`; add the run to galph_memory Attempts History with STAMP + key findings.
 Pitfalls To Avoid:
-- Do not execute from `/home/ollie/Documents/tmp/nanoBragg`; run from repo root so session fixtures load.
-- Do not omit `tee` to `logs/pytest_full.log`; this artifact is mandatory for Phase M parsing.
-- Do not skip `/usr/bin/time -v`; Phase L needs runtime evidence to confirm timeout margin.
-- Keep `NANOBRAGG_DISABLE_COMPILE=1` set to preserve gradcheck behaviour.
-- Do not set `NB_SKIP_INFRA_GATE`; infrastructure guard must exercise.
-- Avoid rerunning without resetting `$STAMP`; each attempt needs isolated directory.
-- Ensure `pytest` exits before writing summary; if it times out, capture partial log and exit code.
-- Do not delete or move artifacts referenced in docs/index.md (protected assets).
-- Maintain CPU-only execution (`CUDA_VISIBLE_DEVICES=-1`) unless plan explicitly changes.
-- After run, update Attempts History with outcomes/stamps.
+- Do not overwrite or delete Phase L artifacts; reference them read-only.
+- Avoid running pytest; this loop is evidence-only.
+- Keep failure parsing deterministic (stable ordering, include nodeids).
+- When updating the remediation tracker, preserve existing historical rows and note deltas clearly.
+- Reference authoritative docs (specs/arch/testing strategy) when noting remediation implications.
+- Include absolute or repo-relative paths in all new markdown tables.
+- Use ASCII only; avoid Unicode bullets/quotes.
+- Commit updates after verifying diffs; no partial edits left staged.
+- Update fix_plan and galph_memory in the same STAMP to avoid drift.
+- Do not modify protected assets listed in docs/index.md.
+- Capture $STAMP in every new artifact filename or header to maintain traceability.
 Pointers:
-- docs/fix_plan.md:19-20 — Blocking notes and remediation expectations.
-- plans/active/test-suite-triage-phase-h.md:62-88 — Full Phase L + M checklist.
-- docs/development/testing_strategy.md:Section 1.4 & 4.1 — Device discipline + gradient timeout guardrails.
-- reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/analysis/summary.md — Prior baseline for comparison.
-- scripts/validation/pytest_failure_parser.py — Optional helper for next phase classification.
-Next Up: If time remains, begin Phase M parsing per plans/active/test-suite-triage-phase-h.md:73-88 after recording Phase L results.
+- plans/active/test-suite-triage-phase-h.md:78-90
+- docs/fix_plan.md:1-25,918-965
+- reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/analysis/summary.md
+- reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/analysis/summary.md
+- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md
+Next Up: Parse tricubic + gradient remediation options for Phase N sequencing if time allows.

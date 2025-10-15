@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop, Phase J guardrail kickoff)
+**Last Updated:** 2025-10-15 (galph loop, Phase M synthesis kickoff)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — Phase L guarded full-suite rerun lacks execution evidence (Attempt #85 captured env only). Regather full logs/artifacts per `plans/active/test-suite-triage-phase-h.md` Phase L before advancing remediation.
+- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — Phase M failure synthesis pending. Parse Phase L STAMP `reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/` into classification bundle per `plans/active/test-suite-triage-phase-h.md` Phase M before delegating remediation fixes.
 - CRITICAL: `[VECTOR-PARITY-001]` — Tap 5.3 accumulation instrumentation must land to unblock full-frame parity (Phase E16–E18 capture + synthesis).
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
