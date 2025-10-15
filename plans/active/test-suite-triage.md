@@ -296,8 +296,10 @@ Exit Criteria: Chunk ladder executed under a new STAMP with aggregated metrics (
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| O1 | Prepare STAMP + command scaffolding | [ ] | Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; create `reports/2026-01-test-suite-triage/phase_o/$STAMP/{chunks,logs}` and capture the 10-command ladder in `commands.txt`. Reference Phase M0 chunk list above; keep the environment prefix (`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`) on the same line. |
-| O2 | Execute 10-chunk pytest ladder | [ ] | Run each chunk command sequentially; tee outputs to `chunks/chunk_##/pytest.log`, capture junit XML via `--junitxml`, and record exit codes in `chunks/chunk_##/exit_code.txt`. Maintain harness runtime <360 s per chunk. |
+| O1 | Prepare STAMP + command scaffolding | [D] | STAMP `20251015T003950Z` prepared per Attempt #46; scaffold + command ladder captured in `reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/commands.txt`. |
+| O2 | Execute 10-chunk pytest ladder | [P] | Attempt #46 completed chunks 01–09 (≤360 s each) and logged artifacts under `phase_o/20251015T003950Z/chunks/`; chunk 10 skipped due to stale file list. Re-run ladder after updating chunk 10 selectors and after resolving the C17 regression identified in chunk 01 (see summary.md). |
 | O3 | Aggregate metrics + sync ledgers | [ ] | Summarise results in `summary.md` (pass/fail/skipped totals, durations, slowest 25 tests). Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` executive summary, `docs/fix_plan.md` Next Actions/Attempts (Attempt #46), and this plan’s Status Snapshot with the new counts. |
+
+- 20251015T003950Z baseline (Attempt #46): 606 collected / 467 passed / 14 failed / 125 skipped; C17 polarization regression surfaced (nopolar path returns `None`), C18 tolerances unchanged, chunk 10 missing because selectors referenced deleted tests. Re-run after C17 fix + chunk list refresh.
 
 Next focus: Execute Phase O to refresh the baseline, then reassess whether C17 (polarization semantics) or C18 (performance expectation) should lead Sprint 1.5.

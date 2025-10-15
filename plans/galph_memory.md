@@ -22,3 +22,19 @@
 - Generated input.md delegating tracker updates and creation of cluster summaries under `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/` before moving to remediation.
 - Ralph review: latest commit 6bea52a0 successfully executed chunk ladder and improved failure count; no regressions noted.
 - Action State: [ready_for_implementation]
+
+## 2025-10-15T00:56:52Z
+- Focus issue: TEST-SUITE-TRIAGE-001 — C17 polarization regression triage
+- Action type: Debug
+- Mode: Parity
+- Action State: [ready_for_implementation]
+- Notes: Initial selection logged prior to artifact edits; triage complete this loop.
+- Findings:
+  - Targeted repro (`pytest -vv tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics`) fails only when `BeamConfig.nopolar=True`, confirming `compute_physics_for_position` legitimately returns `(Tensor, None)` and `Simulator.run` lacks the guard. Same root cause hits `test_polarization_with_tilted_detector`.
+  - Attempt #46 artifacts (`reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/summary.md`) logged 467/14/125 baseline plus new C17 regression and missing chunk 10 selectors; chunk ladder remains partially complete.
+- Updates:
+  - Marked Phase O tasks O1→[D], O2→[P]; added baseline recap + rerun prerequisites in `plans/active/test-suite-triage.md`.
+  - Refreshed `docs/fix_plan.md` Next Actions (#5–6) to capture the STAMP 20251015T003950Z results and require the nopolar guard before rerunning the ladder.
+  - Authored `input.md` directing Ralph to add the guard in `src/nanobrag_torch/simulator.py` (both oversample and pixel-center paths), rerun the two failing selectors, and stash artifacts under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/c17_polarization_guard/`.
+- Ralph review: recent commit 31d34a40 captured Phase O evidence cleanly (9 chunks, logs + summary); no new code regressions beyond the identified C17 issue.
+- Next expectations for Ralph: implement the nopolar guard, record targeted pytest passes, update trackers per How-To Map, then prep for the chunk 10 rerun once the guard lands.
