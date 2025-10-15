@@ -1,0 +1,95 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 48 items / 1 skipped
+
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_identical_seed_produces_identical_noise PASSED [  2%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_different_seed_produces_different_noise PASSED [  4%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_seed_determinism_without_roi PASSED [  6%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_negative_seed_accepted PASSED [  8%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_overload_count_determinism PASSED [ 10%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_filtering_reduces_intensity PASSED [ 12%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_very_strict_removes_most_intensity PASSED [ 14%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_zero_has_no_effect PASSED [ 16%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_header_required_keys PASSED [ 18%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_data_ordering PASSED    [ 20%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_convention_specific_headers PASSED [ 22%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_torch_tensor_input PASSED [ 25%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_byte_order PASSED       [ 27%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_mosflm_xbeam_ybeam_mapping SKIPPED [ 29%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_xds_orgx_orgy_mapping SKIPPED [ 31%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_pivot_mode_consistency SKIPPED [ 33%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_equivalent_configurations_produce_same_pattern SKIPPED [ 35%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance PASSED [ 37%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling PASSED [ 39%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_combined_wavelength_and_distance PASSED [ 41%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_distance_units_consistency PASSED [ 43%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_wavelength_units_consistency PASSED [ 45%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_angle_units_consistency PASSED [ 47%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive PASSED [ 50%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_detector_rotation_units PASSED [ 52%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_tiny_scale PASSED [ 54%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_large_cell PASSED [ 56%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_long_distance PASSED [ 58%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_extreme_scale_c_comparison SKIPPED [ 60%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_combined_extremes PASSED [ 62%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_numerical_stability_metrics PASSED [ 64%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_pytorch_only PASSED [ 66%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c PASSED [ 68%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_vs_cubic_peak_difference PASSED [ 70%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_structure_factor_loading PASSED [ 72%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_intensity_ratios PASSED [ 75%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_pattern_structure PASSED [ 77%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_c_pytorch_equivalence SKIPPED [ 79%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_f_squared_scaling PASSED [ 81%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_suite_execution SKIPPED [ 83%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_pytorch_performance_basic PASSED [ 85%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_memory_scaling PASSED [ 87%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_gpu_performance SKIPPED [ 89%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_output_format PASSED [ 91%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_large_tensor_gpu_residency SKIPPED [ 93%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_auto_device_selection_uses_cuda SKIPPED [ 95%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_skip_when_cuda_unavailable PASSED [ 97%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_memory_efficient_gpu_usage SKIPPED [100%]
+
+=============================== warnings summary ===============================
+tests/test_at_parallel_026.py:23
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.parallel_validation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.parallel_validation
+
+tests/test_at_parallel_026.py:116
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.requires_c_binary - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.requires_c_binary
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/chunks/chunk_09/pytest.xml -
+============================= slowest 25 durations =============================
+13.79s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_overload_count_determinism
+9.77s call     tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_zero_has_no_effect
+9.23s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_identical_seed_produces_identical_noise
+9.22s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_different_seed_produces_different_noise
+9.22s call     tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_filtering_reduces_intensity
+9.21s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_negative_seed_accepted
+9.18s call     tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_seed_determinism_without_roi
+4.88s call     tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_very_strict_removes_most_intensity
+3.01s call     tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_pytorch_performance_basic
+1.90s call     tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance
+1.58s call     tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_intensity_ratios
+1.41s call     tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive
+1.38s call     tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling
+1.26s call     tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_tiny_scale
+1.18s call     tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_distance_units_consistency
+0.30s call     tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_large_cell
+0.04s call     tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_combined_wavelength_and_distance
+0.04s call     tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_memory_scaling
+0.02s call     tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_detector_rotation_units
+0.02s call     tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c
+0.02s call     tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_vs_cubic_peak_difference
+0.02s call     tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_wavelength_units_consistency
+0.01s call     tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_angle_units_consistency
+0.01s call     tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_pytorch_only
+0.01s call     tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_long_distance
+============ 37 passed, 12 skipped, 2 warnings in 89.13s (0:01:29) =============

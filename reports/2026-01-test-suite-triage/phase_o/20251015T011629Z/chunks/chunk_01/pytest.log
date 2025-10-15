@@ -1,0 +1,108 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 71 items
+
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cpu] PASSED [  1%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[False-cpu] PASSED [  2%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[True-cpu] PASSED [  4%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cpu] PASSED [  5%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cpu] PASSED [  7%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cpu] PASSED [  8%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cpu] PASSED [  9%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cpu] PASSED [ 11%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_and_fdump_with_default_f_zero PASSED [ 12%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_but_has_default_f PASSED [ 14%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_cell_parameters PASSED [ 15%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_fdump_fallback PASSED [ 16%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_help_message PASSED [ 18%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_dispstep PASSED [ 19%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_hdiv PASSED [ 21%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_vdiv PASSED [ 22%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_header_format PASSED    [ 23%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_pixel_scaling PASSED    [ 25%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_with_default_scale PASSED [ 26%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_torch_tensor_input PASSED [ 28%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_clipping_behavior PASSED [ 29%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_peak_positions_with_rotations SKIPPED [ 30%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_peak_intensity_ordering SKIPPED [ 32%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_rotation_effect_on_pattern SKIPPED [ 33%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts PASSED [ 35%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_twotheta PASSED [ 36%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_combined_extreme_angles PASSED [ 38%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_near_90_degree_incidence PASSED [ 39%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_solid_angle_obliquity_corrections PASSED [ 40%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_extreme_rotation_stability PASSED [ 42%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_cpu_performance_parity SKIPPED.) [ 43%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_gpu_performance_superiority SKIPPED.) [ 45%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_performance_measurement_validity PASSED [ 46%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_calculation PASSED [ 47%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_nopolar_toggle PASSED [ 49%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics PASSED [ 50%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector PASSED [ 52%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_range PASSED [ 53%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_no_parameters_provided PASSED [ 54%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_step_provided PASSED [ 56%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_range_provided PASSED [ 57%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_count_provided_angles PASSED [ 59%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_count_provided_thickness PASSED [ 60%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_range_and_step_provided PASSED [ 61%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_count_and_range_provided PASSED [ 63%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_divergence_auto_selection PASSED [ 64%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_dispersion_auto_selection PASSED [ 66%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_thickness_auto_selection PASSED [ 67%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_all_parameters_provided PASSED [ 69%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_conflicting_parameters PASSED [ 70%]
+tests/test_cli_scaling.py::TestMOSFLMCellVectors::test_mosflm_cell_vectors PASSED [ 71%]
+tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c SKIPPED [ 73%]
+tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec PASSED [ 74%]
+tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile PASSED [ 76%]
+tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored PASSED [ 77%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted PASSED [ 78%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted PASSED [ 80%]
+tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback PASSED [ 81%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference SKIPPED [ 83%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning PASSED [ 84%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float32] PASSED [ 85%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float64] PASSED [ 87%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cuda-float32] SKIPPED [ 88%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cuda-float64] SKIPPED [ 90%]
+tests/test_detector_pivots.py::test_beam_pivot_keeps_beam_indices_and_alignment PASSED [ 91%]
+tests/test_detector_pivots.py::test_sample_pivot_moves_beam_indices_with_twotheta PASSED [ 92%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_against_c_value PASSED [ 94%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_fractional_miller_index PASSED [ 95%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_at_zero PASSED   [ 97%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_vectorized PASSED [ 98%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_broadcast_N PASSED [100%]
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/chunks/chunk_01/pytest.xml -
+============================= slowest 25 durations =============================
+9.16s call     tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec
+4.55s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_fdump_fallback
+4.55s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_but_has_default_f
+4.09s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_and_fdump_with_default_f_zero
+4.03s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_cell_parameters
+4.02s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_hdiv
+4.02s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_help_message
+4.00s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_vdiv
+3.98s call     tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_dispstep
+1.88s call     tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cpu]
+1.59s call     tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning
+1.53s call     tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile
+0.94s call     tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_performance_measurement_validity
+0.68s call     tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts
+0.67s call     tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics
+0.64s call     tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cpu]
+0.47s call     tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cpu]
+0.44s call     tests/test_at_pol_001.py::TestATPOL001KahnModel::test_nopolar_toggle
+0.26s call     tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float32]
+0.25s call     tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float64]
+0.17s call     tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_range
+0.08s call     tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_calculation
+0.06s call     tests/test_physics.py::TestPhysicsFunctions::test_sincg_broadcast_N
+0.05s call     tests/test_physics.py::TestPhysicsFunctions::test_sincg_vectorized
+0.03s call     tests/test_physics.py::TestPhysicsFunctions::test_sincg_against_c_value
+======================== 62 passed, 9 skipped in 54.59s ========================

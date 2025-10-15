@@ -1,0 +1,101 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 63 items
+
+tests/test_at_cli_005.py::test_cli_roi_basic PASSED                      [  1%]
+tests/test_at_cli_005.py::test_cli_roi_with_noise PASSED                 [  3%]
+tests/test_at_cli_005.py::test_cli_roi_edge_cases PASSED                 [  4%]
+tests/test_at_cli_005.py::test_cli_roi_different_conventions PASSED      [  6%]
+tests/test_at_geo_004.py::test_twotheta_axis_defaults PASSED             [  7%]
+tests/test_at_geo_004.py::test_twotheta_axis_override PASSED             [  9%]
+tests/test_at_geo_004.py::test_twotheta_rotation_applied PASSED          [ 11%]
+tests/test_at_geo_004.py::test_twotheta_value_preserved PASSED           [ 12%]
+tests/test_at_geo_004.py::test_mosflm_twotheta_rotation PASSED           [ 14%]
+tests/test_at_geo_004.py::test_dials_twotheta_rotation PASSED            [ 15%]
+tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation PASSED [ 17%]
+tests/test_at_parallel_003.py::TestATParallel003::test_peak_position_at_offset_beam_centers PASSED [ 19%]
+tests/test_at_parallel_003.py::TestATParallel003::test_offset_ratio_preservation PASSED [ 20%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed PASSED [ 22%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds PASSED [ 23%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs PASSED [ 25%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_c_pytorch_equivalence SKIPPED [ 26%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_platform_fingerprint PASSED [ 28%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 PASSED [ 30%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism PASSED [ 31%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_c_pytorch_equivalence SKIPPEDtions. Interface fix is complete - C code correctly
+receives misset parameters.)                                             [ 34%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_lcg_compatibility PASSED [ 36%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism PASSED [ 38%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip PASSED [ 39%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_torch_compile_speedup PASSED [ 41%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_hot_function_compilation PASSED [ 42%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_compilation_amortization PASSED [ 44%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_gpu_kernel_compilation SKIPPED [ 46%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_dtype_optimization_impact PASSED [ 47%]
+tests/test_at_sam_003.py::test_dmin_culling_basic PASSED                 [ 49%]
+tests/test_at_sam_003.py::test_dmin_culling_exact_threshold PASSED       [ 50%]
+tests/test_at_sam_003.py::test_dmin_zero_no_culling PASSED               [ 52%]
+tests/test_at_str_004.py::TestAT_STR_004::test_sparse_hkl_loading PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_missing_reflection_uses_default_f PASSED [ 55%]
+tests/test_at_str_004.py::TestAT_STR_004::test_intensity_ratios_with_sparse_hkl PASSED [ 57%]
+tests/test_at_str_004.py::TestAT_STR_004::test_fallback_with_no_hkl_uses_default_f PASSED [ 58%]
+tests/test_at_str_004.py::TestAT_STR_004::test_fdump_preserves_sparse_behavior PASSED [ 60%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_mosflm_convention PASSED [ 61%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_xds_convention PASSED [ 63%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_single_axis_rotations PASSED [ 65%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_combined_rotations PASSED [ 66%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_twotheta_rotation PASSED [ 68%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_all_rotations_combined PASSED [ 69%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_tensor_rotation_parameters PASSED [ 71%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_finds_repo_root PASSED [ 73%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_loads_yaml PASSED [ 74%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_yaml_structure_validation PASSED [ 76%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_missing_yaml_file PASSED [ 77%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_invalid_yaml PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_real_repo_linting PASSED [ 80%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_spec_ats PASSED [ 82%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_yaml_ats PASSED [ 84%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_scalar PASSED [ 85%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_tensor PASSED [ 87%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_gradient PASSED [ 88%]
+tests/test_units.py::TestUnitConversions::test_meters_to_angstroms_scalar PASSED [ 90%]
+tests/test_units.py::TestUnitConversions::test_meters_to_angstroms_tensor PASSED [ 92%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_scalar PASSED [ 93%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_tensor PASSED [ 95%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_gradient PASSED [ 96%]
+tests/test_units.py::TestUnitConversions::test_inverse_conversions PASSED [ 98%]
+tests/test_units.py::TestUnitConversions::test_batch_tensor_conversions PASSED [100%]
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/chunks/chunk_07/pytest.xml -
+============================= slowest 25 durations =============================
+2.02s call     tests/test_at_cli_005.py::test_cli_roi_edge_cases
+2.01s call     tests/test_at_cli_005.py::test_cli_roi_different_conventions
+1.93s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs
+1.54s call     tests/test_at_parallel_003.py::TestATParallel003::test_peak_position_at_offset_beam_centers
+1.08s call     tests/test_at_cli_005.py::test_cli_roi_basic
+1.01s call     tests/test_at_cli_005.py::test_cli_roi_with_noise
+0.89s call     tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_torch_compile_speedup
+0.86s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds
+0.86s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed
+0.18s call     tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_hot_function_compilation
+0.14s call     tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_compilation_amortization
+0.11s call     tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_dtype_optimization_impact
+0.08s call     tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism
+0.03s call     tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence
+0.01s call     tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64
+0.01s call     tests/test_at_sam_003.py::test_dmin_culling_basic
+0.01s call     tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_loads_yaml
+0.01s call     tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_real_repo_linting
+0.01s call     tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_yaml_ats
+0.01s call     tests/test_at_sam_003.py::test_dmin_zero_no_culling
+0.01s call     tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation
+0.01s call     tests/test_at_sam_003.py::test_dmin_culling_exact_threshold
+0.01s call     tests/test_at_str_004.py::TestAT_STR_004::test_intensity_ratios_with_sparse_hkl
+0.00s call     tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_single_axis_rotations
+0.00s call     tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_yaml_structure_validation
+======================== 60 passed, 3 skipped in 15.19s ========================

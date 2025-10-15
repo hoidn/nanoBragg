@@ -1,0 +1,121 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 78 items
+
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_point_pixel_solid_angle PASSED [  1%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_default_solid_angle_with_obliquity PASSED [  2%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_off_center_pixel_comparison PASSED [  3%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_gradient_flow PASSED [  5%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_corner_pixel_values PASSED [  6%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_loading_via_cli PASSED [  7%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_with_missing_columns PASSED [  8%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_takes_precedence_over_divergence PASSED [ 10%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype0] PASSED [ 11%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype1] PASSED [ 12%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[None] PASSED [ 14%]
+tests/test_at_src_001_simple.py::test_sourcefile_parsing PASSED          [ 15%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_mosflm_auto_calculated_applies_offset PASSED [ 16%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_mosflm_explicit_no_offset PASSED [ 17%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_xds_no_offset_regardless_of_source PASSED [ 19%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_explicit_matches_default_value PASSED [ 20%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_default_beam_center_source_is_auto PASSED [ 21%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias PASSED [ 23%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_millimeter_alias PASSED [ 24%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence PASSED [ 25%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_dual_pix0_flag_rejection PASSED [ 26%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0] PASSED [ 28%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1] PASSED [ 29%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2] PASSED [ 30%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cpu PASSED [ 32%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cuda SKIPPED [ 33%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_dtype_preservation PASSED [ 34%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_suppresses_noise_output PASSED [ 35%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_noisefile_without_nonoise PASSED [ 37%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_preserves_seed PASSED [ 38%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_without_noisefile PASSED [ 39%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_does_not_alter_beam_vector PASSED [ 41%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_triggers_custom_convention PASSED [ 42%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_roi_unaffected_by_new_flags PASSED [ 43%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_convention_preserved_without_pix0 PASSED [ 44%]
+tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates PASSED [ 46%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cpu-dtype0] PASSED [ 47%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cuda-dtype1] SKIPPED [ 48%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] PASSED [ 50%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda] SKIPPED [ 51%]
+tests/test_cli_flags.py::TestCLIPolarization::test_default_polarization_parity PASSED [ 52%]
+tests/test_cli_flags.py::TestCLIPolarization::test_nopolar_flag PASSED   [ 53%]
+tests/test_cli_flags.py::TestCLIPolarization::test_polar_override PASSED [ 55%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cpu] PASSED [ 56%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cuda] SKIPPED [ 57%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cpu] PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cuda] SKIPPED [ 60%]
+tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip PASSED [ 61%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_convention_basis_vectors PASSED [ 62%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_convention_basis_vectors PASSED [ 64%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_beam_center_mapping PASSED [ 65%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_beam_direction PASSED [ 66%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_twotheta_axis_default PASSED [ 67%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_twotheta_axis_default PASSED [ 69%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_default_beam_centers PASSED [ 70%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_all_conventions_orthonormal PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_conventions_with_rotations PASSED [ 73%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_rotated_basis_vectors_match_c_reference PASSED [ 74%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_pix0_vector_matches_c_reference_in_beam_pivot PASSED [ 75%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_mosflm_axis_mapping_correctness PASSED [ 76%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 78%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 79%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 80%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 82%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 83%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 84%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 85%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 87%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu] PASSED [ 89%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cuda] SKIPPED [ 91%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cuda_multiple_runs SKIPPED [ 92%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved PASSED [ 93%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cpu] PASSED [ 94%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cuda] SKIPPED [ 96%]
+tests/test_perf_pytorch_006.py::test_dtype_support[dtype0] PASSED        [ 97%]
+tests/test_perf_pytorch_006.py::test_dtype_support[dtype1] PASSED        [ 98%]
+tests/test_perf_pytorch_006.py::test_float32_float64_correlation PASSED  [100%]
+
+=============================== warnings summary ===============================
+tests/test_at_src_001_simple.py::test_sourcefile_parsing
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001_simple.py:71: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 6.200000e-10 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/chunks/chunk_10/pytest.xml -
+============================= slowest 25 durations =============================
+4.74s call     tests/test_perf_pytorch_006.py::test_float32_float64_correlation
+4.64s call     tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_loading_via_cli
+4.62s call     tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_with_missing_columns
+4.60s call     tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_takes_precedence_over_divergence
+2.46s call     tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved
+2.45s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients
+1.30s call     tests/test_perf_pytorch_006.py::test_dtype_support[dtype1]
+0.49s call     tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu]
+0.39s call     tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip
+0.05s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients
+0.02s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck
+0.01s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients
+0.01s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients
+0.01s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode
+0.00s call     tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cpu]
+0.00s call     tests/test_perf_pytorch_006.py::test_dtype_support[dtype0]
+0.00s call     tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu]
+0.00s call     tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates
+0.00s call     tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence
+0.00s call     tests/test_detector_conventions.py::TestDetectorConventions::test_all_conventions_orthonormal
+0.00s call     tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2]
+0.00s call     tests/test_detector_conventions.py::TestDetectorConventions::test_conventions_with_rotations
+0.00s call     tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0]
+0.00s call     tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1]
+0.00s call     tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients
+================== 70 passed, 8 skipped, 1 warning in 27.90s ===================

@@ -1,0 +1,113 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 72 items
+
+tests/test_at_cli_004.py::test_header_precedence_img_then_mask PASSED    [  1%]
+tests/test_at_cli_004.py::test_mask_zeros_are_skipped PASSED             [  2%]
+tests/test_at_cli_004.py::test_mask_beam_center_y_flip PASSED            [  4%]
+tests/test_at_cli_004.py::test_conflicting_detector_size PASSED          [  5%]
+tests/test_at_cli_004.py::test_img_only_no_mask PASSED                   [  6%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_r_factor_calculation PASSED [  8%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_distance_update_with_close_distance PASSED [  9%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_preservation_beam_pivot PASSED [ 11%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_preservation_sample_pivot PASSED [ 12%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_no_rotations_r_factor_equals_one PASSED [ 13%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_with_various_rotations[DetectorPivot.BEAM] PASSED [ 15%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_with_various_rotations[DetectorPivot.SAMPLE] PASSED [ 16%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_gradients_flow_through_r_factor PASSED [ 18%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size PASSED [ 19%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 20%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 22%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency PASSED [ 23%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation PASSED [ 25%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation PASSED [ 26%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_cubic_tilted_detector_correlation PASSED [ 27%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant PASSED [ 29%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles0-cubic-cell_params0] SKIPPED [ 30%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles0-triclinic-cell_params1] SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles1-cubic-cell_params0] SKIPPED [ 33%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles1-triclinic-cell_params1] SKIPPED [ 34%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles2-cubic-cell_params0] SKIPPED [ 36%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles2-triclinic-cell_params1] SKIPPED [ 37%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles3-cubic-cell_params0] SKIPPED [ 38%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles3-triclinic-cell_params1] SKIPPED [ 40%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles4-cubic-cell_params0] SKIPPED [ 41%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles4-triclinic-cell_params1] SKIPPED [ 43%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_misset_changes_pattern SKIPPED [ 44%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_sincg_throughput PASSED [ 45%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_dot_product_throughput PASSED [ 47%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_profile_hot_paths PASSED [ 48%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_vectorization_efficiency PASSED [ 50%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_critical_operations_performance PASSED [ 51%]
+tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_omega_last_value_semantics PASSED [ 52%]
+tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_without_subpixel_flags PASSED [ 54%]
+tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_flag_precedence PASSED [ 55%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_square_shape_model PASSED [ 56%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_round_shape_model PASSED [ 58%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model PASSED [ 59%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_tophat_shape_model PASSED [ 61%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_model_comparison PASSED [ 62%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_fudge_parameter_scaling PASSED [ 63%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_models_at_bragg_peak PASSED [ 65%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag PASSED [ 66%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_pixel_flag PASSED [ 68%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag PASSED [ 69%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_combined_debug_flags PASSED [ 70%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_out_of_bounds_pixel PASSED [ 72%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_auto_select_formula PASSED [ 73%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_different_crystal_sizes PASSED [ 75%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_explicit_oversample_overrides_auto PASSED [ 76%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_different_wavelengths PASSED [ 77%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar PASSED [ 79%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_neighborhood_gathering_internals PASSED [ 80%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire ✓ Phase C2: OOB warning single-fire behavior validated
+  - First OOB: warning printed, interpolation disabled, returned default_F=100.0
+  - Second OOB: no warning, still returns default_F=100.0
+  - In-bounds post-disable: uses fallback path, returns 50.0
+PASSED [ 81%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cpu] PASSED [ 83%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cuda] SKIPPED [ 84%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched PASSED [ 86%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_gradient_flow PASSED [ 87%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched PASSED [ 88%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_gradient_flow PASSED [ 90%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched PASSED [ 91%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_gradient_flow PASSED [ 93%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_batch_shape_preserved PASSED [ 94%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype0] PASSED [ 95%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype1] PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cpu] PASSED [ 98%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] SKIPPED [100%]
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/chunks/chunk_06/pytest.xml -
+============================= slowest 25 durations =============================
+4.96s call     tests/test_at_cli_004.py::test_header_precedence_img_then_mask
+4.89s call     tests/test_at_cli_004.py::test_mask_zeros_are_skipped
+4.89s call     tests/test_at_cli_004.py::test_img_only_no_mask
+4.88s call     tests/test_at_cli_004.py::test_conflicting_detector_size
+4.87s call     tests/test_at_cli_004.py::test_mask_beam_center_y_flip
+4.62s call     tests/test_debug_trace.py::TestDebugTraceFeatures::test_combined_debug_flags
+4.62s call     tests/test_debug_trace.py::TestDebugTraceFeatures::test_out_of_bounds_pixel
+4.59s call     tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_pixel_flag
+4.59s call     tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag
+4.57s call     tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag
+2.30s call     tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant
+1.79s call     tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size
+1.25s call     tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_auto_select_formula
+1.13s call     tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_profile_hot_paths
+1.01s call     tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_flag_precedence
+0.80s call     tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes
+0.80s call     tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation
+0.70s call     tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_omega_last_value_semantics
+0.57s call     tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_without_subpixel_flags
+0.57s call     tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation
+0.18s call     tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_cubic_tilted_detector_correlation
+0.14s call     tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_sincg_throughput
+0.11s call     tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_critical_operations_performance
+0.05s call     tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_square_shape_model
+0.03s call     tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_different_crystal_sizes
+================== 59 passed, 13 skipped in 61.47s (0:01:01) ===================
