@@ -2790,3 +2790,14 @@
 - Issued fresh input.md directing Ralph to run the three guarded pytest commands, aggregate totals via the helper script, and sync trackers/ledgers.
 - <Action State>: [ready_for_implementation]
 
+
+### 2025-10-15T04:25:34Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O chunk 03 remainder rerun restructure
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T04:30:00Z (galph loop recap)
+- Refined Phase O5 in `plans/active/test-suite-triage.md` with four-way shard split (part3a/part3b) plus 1200 s guard for slow gradient tests; helper snippet now consumes all four XML outputs.
+- Updated `docs/fix_plan.md` Next Actions 8-9 to summarise Attempts #70-#74 and point Ralph at the new O5a–O5h workflow.
+- Reissued `input.md` (Parity mode) instructing Ralph to prep the STAMP scaffold, author new selector files, run parts 1/2/3a/3b, record timings, and refresh summaries/artifacts.
+- <Action State>: [ready_for_implementation]
