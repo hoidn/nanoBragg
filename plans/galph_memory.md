@@ -38,3 +38,12 @@
   - Authored `input.md` directing Ralph to add the guard in `src/nanobrag_torch/simulator.py` (both oversample and pixel-center paths), rerun the two failing selectors, and stash artifacts under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/c17_polarization_guard/`.
 - Ralph review: recent commit 31d34a40 captured Phase O evidence cleanly (9 chunks, logs + summary); no new code regressions beyond the identified C17 issue.
 - Next expectations for Ralph: implement the nopolar guard, record targeted pytest passes, update trackers per How-To Map, then prep for the chunk 10 rerun once the guard lands.
+
+## 2025-10-15T10:24:59Z
+- Focus issue: TEST-SUITE-TRIAGE-001 — Phase R chunk 03 rerun readiness
+- Action type: Review or housekeeping
+- Mode: Perf
+- Action State: [ready_for_implementation]
+- Findings: R2 tolerance uplift already landed (timeout decorator + docs at 905 s with STAMP 20251015T100100Z); plan/fix_plan still listed it as pending.
+- Updates: Marked Phase R status in `plans/active/test-suite-triage.md` with Attempt #83 completion, flipped R2 to [D], and pointed status text at the tolerance_update bundle. Synced `docs/fix_plan.md` (Next Action 16 now COMPLETE; logged Attempt #83 summary). Rewrote `input.md` to push Ralph toward R3 guarded chunk execution with explicit command roster + artifact expectations.
+- Next expectations for Ralph: follow the new input.md to recreate commands.txt, run all four chunk 03 selectors under the guarded env, capture logs/summary/timing for STAMP $(date), and update fix_plan Attempts after the run.
