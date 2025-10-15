@@ -76,10 +76,10 @@ Exit Criteria: Classification bundle under `reports/2026-01-test-suite-refresh/p
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| M1 | Parse failure list | [ ] | Extract nodeids/stack traces from `phase_l/20251015T190350Z/logs/pytest_full.log` into `analysis/failures.json` (use `scripts/validation/pytest_failure_parser.py` if available). |
-| M2 | Map to clusters & flag regressions | [ ] | Compare vs Phase G triage and remediation tracker; record results in `analysis/cluster_mapping.md` with cluster IDs (e.g., C2, C18) and supporting evidence links. Highlight new or cleared failures. |
-| M3 | Refresh remediation tracker | [ ] | Update `reports/2026-01-test-suite-triage/phase_j/20251015T043327Z/remediation_tracker.md` (or add an addendum at `phase_m/$STAMP/tracker_update.md`) with new counts, owners, and statuses. |
-| M4 | Publish next-step brief | [ ] | Draft `analysis/next_steps.md` summarizing recommended remediation order, gating requirements, and targeted selectors. Update `docs/fix_plan.md` (Next Action 20) and galph_memory entry with the hand-off. |
+| M1 | Parse failure list | [D] | ✅ STAMP `20251015T201831Z`: Extracted 8 test nodeids from `phase_l/20251015T190350Z/logs/pytest_full.log` into `analysis/failures.json`. |
+| M2 | Map to clusters & flag regressions | [D] | ✅ STAMP `20251015T201831Z`: Delivered `analysis/cluster_mapping.md` with Phase G delta analysis (6 clusters, ±0 changes, root cause hypotheses, remediation paths). |
+| M3 | Refresh remediation tracker | [D] | ✅ STAMP `20251015T201831Z`: Published `analysis/tracker_update.md` comparing Phase L vs Phase J baseline (cluster status table, delta analysis, sequencing). |
+| M4 | Publish next-step brief | [D] | ✅ STAMP `20251015T201831Z`: Delivered `analysis/next_steps.md` with Sprint 1-3 sequencing, Gap 1 details, GRAD-001 policy options, gating criteria, artifact expectations. Updated `docs/fix_plan.md` Attempt #21 and Next Actions 21-24. |
 
 ## Exit & Handoff
 - Phases H–K are complete with evidence bundles stamped 20251015; Phase L (guarded rerun) and Phase M (failure synthesis) are now staged above and represent the next executable gates.

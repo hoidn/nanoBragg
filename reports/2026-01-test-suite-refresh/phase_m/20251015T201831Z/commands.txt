@@ -1,0 +1,65 @@
+# Phase M Synthesis Commands (STAMP 20251015T201831Z)
+# Initiative: [TEST-SUITE-TRIAGE-002]
+# Mode: Docs (evidence-only, no pytest execution)
+
+# M1: Parse failure list
+python3 - <<'PY_SCRIPT'
+import json
+import sys
+import re
+from pathlib import Path
+
+INPUT_LOG = Path("reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/logs/pytest_full.log")
+OUTPUT_JSON = Path("reports/2026-01-test-suite-refresh/phase_m/20251015T201831Z/analysis/failures.json")
+
+failures = []
+
+if not INPUT_LOG.exists():
+    print(f"ERROR: Input log not found: {INPUT_LOG}", file=sys.stderr)
+    sys.exit(1)
+
+log_content = INPUT_LOG.read_text()
+lines = log_content.splitlines()
+
+for line in lines:
+    if line.startswith('FAILED '):
+        parts = line.split()
+        if len(parts) >= 2:
+            nodeid = parts[1]
+            summary = ' '.join(parts[2:])
+            failures.append({
+                "nodeid": nodeid,
+                "summary": summary
+            })
+
+print(f"Parsed {len(failures)} failures from {INPUT_LOG}")
+
+OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
+OUTPUT_JSON.write_text(json.dumps(failures, indent=2) + '\n')
+
+print(f"Written failures to {OUTPUT_JSON}")
+
+for i, f in enumerate(failures, 1):
+    print(f"{i}. {f['nodeid']}")
+PY_SCRIPT
+
+# M2: Map to clusters & flag regressions
+# Deliverable: reports/2026-01-test-suite-refresh/phase_m/20251015T201831Z/analysis/cluster_mapping.md
+# Method: Manual analysis comparing Phase L vs Phase G baselines with Phase C/D cluster definitions
+
+# M3: Refresh remediation tracker
+# Deliverable: reports/2026-01-test-suite-refresh/phase_m/20251015T201831Z/analysis/tracker_update.md
+# Method: Delta analysis with Phase J baseline, updated counts and statuses
+
+# M4: Publish next-step brief
+# Deliverable: reports/2026-01-test-suite-refresh/phase_m/20251015T201831Z/analysis/next_steps.md
+# Method: Remediation sequencing (Sprint 1-3), gating requirements, policy decisions
+
+# Artifacts produced:
+# - analysis/failures.json (8 test nodeids)
+# - analysis/cluster_mapping.md (6 clusters, Phase G delta, root cause analysis)
+# - analysis/tracker_update.md (Phase J tracker refresh with Phase L counts)
+# - analysis/next_steps.md (Sprint 1-3 remediation plan, gating criteria)
+# - commands.txt (this file)
+
+# Exit status: SUCCESS (all Phase M tasks M1-M4 complete)
