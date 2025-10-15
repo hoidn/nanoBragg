@@ -17,7 +17,7 @@ Exit Criteria: Targeted pytest log + gradient snapshot stored under new phase di
 | ID | Task Description | State | How/Why & Guidance (including commands) |
 | --- | --- | --- | --- |
 | A1 | Reproduce failure via targeted pytest run | [ ] | `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`;<br>`mkdir -p reports/2026-01-gradient-flow/phase_a/$STAMP/`; <br>`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \`<br>`  pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation \`<br>`  --maxfail=1 --durations=25 --tb=short \`<br>`  | tee reports/2026-01-gradient-flow/phase_a/$STAMP/pytest.log`. Capture exit code in `exit_code.txt` and store XML via `--junitxml`. |
-| A2 | Record per-parameter gradient magnitudes | [ ] | Run a standalone script mirroring the test to serialize gradients: <br>`python - <<'PY' > reports/2026-01-gradient-flow/phase_a/$STAMP/gradients.json`<br>`from gradient_flow_capture import capture_gradients` *(or inline snippet replicating test logic; ensure it sets guards)*. Log values for a,b,c,α,β,γ and confirm they are ≤1e-10. |
+| A2 | Record per-parameter gradient magnitudes | [ ] | Run a standalone inline script mirroring the test to serialize gradients (see supervisor `input.md` snippet) and write `gradients.json` under the same directory. Log values for a,b,c,α,β,γ and confirm they are ≤1e-10. |
 | A3 | Summarise baseline findings | [ ] | Draft `summary.md` in same directory noting command, runtime, gradient magnitudes, and assertion message. Reference chunk_03 summary for historical context. |
 
 ### Phase B — Gradient Path Audit (Callchain + Hooks)
