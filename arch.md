@@ -372,6 +372,12 @@ The PyTorch implementation **MUST** maintain end-to-end differentiability to ena
 - **Canonical command:** `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py -k "gradcheck"`
 - **Reference:** `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md` for validation artifacts and rationale
 
+**Gradient Test Performance Expectations:**
+- **Runtime tolerance:** Gradient stability tests (particularly `test_property_gradient_stability`) may legitimately run up to 900 seconds on CPU when using float64 precision with compile guard enabled
+- **Rationale:** High-precision numerical gradient checks (`torch.autograd.gradcheck`) require extensive finite-difference computations. The 900s tolerance provides a 6 percent margin above validated baseline performance (839-845s range)
+- **Evidence:** Phase P timing packet (2025-10-15T060354Z) documents tolerance derivation; Phase Q validation (2025-10-15T071423Z) confirms runtime stability within approved ceiling
+- **Implementation:** Tests marked with `@pytest.mark.timeout(900)` and `@pytest.mark.slow_gradient`; requires `pytest-timeout` dependency (included in `pip install -e ".[test]"`)
+
 ### Common Pitfalls and Solutions
 
 | Pitfall | Symptom | Solution |

@@ -522,6 +522,14 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
 *   **Validation:** Phase M2 (2025-10-11T172830Z) confirmed 10/10 gradcheck tests pass with guard enabled
 *   **Reference:** `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md` for validation artifacts
 
+**Performance Expectations (Slow Gradient Suite):**
+*   **Maximum runtime tolerance:** Gradient stability tests (particularly `test_property_gradient_stability`) may run up to 900 seconds on CPU with float64 precision and compile guard enabled
+*   **Rationale:** High-precision numerical gradient checks (`torch.autograd.gradcheck`) require extensive finite-difference computations across large parameter spaces, inherently slow on CPU
+*   **Marker:** Tests expected to exceed standard timeouts are marked with `@pytest.mark.timeout(900)` and `@pytest.mark.slow_gradient`
+*   **Validation:** Phase P timing packet (2025-10-15T060354Z) established 900s ceiling with 6 percent margin above 845.68s Phase O baseline; Phase Q validation (2025-10-15T071423Z) confirmed 839.14s runtime with 6.7 percent margin, demonstrating stability
+*   **CI integration:** pytest-timeout dependency required; install via `pip install pytest-timeout` or `pip install -e ".[test]"` (includes optional test dependencies)
+*   **Evidence artifacts:** `reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md` (tolerance derivation), `reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/summary.md` (validation results)
+
 ### 4.2 Multi-Tier Gradient Testing
 
 **Comprehensive gradient testing requires multiple levels of verification:**
