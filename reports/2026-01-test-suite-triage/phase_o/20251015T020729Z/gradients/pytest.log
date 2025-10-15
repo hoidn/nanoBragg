@@ -1,0 +1,20 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 14 items
+
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_a PASSED [  7%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_b PASSED [ 14%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_c PASSED [ 21%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_alpha PASSED [ 28%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_beta PASSED [ 35%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_gamma PASSED [ 42%]
+tests/test_gradients.py::TestAdvancedGradients::test_joint_gradcheck PASSED [ 50%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradgradcheck_cell_params PASSED [ 57%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation FAILED [ 64%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality PASSED [ 71%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency PASSED [ 78%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability 
