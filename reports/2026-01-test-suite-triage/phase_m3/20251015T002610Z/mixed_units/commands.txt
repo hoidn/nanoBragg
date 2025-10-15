@@ -1,0 +1,38 @@
+# C15 Cluster Validation Commands
+# Date: 2025-10-15
+# STAMP: 20251015T002610Z
+# Purpose: Evidence-only validation of C15 mixed-units cluster status
+
+# Step 1: Create artifact directories
+STAMP=20251015T002610Z
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units
+mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units_callchain
+
+# Step 2: Run targeted test (expected input.md test selector had wrong class name)
+# Corrected selector: TestATParallel015MixedUnits (not TestATParallel015)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE \
+  pytest -v tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/pytest_before.log
+
+# Result: PASSED in 3.74s
+
+# Step 3: Run full module for validation
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE \
+  pytest -v tests/test_at_parallel_015.py \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/pytest_module.log
+
+# Result: 5/5 PASSED in 4.49s
+
+# Step 4: Check git history for resolution
+git log --all --grep="C15|mixed.units|zero.intensity" --oneline | head -10
+
+# Found resolution commit: f2a720ba (2025-10-12)
+
+# Step 5: Examine resolution commit
+git show f2a720ba --stat
+
+# Root cause: dmin=2.0Å too aggressive, excluded all reflections
+# Fix: Changed simulator.py:162 to handle dmin=None, updated test to use dmin=None
+
+# FINDING: C15 cluster ALREADY RESOLVED in prior loop (commit f2a720ba)
+# input.md directive is stale/redundant — no callchain SOP execution needed

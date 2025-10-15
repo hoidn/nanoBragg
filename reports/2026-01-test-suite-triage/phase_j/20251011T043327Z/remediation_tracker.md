@@ -12,13 +12,13 @@
 
 This tracker maps all active test failures across clusters to their owning fix-plan items, defines reproduction commands, documents blocking dependencies, and specifies exit criteria. Use this document as the single source of truth for remediation execution order and progress tracking.
 
-**Current Status (Updated 2025-10-15 Sprint 1.2 Complete, STAMP: 20251015T001345Z):**
+**Current Status (Updated 2025-10-15 Attempt #45, STAMP: 20251015T002610Z):**
 - **Total Failures:** 12 (down from 46 in Phase M0, -73.9% improvement; down from 31 in Phase K, -61.3% improvement)
-- **Active Clusters:** 5 (C2, C8, C15, C17, C18 active; C1/C3/C4/C5/C7/C16 resolved)
+- **Active Clusters:** 4 (C2, C8, C17, C18 active; C1/C3/C4/C5/C7/C15/C16 resolved)
 - **Implementation Bugs:** 11 (91.7%)
 - **Tolerance Adjustments:** 0 (C16 resolved via tolerance relaxation)
 - **Pass Rate:** 82.0% (estimated, pending full suite rerun)
-- **Ledger Updated:** Attempt #44 (20251015T001345Z)
+- **Ledger Updated:** Attempt #45 (20251015T002610Z)
 
 **Phase M2 Closure Notes:**
 - ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
@@ -44,7 +44,7 @@ This tracker maps all active test failures across clusters to their owning fix-p
 | C6 | MOSFLM Offset (retired) | 0 | - | - | ✅ SUBSUMED | done | - | Merged into C8 per Phase M2 triage |
 | C7 | Lattice Shape Fixtures | 0 | ralph | [SIMULATOR-DETECTOR-REQUIRED-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #27 (20251011T170539Z) |
 | C8 | MOSFLM Beam Center | 1 | ralph | [DETECTOR-CONFIG-001] | P2.1 | → Phase M3 | - | Phase M3a summary at 20251011T175917Z |
-| C15 | Mixed Units Zero Intensity | 1 | ralph | [UNIT-CONV-001] | P2.2 | → Phase M3 | - | Needs callchain investigation |
+| C15 | Mixed Units Zero Intensity | 0 | ralph | [UNIT-CONV-001] | ✅ RESOLVED | done | - | Attempt #45 (20251015T002610Z): dmin=2.0Å → dmin=None per commit f2a720ba (2025-10-12), 5/5 tests passing |
 | C16 | Detector Orthogonality | 0 | ralph | [DETECTOR-ORTHOGONALITY-001] | ✅ RESOLVED | done | - | Sprint 1.2 (20251015T001345Z): tolerance relaxed 1e-10→1e-7, 25/25 geometry tests passing |
 | C17 | Polarization Semantics | 2 | ralph | [POLARIZATION-OVERSAMPLE-001] | P3.2 | in_planning | - | Spec clarification needed |
 | C18 | Performance Expectations | 1 | ralph | [PERF-THREAD-SCALING-001] | P4.1 | in_planning | - | Test expectation adjustment needed |
