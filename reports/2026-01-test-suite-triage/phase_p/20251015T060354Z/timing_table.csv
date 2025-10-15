@@ -1,0 +1,8 @@
+test_node,runtime_s,status,source_selector
+tests/test_gradients.py::TestAdvancedGradients::test_property_gradient_stability,845.68,PASS,chunk_03_part3b
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation,1.59,FAIL_C19,chunk_03_part3b
+tests/test_at_cli_001.py::TestATCLI001CommandLineInterface::test_vectorization_scaling,2.60,PASS,chunk_03_part2
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_pivot_override,2.01,PASS,chunk_03_part2
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_distance_vs_close_distance_pivot_defaults,2.00,PASS,chunk_03_part2
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality,0.07,PASS,chunk_03_part3a
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency,0.04,PASS,chunk_03_part3a
