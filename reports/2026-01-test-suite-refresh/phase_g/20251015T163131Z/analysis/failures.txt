@@ -1,0 +1,8 @@
+FAILED tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c - AssertionError: C reference run failed
+FAILED tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization - AssertionError: Bandwidth utilization decreases too much with size: 0.178 GB/s vs 0.394 GB/s
+FAILED tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_script_integration - assert 2 in [0, 3]
+FAILED tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] - FileNotFoundError: [Errno 2] No such file or directory: 'reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json'
+FAILED tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip - AssertionError: Missing scaled.hkl
+FAILED tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability - Failed: Timeout (>905.0s) from pytest-timeout.
+FAILED tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar - RuntimeError: Float did not match Double
+FAILED tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire - RuntimeError: Float did not match Double

@@ -1,0 +1,21 @@
+# Phase G Full Suite Rerun - Validation After Phase D/F Cluster Diagnostics
+# Date: 2025-10-15
+# Purpose: Lock in Phase D/F remediation results; validate zero regressions
+
+# Environment setup
+export CUDA_VISIBLE_DEVICES=-1
+export KMP_DUPLICATE_LIB_OK=TRUE
+export NANOBRAGG_DISABLE_COMPILE=1
+export PYTEST_ADDOPTS="--maxfail=200 --timeout=905"
+
+# Full guarded suite with timing + output capture
+/usr/bin/time -v -o reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/artifacts/time.txt \
+  timeout 3600 \
+  env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  PYTEST_ADDOPTS="--maxfail=200 --timeout=905" \
+  pytest -vv tests/ \
+  --junitxml=reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/artifacts/pytest.junit.xml \
+  | tee reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/logs/pytest_full.log
+
+# Capture exit code
+echo $? > reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/artifacts/exit_code.txt
