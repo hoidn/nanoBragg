@@ -44,6 +44,9 @@ dev = [
     "ruff",
     "isort"
 ]
+test = [
+    "pytest-timeout"
+]
 
 [tool.pytest.ini_options]
 markers = [
