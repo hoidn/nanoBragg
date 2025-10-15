@@ -1,0 +1,3 @@
+NB_C_BIN=<unset>
+fallback_golden=./golden_suite_generator/nanoBragg
+fallback_root=./nanoBragg

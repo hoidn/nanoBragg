@@ -1,0 +1,10 @@
+-rwxrwxr-x 1 ollie ollie 139552 Oct 10 05:37 ./golden_suite_generator/nanoBragg
+  File: ./golden_suite_generator/nanoBragg
+  Size: 139552    	Blocks: 280        IO Block: 4096   regular file
+Device: 259,2	Inode: 16815164    Links: 1
+Access: (0775/-rwxrwxr-x)  Uid: ( 1000/   ollie)   Gid: ( 1000/   ollie)
+Access: 2025-10-14 17:44:19.831785097 -0700
+Modify: 2025-10-10 05:37:14.215313198 -0700
+Change: 2025-10-10 05:37:14.215326698 -0700
+ Birth: 2025-10-10 05:37:14.199246337 -0700
+eec0f143648d3826017e3635b9b4adb1b1e3cbd9d0a1994bf594d6cd23049eb3  ./golden_suite_generator/nanoBragg

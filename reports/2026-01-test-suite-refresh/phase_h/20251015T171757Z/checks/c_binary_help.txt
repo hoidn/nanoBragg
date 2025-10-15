@@ -1,0 +1,80 @@
+nanoBragg nanocrystal diffraction simulator - James Holton and Ken Frankel 5-17-17
+ERROR: no hkl file and no dump file to read.usage: nanoBragg -mat auto.mat -hkl Fs.hkl
+options:
+	-mat filename.mat	mosflm-style matrix file containing three reciprocal unit cell vectors
+	-hkl filename.hkl	text file containing h, k, l and F for P1 unit cell
+	-misset 10 20 30 	alternative to mat file: crystal rotations about x,y,z axes (degrees)
+	-misset random   	alternative to mat file: random orientation
+	-cell a b c al be ga	alternative to mat file: specify crystal unit cell (Angstroms and degrees)
+	-default_F       	alternative to -hkl: assign all unspecified structure factors (default: 0)
+	-distance        	distance from origin to detector center in mm
+	-detsize         	detector size in mm.  may also use -detsize_f -detsize_s
+	-detpixels       	detector size in pixels.  may also use -detpixels_x -detpixels_y
+	-pixel           	detector pixel size in mm.
+	-img header.img  	attempt to initialize camera parameters from an ADSC img header
+	-mask mask.img   	use ADSC img file full of 0 or non-0 values as a mask
+	-detector_absorb 	detector sensor material attenuation depth (um) (default: "inf" to save time)
+	-detector_thick  	detector sensor thickness (um)
+	-detector_thicksteps	number of layers of detector sensor material. Default: 1
+	-Xbeam           	image fast coordinate of direct-beam spot (mm). (default: center)
+	-Ybeam           	image slow coordinate of direct-beam spot (mm). (default: center)
+	-mosflm          	use MOSFLM's direct-beam convention, same as -denzo. (default: adxv)
+	-xds             	use XDS detector origin convention. (default: adxv)
+	-ORGX  -ORGY     	XDS-convention beam center
+	-twotheta        	rotation of detector about spindle axis (deg). (default: 0)
+	-N               	number of unit cells in all directions. may also use -Na -Nb or -Nc
+	-xtalsize        	alternative to -N: specify crystal full width (mm)
+	-square_xtal     	specify parallelpiped crystal shape (default)
+	-round_xtal      	specify ellipsoidal crystal shape (sort of)
+	-gauss_xtal      	Gaussian-shaped spots: no inter-Bragg maxima
+	-tophat_spots    	clip lattice transform at fwhm: no inter-Bragg maxima
+	-oversample      	number of sub-pixels per pixel. use this if xtalsize/lambda > distance/pixel
+	-oversample_thick 	re-calculate thickness effect for sub-pixels (not the default)
+	-oversample_polar 	re-calculate polarization effect for sub-pixels (not the default)
+	-oversample_omega 	re-calculate solid-angle effect for sub-pixels (not the default)
+	-lambda          	incident x-ray wavelength in Angstrom. may also use -energy in eV
+	-mosaic          	isotropic mosaic spread in degrees (use 90 for powder)
+	-mosaic_domains  	number of randomly-oriented mosaic domains to render
+	-dispersion      	spectral dispersion: delta-lambda/lambda in percent
+	-dispsteps       	number of wavelengths in above range
+	-hdivrange       	horizontal angular spread of source points in mrad
+	-vdivrange       	vertical angular spread of source points in mrad
+	-hdivstep        	number of source points in the horizontal
+	-vdivstep        	number of source points in the vertical
+	-square_div      	full divergence grid (default: round off corners)
+	-phi             	starting rotation value about spindle axis in degrees
+	-osc             	rotation range about spindle axis in degrees
+	-phisteps        	number of rotation steps to render
+	-water           	add contribution of x microns of water surrounding crystal
+	-floatfile       	name of binary output file (4-byte floats)
+	-intfile         	name of noiseless smv-formatted output file (not on absolute scale by default)
+	-scale           	scale factor to apply to intfile (default: autoscale)
+	-adc             	offset to apply to output img file pixels (default: 40)
+	-polar           	specify Kahn polarization factor (default: 1)
+	-noisefile       	name of photon-scale smv-formatted output file (with Poisson noise)
+	-pgmfile         	name of 8-bit portable greymap format output file
+	-pgmscale        	relative scale of pgm file (default: auto)
+	-nopgm           	do not write pgm file
+	-roi             	only render part of the image: xmin xmax ymin ymax
+	-printout        	print pixel values out to the screen
+	-seed            	specify random-number seed for noisefile (default, initialize with time)
+	-mosaic_seed     	specify random-number seed for mosaic domain generation (default: 1234567)
+	-misset_seed     	specify random-number seed for crystal orentaiton when -misset random (default, same as -seed)
+	-fluence         	incident beam intensity for photon-counting statistics (photons/m^2)
+	-flux            	alternative to -fluence, specify flux, along with -beamsize and -exposure (photons/s)
+	-beamsize        	alternative to -fluence, specify beam size, along with -flux and -exposure (default: 0.1 mm)
+	-exposure        	alternative to -fluence, specify flux, along with -flux and -beamsize (default: 1 s)
+	-nonoise         	disable generating the noisefile
+	-noprogress      	turn off the progress meter
+	-nopolar         	turn off the polarization correction
+	-nointerpolate   	disable inter-Bragg peak structure factor interpolation
+	-interpolate     	force inter-Bragg peak structure factor interpolation (default: on if < 3 cells wide)
+	-point_pixel     	turn off the pixel solid angle correction
+	-curved_det      	all pixels same distance from crystal
+	-fdet_vector     	unit vector of increasing fast-axis detector pixel coordinate (default: 0 0 1)
+	-sdet_vector     	unit vector of increasing slow-axis detector pixel coordinate (default: 0 -1 0)
+	-odet_vector     	unit vector of increasing detector distance (default: 1 0 0)
+	-beam_vector     	unit vector of x-ray beam direction (default: 1 0 0)
+	-polar_vector    	unit vector of x-ray E-vector polarization (default: 0 0 1)
+	-spindle_axis    	unit vector of right-handed phi rotation axis (default: 0 0 1)
+	-pix0_vector     	vector from crystal to first pixel in image (default: beam centered on detector)
