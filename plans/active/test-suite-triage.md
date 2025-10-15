@@ -29,7 +29,7 @@
 - Phase O ✅ complete — Attempt #75 (chunk 03 rerun, STAMP 20251015T043128Z) confirmed gradcheck guard effectiveness, and Attempt #76 consolidated artifacts + ledger updates to lock the 552 pass / 3 fail / 137 skip baseline (failures limited to C2 infrastructure + C18 performance pre-review).
 - Phase P ✅ complete — Gradient-flow regression resolved via `reports/2026-01-gradient-flow/phase_d/20251015T054646Z/` (Attempt #3); C18 timing packet authored at `phase_p/20251015T060354Z/` with supervisor approval.
 - Phase Q ✅ complete — Validation rerun (Attempt #79, STAMP 20251015T071423Z) passed in 839.14 s, documentation refreshed (Attempt #78/79), and ledger/tracker closure logged (Attempt #80) marking C18 resolved.
-- Phase R 🚧 wrap-up — Chunk 03 rerun succeeded (Attempt #84 / STAMP 20251015T102654Z); remaining work is R4 aggregation + ledger sync before archiving the initiative.
+- Phase R ✅ complete — Chunk 03 rerun (Attempt #84 / STAMP 20251015T102654Z) validated the 905 s tolerance, synced ledger/tracker, and captured closure summary; only archival remains.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -376,11 +376,20 @@ Goal: Capture a final `pytest tests/` ladder under the compile guard to prove ze
 Prereqs: Phase Q completion acknowledged in `docs/fix_plan.md`; chunk command roster synced with `reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/commands.txt`; ensure `pip install -e .` still current.
 Exit Criteria: `reports/2026-01-test-suite-triage/phase_r/<STAMP>/` contains guarded chunk logs + junit XML with 0 failures, aggregated summary + env snapshot captured, and both `docs/fix_plan.md` + `remediation_tracker.md` updated to mark the initiative ready for closure.
 
-**Status (STAMP 20251015T102654Z):** Chunk 03 rerun completed (Attempt #84) under the 905 s ceiling with commands + env guard captured in `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/`. R1–R3 exit signals are satisfied; remaining scope is R4 aggregation + ledger sync using `timing_summary.md` and the tolerance update packet as evidence.
+**Status (STAMP 20251015T102654Z):** Chunk 03 rerun completed (Attempt #84) under the 905 s ceiling with commands + env guard captured in `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/`. R1–R4 are now [D], closure summary + tracker updates landed, and the initiative is ready to archive once fix_plan reflects the completion.
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
 | R1 | Refresh chunk ladder & env guard | [D] | **Attempt #84 (STAMP 20251015T102654Z)** rebuilt `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/commands.txt`, pre-created `chunks/chunk_##/` directories, and captured the guard env under `phase_r/20251015T102654Z/env/python_torch_env.txt` before launching the ladder. |
 | R2 | Uplift slow-gradient timeout ceiling | [D] | **Complete — Attempt #83 (STAMP 20251015T100100Z)** raised the decorator to `@pytest.mark.timeout(905)`, refreshed docs in sync with the Phase P/Q/R evidence packets, and published the design memo plus timing recap under `reports/2026-01-test-suite-triage/phase_r/20251015T100100Z/tolerance_update/`. |
 | R3 | Re-run chunk 03 with updated tolerance | [D] | **Attempt #84** executed the guarded ladder via `timeout 2400 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @commands.txt --maxfail=0 --durations=25 --junitxml chunks/chunk_03/pytest.xml`; artifacts (`pytest.log`, `pytest.xml`, `exit_code.txt`, `timing_summary.md`) live under `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/chunks/chunk_03/` confirming 846.60 s < 905 s. |
-| R4 | Aggregate results & sync ledgers | [D] | **Attempt #84 (docs-only loop)** synthesized Attempt #84 outputs: drafted `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md` (pulling metrics from `timing_summary.md`, commands.txt, env snapshots), updated `remediation_tracker.md` Executive Summary + C18 row with Phase R closure (905s tolerance, 846.60s runtime, 58.40s margin), marked R1-R3 [D] in this plan. Next: update `docs/fix_plan.md` (log Attempt #84 + close Next Action 18) to complete Phase R before archiving [TEST-SUITE-TRIAGE-001]. |
+| R4 | Aggregate results & sync ledgers | [D] | **Attempt #84 (docs-only loop)** synthesized the closure bundle: `summary.md`, `timing_summary.md`, env snapshots, and tracker updates now live under `phase_r/20251015T102654Z/`. Fix plan + remediation tracker capture the 846.60 s runtime and 905 s ceiling; archival is the only remaining step. |
+
+### Phase S — Archival & Closure
+Goal: Retire the initiative once supervisory sign-off is recorded while preserving discoverability of the evidence bundles.
+Prereqs: Phase R completion logged in `docs/fix_plan.md`; closure artifacts indexed in `phase_r/20251015T102654Z/`.
+Exit Criteria: Plan relocated to `plans/archive/` with closure note, fix_plan index updated to status `done`, and `galph_memory.md` records the archival attempt.
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| S1 | Move plan & sync ledger | [ ] | After this loop’s fix_plan update is reviewed, move this file to `plans/archive/test-suite-triage.md`, add a short closure preface (motivation, final metrics), and update `docs/fix_plan.md` Active Focus + Index to reflect archival. Reference `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md` for the final baseline. |
