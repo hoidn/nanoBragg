@@ -1,0 +1,4 @@
+nanobrag-torch                     0.1.0          /home/ollie/Documents/tmp/nanoBragg
+pytorch-lightning                  2.5.2
+torch                              2.7.1
+torchmetrics                       1.7.3
