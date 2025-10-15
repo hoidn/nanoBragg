@@ -1,0 +1,6 @@
+part1=cli_001,flu_001,io_004,parallel_009,parallel_020
+part2=perf_001,pre_002,sta_001,configuration_consistency,show_config
+part3=gradients_only
+part3_timeout=yes
+part3_elapsed=10:00.10
+part3_exit_code=124
