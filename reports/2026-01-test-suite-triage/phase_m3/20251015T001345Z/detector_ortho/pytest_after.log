@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 25 items
+
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_mosflm_convention PASSED [  4%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_xds_convention PASSED [  8%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_single_axis_rotations PASSED [ 12%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_combined_rotations PASSED [ 16%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_twotheta_rotation PASSED [ 20%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_all_rotations_combined PASSED [ 24%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_tensor_rotation_parameters PASSED [ 28%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_rotated_basis_vectors_match_c_reference PASSED [ 32%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_pix0_vector_matches_c_reference_in_beam_pivot PASSED [ 36%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_mosflm_axis_mapping_correctness PASSED [ 40%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 44%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 48%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 52%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 56%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 60%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 64%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 68%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [ 76%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts PASSED [ 80%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_twotheta PASSED [ 84%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_combined_extreme_angles PASSED [ 88%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_near_90_degree_incidence PASSED [ 92%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_solid_angle_obliquity_corrections PASSED [ 96%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_extreme_rotation_stability PASSED [100%]
+
+============================== 25 passed in 6.02s ==============================

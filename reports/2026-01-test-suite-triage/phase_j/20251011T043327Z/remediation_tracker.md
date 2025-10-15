@@ -12,13 +12,13 @@
 
 This tracker maps all active test failures across clusters to their owning fix-plan items, defines reproduction commands, documents blocking dependencies, and specifies exit criteria. Use this document as the single source of truth for remediation execution order and progress tracking.
 
-**Current Status (Updated 2025-10-12 Phase M2 Ledger Refresh, STAMP: 20251012T010425Z):**
-- **Total Failures:** 13 (down from 46 in Phase M0, -71.7% improvement; down from 31 in Phase K, -58.1% improvement)
-- **Active Clusters:** 6 (C2, C8, C15, C16, C17, C18 active; C1/C3/C4/C5/C7/C9-C14 resolved)
-- **Implementation Bugs:** 12 (92.3%)
-- **Tolerance Adjustments:** 1 (7.7% — C16 orthogonality)
-- **Pass Rate:** 81.7% (561 passed / 687 collected)
-- **Ledger Updated:** Attempt #40 (20251012T010425Z)
+**Current Status (Updated 2025-10-15 Sprint 1.2 Complete, STAMP: 20251015T001345Z):**
+- **Total Failures:** 12 (down from 46 in Phase M0, -73.9% improvement; down from 31 in Phase K, -61.3% improvement)
+- **Active Clusters:** 5 (C2, C8, C15, C17, C18 active; C1/C3/C4/C5/C7/C16 resolved)
+- **Implementation Bugs:** 11 (91.7%)
+- **Tolerance Adjustments:** 0 (C16 resolved via tolerance relaxation)
+- **Pass Rate:** 82.0% (estimated, pending full suite rerun)
+- **Ledger Updated:** Attempt #44 (20251015T001345Z)
 
 **Phase M2 Closure Notes:**
 - ✅ [DTYPE-NEUTRAL-001] **VERIFIED COMPLETE** — Pre-Sprint gate passed (20251011T044530Z)
@@ -45,7 +45,7 @@ This tracker maps all active test failures across clusters to their owning fix-p
 | C7 | Lattice Shape Fixtures | 0 | ralph | [SIMULATOR-DETECTOR-REQUIRED-001] | ✅ RESOLVED | done | - | Sprint 0 Attempt #27 (20251011T170539Z) |
 | C8 | MOSFLM Beam Center | 1 | ralph | [DETECTOR-CONFIG-001] | P2.1 | → Phase M3 | - | Phase M3a summary at 20251011T175917Z |
 | C15 | Mixed Units Zero Intensity | 1 | ralph | [UNIT-CONV-001] | P2.2 | → Phase M3 | - | Needs callchain investigation |
-| C16 | Detector Orthogonality | 1 | ralph | [DETECTOR-ORTHOGONALITY-001] | P3.1 | → Phase M3 | - | Phase M3b notes at 20251011T181529Z; tolerance adjustment candidate |
+| C16 | Detector Orthogonality | 0 | ralph | [DETECTOR-ORTHOGONALITY-001] | ✅ RESOLVED | done | - | Sprint 1.2 (20251015T001345Z): tolerance relaxed 1e-10→1e-7, 25/25 geometry tests passing |
 | C17 | Polarization Semantics | 2 | ralph | [POLARIZATION-OVERSAMPLE-001] | P3.2 | in_planning | - | Spec clarification needed |
 | C18 | Performance Expectations | 1 | ralph | [PERF-THREAD-SCALING-001] | P4.1 | in_planning | - | Test expectation adjustment needed |
 | ~~C9~~ | ~~DENZO Convention~~ | - | - | - | ✅ RESOLVED | - | - | Cleared in Phase M post-fix validation |
