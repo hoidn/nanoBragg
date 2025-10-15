@@ -309,7 +309,7 @@ Exit Criteria: Chunk ladder executed under a new STAMP with aggregated metrics (
 | O5f | Run gradients — part 3b (slow set) | [D] | 1 pass / 1 fail; `test_property_gradient_stability` runtime logged at 845.68 s, `test_gradient_flow_simulation` failed with zero gradients. Artifacts: `pytest_part3b.{log,xml}`. |
 | O5g | Aggregate chunk 03 evidence | [D] | `phase_o/20251015T043128Z/chunks/chunk_03/summary.md` records aggregated counts (42 pass / 1 fail / 10 skipped) and slowest durations; `phase_o/20251015T043128Z/summary.md` updated with Attempt #75 findings. |
 | O5h | Capture per-test timing + blockers | [D] | Attempt #75 added the "Gradient Timing" section documenting the 845.68 s stability runtime and the C19 failure signature; recommendations captured for C18/C19 follow-up. |
-| O6 | Refresh ledgers + clean artifacts | [P] | Pending this supervisor loop: (1) update `remediation_tracker.md` + Status Snapshot to reflect 552/3/137 baseline, (2) log Attempt #75 in docs/fix_plan.md with updated Next Actions (pivot to C18/C19), and (3) consolidate guard artifacts while pruning the earlier timeout bundles once summaries copied. |
+| O6 | Refresh ledgers + clean artifacts | [D] | Attempt #76 (2025-10-15, ralph docs-only loop): relocated stray `pytest.xml` to `phase_o/20251015T043128Z/gradients/`, archived 5 timeout bundles (020729Z–041005Z) to `phase_o/archive/`, ran aggregation verifier for chunk 03 (42/1/10), and verified `remediation_tracker.md` Executive Summary reflects 552/3/137 baseline with C2 marked ✅ RESOLVED. All Phase O6 tasks complete. |
 
 - Baseline `20251015T043128Z` (Attempt #75) now records 552 passed / 3 failed / 137 skipped. C2 is fully resolved; the remaining failures are C18 (2 perf tolerances) and C19 (gradient flow assertion).
 

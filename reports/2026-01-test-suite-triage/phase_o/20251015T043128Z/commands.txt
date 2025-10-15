@@ -65,3 +65,12 @@ timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DIS
 # - test_property_gradient_stability: 845.68s (validates C18 slow-test classification)
 # - test_gradient_flow_simulation: FAILED with zero gradients (C19)
 # - Selector correction applied: TestPropertyBasedGradients, TestAdvancedGradients
+
+2025-10-15T05:05:52Z Phase O6 cleanup start
+2025-10-15T05:06:17Z Moved stray pytest.xml to 20251015T043128Z/gradients/
+2025-10-15T05:06:18Z Archived timeout bundle 20251015T020729Z
+2025-10-15T05:06:18Z Archived timeout bundle 20251015T023954Z
+2025-10-15T05:06:18Z Archived timeout bundle 20251015T030233Z
+2025-10-15T05:06:18Z Archived timeout bundle 20251015T034633Z
+2025-10-15T05:06:18Z Archived timeout bundle 20251015T041005Z
+2025-10-15T05:06:18Z Phase O6 cleanup complete
