@@ -2673,3 +2673,14 @@
 - No orthogonality-related findings found in `docs/findings.md`; proceeding under assumption documentation remains current.
 - Follow-up for Ralph: complete Phase N N1–N4, update remediation tracker, and log Attempt referencing new STAMP before moving to C15.
 - <Action State>: [ready_for_implementation]
+### 2025-10-15T00:19:46Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase N status sync & Sprint 1.3 gate
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-15T00:24:43Z (galph loop recap)
+- Aligned `plans/active/test-suite-triage.md` Phase N with Attempt #44 (C16 tolerance closure), updated status snapshot, and pointed Phase O toward C15 mixed-units callchain.
+- Refreshed `docs/fix_plan.md` Next Actions to mark Sprint 1.2 complete and staged Sprint 1.3 tasks (S1–S3) for mixed-units callchain evidence.
+- Reissued `input.md` directing C15 reproduction plus callchain capture with STAMPed artifact expectations.
+- Action State: [ready_for_implementation]
+

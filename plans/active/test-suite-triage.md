@@ -24,9 +24,9 @@
 - Phase M0 ✅ complete — Attempt #21 (20251011T153931Z) executed the chunked rerun: 504 passed / 46 failed / 136 skipped, triage_summary.md refreshed with nine active clusters (C1–C9) and new quick-win priorities.
 - Phase M1 ✅ complete — Sprint 0 clusters C1/C3/C4/C5/C7 closed (Attempts #21/#22/#25/#26/#27); Attempt #28 logged the M1f ledger/tracker refresh, Attempt #29 verified the compile guard (10/10 gradchecks pass), and Attempt #30 documented the compile-guard doc updates.
 - Phase M2 ✅ complete (Attempt #41 — `reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/`): 561 passed / 13 failed / 112 skipped recorded with chunked execution (<110 s per chunk).
-- Phase M3 ✅ documentation complete (STAMP: 20251011T193829Z) — Evidence bundles created for 4 remaining clusters (C2 gradients guard, C8 MOSFLM offset, C15 mixed units, C16 orthogonality) under `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/`; tracker and analysis summaries refreshed with Phase M2 results.
-- Phase N 🚧 pending — Sprint 1.2 (C16 detector orthogonality) delegated for execution; tasks N1–N4 remain open pending implementation handoff (see Phase N below).
-- Phase M ⏳ pending — 13 residual failures (clusters C2, C8, C15, C16) await specialist handoffs + remediation execution before final post-fix validation rerun.
+- Phase M3 ✅ documentation complete (STAMP: 20251011T193829Z) — Evidence bundles captured for the active clusters (C2 gradient guard, C8 detector config follow-up, C15 mixed units, C17 polarization, C18 performance) under `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/`; tracker and analysis summaries reflect the Phase M2 results.
+- Phase N ✅ complete — Sprint 1.2 (C16 detector orthogonality) closed via Attempt #44 (STAMP 20251015T001345Z); tolerance relaxed to 1e-7 with geometry regression green.
+- Phase M ⏳ pending — 12 residual failures (clusters C2 gradient guard, C8 detector config follow-up, C15 mixed units, C17 polarization, C18 performance) await specialist handoffs + remediation execution before final post-fix validation rerun.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -284,7 +284,9 @@ Exit Criteria: Targeted grazing-incidence test passes with updated tolerance, re
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| N1 | Capture baseline failure log | [ ] | Run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts` and store STDERR/STDOUT under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho/pytest_before.log` to confirm pre-fix signature (1.49e-08 > 1e-10). |
-| N2 | Update orthogonality tolerance | [ ] | Adjust the tolerance in `tests/test_at_parallel_017.py:95` (and any shared helper) to use `1e-7` for float64 contexts (cite `detector_ortho/notes.md` §Executive Summary). Add inline comment referencing spec-a-core.md §49-54 and the recorded drift; avoid touching production code unless follow-up analysis refutes tolerance relaxation. |
-| N3 | Validate geometry regression suite | [ ] | Re-run `pytest -vv tests/test_detector_basis_vectors.py tests/test_detector_geometry.py tests/test_at_parallel_017.py` (CPU, float64) capturing logs under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho/pytest_after.log` and `.../regression.log`. Ensure no new failures/skips appear. |
-| N4 | Sync documentation and trackers | [ ] | Update `tests/test_at_parallel_017.py` docstring with the numeric tolerance rationale, refresh `reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho/implementation_notes.md`, mark C16 row resolved in `phase_j/remediation_tracker.md`, and log Attempt in `docs/fix_plan.md` + plan status snapshot. |
+| N1 | Capture baseline failure log | [D] | Attempt #44 referenced the documented 1.49e-08 breach in `reports/2026-01-test-suite-triage/phase_m3/20251011T181529Z/detector_ortho/notes.md` before adjusting tolerances. |
+| N2 | Update orthogonality tolerance | [D] | Attempt #44 relaxed assertions to `1e-7` in `tests/test_at_parallel_017.py:95-106` with inline rationale citing spec-a-core.md §§49-54; see STAMP `20251015T001345Z` implementation notes. |
+| N3 | Validate geometry regression suite | [D] | Attempt #44 reran `pytest -vv tests/test_detector_basis_vectors.py tests/test_detector_geometry.py tests/test_at_parallel_017.py`; `reports/2026-01-test-suite-triage/phase_m3/20251015T001345Z/detector_ortho/pytest_after.log` shows 25/25 passing. |
+| N4 | Sync documentation and trackers | [D] | Attempt #44 updated `implementation_notes.md`, marked C16 resolved in the Phase J tracker, and logged the attempt in `docs/fix_plan.md` / this status snapshot. |
+
+Next focus: Stage Phase O — Sprint 1.3 mixed-units callchain (cluster C15). Use `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mixed_units/summary.md` as the specialist brief before launching evidence collection.

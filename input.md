@@ -1,37 +1,35 @@
-Summary: Resolve the remaining detector orthogonality failure (C16) by relaxing the documented tolerance and revalidating the geometry suite.
+Summary: Capture the C15 mixed-units zero-intensity failure and launch the callchain evidence pack to locate the first divergence.
 Mode: Parity
-Focus: TEST-SUITE-TRIAGE-001 / Sprint 1.2 (C16 detector orthogonality)
+Focus: TEST-SUITE-TRIAGE-001 / Sprint 1.3 (C15 mixed-units callchain)
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts; tests/test_detector_basis_vectors.py; tests/test_detector_geometry.py
-Artifacts: reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho/{commands.txt,pytest_before.log,pytest_after.log,regression.log,implementation_notes.md}
-Do Now: env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts
-If Blocked: Capture the failure signature under reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho/blocked.md and note the blocker in docs/fix_plan.md Attempts History; ping supervisor before proceeding.
+Mapped tests: tests/test_at_parallel_015.py::TestATParallel015::test_mixed_units_comprehensive
+Artifacts: reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/{commands.txt,pytest_before.log}; reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units_callchain/{callchain/static.md,summary.md,trace/tap_points.md,env/trace_env.json}
+Do Now: [TEST-SUITE-TRIAGE-001] Sprint 1.3 (C15 mixed-units callchain) — env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_parallel_015.py::TestATParallel015::test_mixed_units_comprehensive
+If Blocked: Save stdout/stderr plus context to reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/blocked.md and flag the blocker in docs/fix_plan.md Attempts History; pause for supervisor guidance.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:280 — Phase N checklist (N1–N4) defines the exact tasks for Sprint 1.2.
-- docs/fix_plan.md:48 — Next Actions now point to launching Sprint 1.2 with baseline log, tolerance update, regression run, and tracker sync.
-- reports/2026-01-test-suite-triage/phase_m3/20251011T181529Z/detector_ortho/notes.md — Owner notes capture the failure magnitude (~1.49e-08) and recommend tolerance relaxation over code changes.
-- tests/test_at_parallel_017.py:88-139 — Current assertions still quote the stricter tolerance in multiple spots and need coordinated updates plus explanatory comments.
-- specs/spec-a-core.md:49-89 — Detector basis and rotation requirements the revised tolerance must still respect.
+- docs/fix_plan.md:48 — Next Action #4 now calls for Sprint 1.3 mixed-units callchain with explicit S1–S3 tasks.
+- plans/active/test-suite-triage.md:292 — Phase N closed; next focus directs Sprint 1.3 using the mixed-units brief.
+- reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mixed_units/summary.md:1 — Contains hypotheses, suspected code paths, and trace strategy you must reference.
+- docs/development/testing_strategy.md:32 — Reiterates required env guards (KMP_DUPLICATE_LIB_OK, CPU-first) for deterministic parity runs.
 How-To Map:
-1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)`, then `mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/detector_ortho` and tee every pytest invocation into `commands.txt` inside that directory.
-2. Run the Do Now command to confirm the pre-fix failure; save full output to `pytest_before.log` (use `2>&1 | tee ...`).
-3. In `tests/test_at_parallel_017.py`, update every orthogonality/normalization assertion to use `1e-7` for float64 contexts (lines ~95-105 and 330-338); refresh or add comments citing Phase M3 measurement and spec §49-54. Ensure any hard-coded tolerance strings in messages stay consistent.
-4. Re-run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_parallel_017.py` and capture the passing log as `pytest_after.log`; follow with `pytest -vv tests/test_detector_basis_vectors.py tests/test_detector_geometry.py` saving to `regression.log`.
-5. Draft `implementation_notes.md` summarising the rationale, doc updates, and verification results; mark C16 resolved in `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` and append the Attempt in docs/fix_plan.md referencing the new STAMP.
+1. export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units_callchain; tee all commands into mixed_units/commands.txt.
+2. Run the Do Now command, capture output via `2>&1 | tee reports/2026-01-test-suite-triage/phase_m3/$STAMP/mixed_units/pytest_before.log`; note failing assertion details.
+3. Prepare callchain inputs: read the brief, extract ROI + suspected modules; then invoke prompts/callchain.md with parameters — analysis_question="Why does the mixed-units comprehensive test produce zero intensity?", initiative_id="mixed-units-callchain", scope_hints='["unit conversions","stol/dmin","scattering vector"]', roi_hint="64 64", namespace_filter="nanobrag_torch", time_budget_minutes=45.
+4. Follow the callchain SOP exactly; emit artifacts under mixed_units_callchain/ (static.md, dynamic.txt if captured, tap_points.md, summary.md, env/trace_env.json). Include both C and PyTorch taps when feasible; if a hook cannot be gathered, document why in tap_points.md.
+5. Update mixed_units/summary.md with an addendum summarising first-divergence findings and next validation steps; reflect status in reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md and add the Attempt to docs/fix_plan.md referencing STAMP + artifacts.
 Pitfalls To Avoid:
-- Do not touch src/ code unless tolerance relaxation fails; this sprint is test-only.
-- Keep STAMPed artifacts separate—never overwrite 20251011T181529Z evidence.
-- Apply the new tolerance uniformly (vector dot products, normalization, rotation-matrix checks) to avoid inconsistent assertions.
-- Maintain dtype-neutral language in comments; note float32 vs float64 implications explicitly.
-- Preserve Protected Assets (`input.md`, `loop.sh`) while editing trackers.
-- Include `KMP_DUPLICATE_LIB_OK=TRUE` on every pytest invocation.
-- Confirm assertions still enforce determinantal checks with realistic tolerances; do not remove the tests.
-- Update documentation before modifying fix_plan attempts to keep ledgers in sync.
-- Capture exact commands in commands.txt; no ad-hoc shells.
+- Do not modify production code this loop; evidence-only per Sprint 1.3 entry.
+- Keep KMP_DUPLICATE_LIB_OK=TRUE on every pytest/trace invocation.
+- Use fresh STAMP directories—never overwrite 20251011T193829Z evidence.
+- Ensure callchain taps reuse production helpers (no re-derived math) per debugging SOP.
+- Capture command provenance in commands.txt; no ad-hoc shell history reliance.
+- Preserve device neutrality; stay on CPU unless evidence demands GPU follow-up.
+- Record any deviations (missing taps, trace schema changes) inside tap_points.md.
+- Respect Protected Assets (docs/index.md listings) during edits of trackers or summaries.
 Pointers:
-- plans/active/test-suite-triage.md:280
 - docs/fix_plan.md:48
-- reports/2026-01-test-suite-triage/phase_m3/20251011T181529Z/detector_ortho/notes.md
-- tests/test_at_parallel_017.py:88-139
-- specs/spec-a-core.md:49-89
-Next Up: C15 mixed-units investigation once C16 is resolved (reuse Phase M3 mixed_units brief).
+- plans/active/test-suite-triage.md:292
+- reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mixed_units/summary.md:1
+- docs/development/testing_strategy.md:32
+- prompts/callchain.md:1
+Next Up: After callchain results, triage the first divergence and map remediation tasks for UNIT-CONV-001.
