@@ -1,0 +1,62 @@
+{
+    "arch": "x86_64",
+    "build": "had4a41a_0",
+    "build_number": 0,
+    "channel": "https://conda.anaconda.org/conda-forge",
+    "depends": [
+        "__glibc >=2.17,<3.0.a0",
+        "libmamba 2.1.1 h430c389_0",
+        "reproc >=14.2,<15.0a0",
+        "reproc-cpp >=14.2,<15.0a0",
+        "zstd >=1.5.6,<1.6.0a0"
+    ],
+    "extracted_package_dir": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/mamba-2.1.1-had4a41a_0",
+    "files": [
+        "bin/mamba",
+        "condabin/mamba",
+        "etc/profile.d/mamba.sh"
+    ],
+    "fn": "mamba-2.1.1-had4a41a_0.conda",
+    "license": "BSD-3-Clause",
+    "license_family": "BSD",
+    "link": {
+        "source": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/mamba-2.1.1-had4a41a_0",
+        "type": 1
+    },
+    "md5": "a42dba86ec002c01ccf9e7b6e005bfc1",
+    "name": "mamba",
+    "package_tarball_full_path": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/mamba-2.1.1-had4a41a_0.tar.bz2",
+    "paths_data": {
+        "paths": [
+            {
+                "_path": "bin/mamba",
+                "path_type": "hardlink",
+                "sha256": "4e4a7f1767173eff14eb2a48551d33c0a9e0f78b2f7b62b4f61728783aa48598",
+                "sha256_in_prefix": "4e4a7f1767173eff14eb2a48551d33c0a9e0f78b2f7b62b4f61728783aa48598",
+                "size_in_bytes": 1663168
+            },
+            {
+                "_path": "condabin/mamba",
+                "path_type": "softlink",
+                "sha256_in_prefix": "4e4a7f1767173eff14eb2a48551d33c0a9e0f78b2f7b62b4f61728783aa48598",
+                "size_in_bytes": 1663168
+            },
+            {
+                "_path": "etc/profile.d/mamba.sh",
+                "path_type": "hardlink",
+                "sha256": "e821954012855db1074ca274fb53daa5de50eb74627eaebaa9040418f997feaf",
+                "sha256_in_prefix": "91cae9ec9bd5dc562515593bfd97277114776ea17e1c3baeb3ecb00c02c12ae4",
+                "size_in_bytes": 2848
+            }
+        ],
+        "paths_version": 1
+    },
+    "platform": "linux",
+    "requested_spec": "mamba==2.1.1=had4a41a_0",
+    "sha256": "2146a0dd88021492b07f754d7f7521c5e9434e2ff1397a3c247562181e7fcd54",
+    "size": 461752,
+    "subdir": "linux-64",
+    "timestamp": 1746517676854,
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/mamba-2.1.1-had4a41a_0.conda",
+    "version": "2.1.1"
+}

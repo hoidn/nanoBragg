@@ -1,0 +1,66 @@
+{
+    "arch": "x86_64",
+    "build": "h8f9b012_3",
+    "build_number": 3,
+    "channel": "https://conda.anaconda.org/conda-forge",
+    "depends": [
+        "__glibc >=2.17,<3.0.a0",
+        "libgcc 15.1.0 h767d61c_3"
+    ],
+    "extracted_package_dir": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/libstdcxx-15.1.0-h8f9b012_3",
+    "files": [
+        "lib/libstdc++.so",
+        "lib/libstdc++.so.6",
+        "lib/libstdc++.so.6.0.34",
+        "share/licenses/libstdc++/RUNTIME.LIBRARY.EXCEPTION"
+    ],
+    "fn": "libstdcxx-15.1.0-h8f9b012_3.conda",
+    "license": "GPL-3.0-only WITH GCC-exception-3.1",
+    "license_family": "GPL",
+    "link": {
+        "source": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/libstdcxx-15.1.0-h8f9b012_3",
+        "type": 1
+    },
+    "md5": "6d11a5edae89fe413c0569f16d308f5a",
+    "name": "libstdcxx",
+    "package_tarball_full_path": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/libstdcxx-15.1.0-h8f9b012_3.tar.bz2",
+    "paths_data": {
+        "paths": [
+            {
+                "_path": "lib/libstdc++.so",
+                "path_type": "softlink",
+                "sha256_in_prefix": "43df50d580721fe5c0a0def95404157c81765da645900c59bd3cbed1ad9d3930",
+                "size_in_bytes": 14140344
+            },
+            {
+                "_path": "lib/libstdc++.so.6",
+                "path_type": "softlink",
+                "sha256_in_prefix": "43df50d580721fe5c0a0def95404157c81765da645900c59bd3cbed1ad9d3930",
+                "size_in_bytes": 14140344
+            },
+            {
+                "_path": "lib/libstdc++.so.6.0.34",
+                "path_type": "hardlink",
+                "sha256": "43df50d580721fe5c0a0def95404157c81765da645900c59bd3cbed1ad9d3930",
+                "sha256_in_prefix": "43df50d580721fe5c0a0def95404157c81765da645900c59bd3cbed1ad9d3930",
+                "size_in_bytes": 14140344
+            },
+            {
+                "_path": "share/licenses/libstdc++/RUNTIME.LIBRARY.EXCEPTION",
+                "path_type": "hardlink",
+                "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74",
+                "sha256_in_prefix": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74",
+                "size_in_bytes": 3324
+            }
+        ],
+        "paths_version": 1
+    },
+    "platform": "linux",
+    "requested_spec": "libstdcxx==15.1.0=h8f9b012_3",
+    "sha256": "7650837344b7850b62fdba02155da0b159cf472b9ab59eb7b472f7bd01dff241",
+    "size": 3896407,
+    "subdir": "linux-64",
+    "timestamp": 1750808251302,
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-15.1.0-h8f9b012_3.conda",
+    "version": "15.1.0"
+}

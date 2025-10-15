@@ -1,0 +1,437 @@
+{
+    "arch": "x86_64",
+    "build": "he02047a_1",
+    "build_number": 1,
+    "channel": "https://conda.anaconda.org/conda-forge",
+    "depends": [
+        "__glibc >=2.17,<3.0.a0",
+        "libgcc-ng >=12",
+        "libstdcxx-ng >=12"
+    ],
+    "extracted_package_dir": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/nlohmann_json-3.11.3-he02047a_1",
+    "files": [
+        "include/nlohmann/adl_serializer.hpp",
+        "include/nlohmann/byte_container_with_subtype.hpp",
+        "include/nlohmann/detail/abi_macros.hpp",
+        "include/nlohmann/detail/conversions/from_json.hpp",
+        "include/nlohmann/detail/conversions/to_chars.hpp",
+        "include/nlohmann/detail/conversions/to_json.hpp",
+        "include/nlohmann/detail/exceptions.hpp",
+        "include/nlohmann/detail/hash.hpp",
+        "include/nlohmann/detail/input/binary_reader.hpp",
+        "include/nlohmann/detail/input/input_adapters.hpp",
+        "include/nlohmann/detail/input/json_sax.hpp",
+        "include/nlohmann/detail/input/lexer.hpp",
+        "include/nlohmann/detail/input/parser.hpp",
+        "include/nlohmann/detail/input/position_t.hpp",
+        "include/nlohmann/detail/iterators/internal_iterator.hpp",
+        "include/nlohmann/detail/iterators/iter_impl.hpp",
+        "include/nlohmann/detail/iterators/iteration_proxy.hpp",
+        "include/nlohmann/detail/iterators/iterator_traits.hpp",
+        "include/nlohmann/detail/iterators/json_reverse_iterator.hpp",
+        "include/nlohmann/detail/iterators/primitive_iterator.hpp",
+        "include/nlohmann/detail/json_custom_base_class.hpp",
+        "include/nlohmann/detail/json_pointer.hpp",
+        "include/nlohmann/detail/json_ref.hpp",
+        "include/nlohmann/detail/macro_scope.hpp",
+        "include/nlohmann/detail/macro_unscope.hpp",
+        "include/nlohmann/detail/meta/call_std/begin.hpp",
+        "include/nlohmann/detail/meta/call_std/end.hpp",
+        "include/nlohmann/detail/meta/cpp_future.hpp",
+        "include/nlohmann/detail/meta/detected.hpp",
+        "include/nlohmann/detail/meta/identity_tag.hpp",
+        "include/nlohmann/detail/meta/is_sax.hpp",
+        "include/nlohmann/detail/meta/std_fs.hpp",
+        "include/nlohmann/detail/meta/type_traits.hpp",
+        "include/nlohmann/detail/meta/void_t.hpp",
+        "include/nlohmann/detail/output/binary_writer.hpp",
+        "include/nlohmann/detail/output/output_adapters.hpp",
+        "include/nlohmann/detail/output/serializer.hpp",
+        "include/nlohmann/detail/string_concat.hpp",
+        "include/nlohmann/detail/string_escape.hpp",
+        "include/nlohmann/detail/value_t.hpp",
+        "include/nlohmann/json.hpp",
+        "include/nlohmann/json_fwd.hpp",
+        "include/nlohmann/ordered_map.hpp",
+        "include/nlohmann/thirdparty/hedley/hedley.hpp",
+        "include/nlohmann/thirdparty/hedley/hedley_undef.hpp",
+        "include/test_data.hpp",
+        "share/cmake/nlohmann_json/nlohmann_jsonConfig.cmake",
+        "share/cmake/nlohmann_json/nlohmann_jsonConfigVersion.cmake",
+        "share/cmake/nlohmann_json/nlohmann_jsonTargets.cmake",
+        "share/pkgconfig/nlohmann_json.pc"
+    ],
+    "fn": "nlohmann_json-3.11.3-he02047a_1.conda",
+    "license": "MIT",
+    "license_family": "MIT",
+    "link": {
+        "source": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/nlohmann_json-3.11.3-he02047a_1",
+        "type": 1
+    },
+    "md5": "e46f7ac4917215b49df2ea09a694a3fa",
+    "name": "nlohmann_json",
+    "package_tarball_full_path": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/nlohmann_json-3.11.3-he02047a_1.tar.bz2",
+    "paths_data": {
+        "paths": [
+            {
+                "_path": "include/nlohmann/adl_serializer.hpp",
+                "path_type": "hardlink",
+                "sha256": "242b578e1a41c97dec6890bd88bdb824cdb76a9edd849c108299a59469d327e0",
+                "sha256_in_prefix": "242b578e1a41c97dec6890bd88bdb824cdb76a9edd849c108299a59469d327e0",
+                "size_in_bytes": 2279
+            },
+            {
+                "_path": "include/nlohmann/byte_container_with_subtype.hpp",
+                "path_type": "hardlink",
+                "sha256": "c7dc197cbb54b9168373b4b9a3e1cc57cc5583bfcf5008b722b363335bc53511",
+                "sha256_in_prefix": "c7dc197cbb54b9168373b4b9a3e1cc57cc5583bfcf5008b722b363335bc53511",
+                "size_in_bytes": 3533
+            },
+            {
+                "_path": "include/nlohmann/detail/abi_macros.hpp",
+                "path_type": "hardlink",
+                "sha256": "1c7dc7c5062b199a35853f4056ed00ed359ef8fa5c7fb15a58bc79598ec21422",
+                "sha256_in_prefix": "1c7dc7c5062b199a35853f4056ed00ed359ef8fa5c7fb15a58bc79598ec21422",
+                "size_in_bytes": 3807
+            },
+            {
+                "_path": "include/nlohmann/detail/conversions/from_json.hpp",
+                "path_type": "hardlink",
+                "sha256": "b37ced0ba32f8ac5834b4c96058ca5e445bccea27f46299a359eed0ecbf2e58e",
+                "sha256_in_prefix": "b37ced0ba32f8ac5834b4c96058ca5e445bccea27f46299a359eed0ecbf2e58e",
+                "size_in_bytes": 18880
+            },
+            {
+                "_path": "include/nlohmann/detail/conversions/to_chars.hpp",
+                "path_type": "hardlink",
+                "sha256": "5fe11205c45dbd08373244d743f38e89ceefb8c9b5fc4c68077117c786d53bef",
+                "sha256_in_prefix": "5fe11205c45dbd08373244d743f38e89ceefb8c9b5fc4c68077117c786d53bef",
+                "size_in_bytes": 38562
+            },
+            {
+                "_path": "include/nlohmann/detail/conversions/to_json.hpp",
+                "path_type": "hardlink",
+                "sha256": "73bad524856d475a6071fd7b5422f80df13ba7586f0d4b48141c2ec60cebcf89",
+                "sha256_in_prefix": "73bad524856d475a6071fd7b5422f80df13ba7586f0d4b48141c2ec60cebcf89",
+                "size_in_bytes": 16274
+            },
+            {
+                "_path": "include/nlohmann/detail/exceptions.hpp",
+                "path_type": "hardlink",
+                "sha256": "55299c55106de2624ca7aa6a5705ad6ff53814c1b52f8fe8d2872f13c956c95a",
+                "sha256_in_prefix": "55299c55106de2624ca7aa6a5705ad6ff53814c1b52f8fe8d2872f13c956c95a",
+                "size_in_bytes": 9267
+            },
+            {
+                "_path": "include/nlohmann/detail/hash.hpp",
+                "path_type": "hardlink",
+                "sha256": "74a9e3af772127cf0b12ee794abc8c47b5bea74ce658d0d20179a26be5d95d0d",
+                "sha256_in_prefix": "74a9e3af772127cf0b12ee794abc8c47b5bea74ce658d0d20179a26be5d95d0d",
+                "size_in_bytes": 4016
+            },
+            {
+                "_path": "include/nlohmann/detail/input/binary_reader.hpp",
+                "path_type": "hardlink",
+                "sha256": "484bcc276c4fa6c7c61a93a8223f3e53bb4dc966e688e96641a93a50d7e503e9",
+                "sha256_in_prefix": "484bcc276c4fa6c7c61a93a8223f3e53bb4dc966e688e96641a93a50d7e503e9",
+                "size_in_bytes": 103146
+            },
+            {
+                "_path": "include/nlohmann/detail/input/input_adapters.hpp",
+                "path_type": "hardlink",
+                "sha256": "bd549419506089c82c94446f939587362ff01516b8e6624c472e704d27b1be42",
+                "sha256_in_prefix": "bd549419506089c82c94446f939587362ff01516b8e6624c472e704d27b1be42",
+                "size_in_bytes": 17402
+            },
+            {
+                "_path": "include/nlohmann/detail/input/json_sax.hpp",
+                "path_type": "hardlink",
+                "sha256": "9147c9d07784a5f3de890d68401ae07d03d0bc0db24ebcbe7beb8a31cfd858a0",
+                "sha256_in_prefix": "9147c9d07784a5f3de890d68401ae07d03d0bc0db24ebcbe7beb8a31cfd858a0",
+                "size_in_bytes": 21420
+            },
+            {
+                "_path": "include/nlohmann/detail/input/lexer.hpp",
+                "path_type": "hardlink",
+                "sha256": "550c275f09d55deb1705b97b8a15b02f211ea0ba87e95452e7a023b854bb024c",
+                "sha256_in_prefix": "550c275f09d55deb1705b97b8a15b02f211ea0ba87e95452e7a023b854bb024c",
+                "size_in_bytes": 54569
+            },
+            {
+                "_path": "include/nlohmann/detail/input/parser.hpp",
+                "path_type": "hardlink",
+                "sha256": "094aed22cfdd641ac15ef59bfef8dd1e23fd92373633a92ed928cb580f0cbd7e",
+                "sha256_in_prefix": "094aed22cfdd641ac15ef59bfef8dd1e23fd92373633a92ed928cb580f0cbd7e",
+                "size_in_bytes": 19661
+            },
+            {
+                "_path": "include/nlohmann/detail/input/position_t.hpp",
+                "path_type": "hardlink",
+                "sha256": "0c9c5be26020c0a7929f3cc1e7e0065589d6a8f4dc1bd2ee13f10ef1a7efaa24",
+                "sha256_in_prefix": "0c9c5be26020c0a7929f3cc1e7e0065589d6a8f4dc1bd2ee13f10ef1a7efaa24",
+                "size_in_bytes": 958
+            },
+            {
+                "_path": "include/nlohmann/detail/iterators/internal_iterator.hpp",
+                "path_type": "hardlink",
+                "sha256": "e75cf5e3c9ae358055bf3335fa2c5b6bbfbd1e24ea3dfdb62c187f37a8e2b485",
+                "sha256_in_prefix": "e75cf5e3c9ae358055bf3335fa2c5b6bbfbd1e24ea3dfdb62c187f37a8e2b485",
+                "size_in_bytes": 1071
+            },
+            {
+                "_path": "include/nlohmann/detail/iterators/iter_impl.hpp",
+                "path_type": "hardlink",
+                "sha256": "70d81ebb931db43a19fe3872a3fb1bc91fab27509c8d29ee4c4dd247b384cae1",
+                "sha256_in_prefix": "70d81ebb931db43a19fe3872a3fb1bc91fab27509c8d29ee4c4dd247b384cae1",
+                "size_in_bytes": 24046
+            },
+            {
+                "_path": "include/nlohmann/detail/iterators/iteration_proxy.hpp",
+                "path_type": "hardlink",
+                "sha256": "839efba147f6f15c693c741039daa3d383c2f4afb8fe653e4dad49a9f998d1d1",
+                "sha256_in_prefix": "839efba147f6f15c693c741039daa3d383c2f4afb8fe653e4dad49a9f998d1d1",
+                "size_in_bytes": 8238
+            },
+            {
+                "_path": "include/nlohmann/detail/iterators/iterator_traits.hpp",
+                "path_type": "hardlink",
+                "sha256": "04b0edaeb214aa1c932b9078849a8fbbbda9c7a241b4cbc28a90b6d11c959443",
+                "sha256_in_prefix": "04b0edaeb214aa1c932b9078849a8fbbbda9c7a241b4cbc28a90b6d11c959443",
+                "size_in_bytes": 1757
+            },
+            {
+                "_path": "include/nlohmann/detail/iterators/json_reverse_iterator.hpp",
+                "path_type": "hardlink",
+                "sha256": "031b45c4f90ab7d64ecb6606fad880d867a23fc63a431f0de34f0fc104307b66",
+                "sha256_in_prefix": "031b45c4f90ab7d64ecb6606fad880d867a23fc63a431f0de34f0fc104307b66",
+                "size_in_bytes": 3861
+            },
+            {
+                "_path": "include/nlohmann/detail/iterators/primitive_iterator.hpp",
+                "path_type": "hardlink",
+                "sha256": "6c949107bb779cecb8beba0835f7292656b52b08c3f6a6d3b27229b58c28aefe",
+                "sha256_in_prefix": "6c949107bb779cecb8beba0835f7292656b52b08c3f6a6d3b27229b58c28aefe",
+                "size_in_bytes": 3227
+            },
+            {
+                "_path": "include/nlohmann/detail/json_custom_base_class.hpp",
+                "path_type": "hardlink",
+                "sha256": "70da7c5b17777f8da6d83310d6526856542585efa8a078db61227b11aaf9ec0b",
+                "sha256_in_prefix": "70da7c5b17777f8da6d83310d6526856542585efa8a078db61227b11aaf9ec0b",
+                "size_in_bytes": 1178
+            },
+            {
+                "_path": "include/nlohmann/detail/json_pointer.hpp",
+                "path_type": "hardlink",
+                "sha256": "4cf537ad88b2d686d5a349b26da7e012ba9a58b01a0ab2badaa796d9150e69bb",
+                "sha256_in_prefix": "4cf537ad88b2d686d5a349b26da7e012ba9a58b01a0ab2badaa796d9150e69bb",
+                "size_in_bytes": 37143
+            },
+            {
+                "_path": "include/nlohmann/detail/json_ref.hpp",
+                "path_type": "hardlink",
+                "sha256": "1660750dd10a562aac1eea37021f1e7138a5d6d50b051815708497a8d30bf60d",
+                "sha256_in_prefix": "1660750dd10a562aac1eea37021f1e7138a5d6d50b051815708497a8d30bf60d",
+                "size_in_bytes": 1811
+            },
+            {
+                "_path": "include/nlohmann/detail/macro_scope.hpp",
+                "path_type": "hardlink",
+                "sha256": "70d2b2aa49a93170ded3d0c0d1b0f76103fdd09704ba5ecc862bc03095920847",
+                "sha256_in_prefix": "70d2b2aa49a93170ded3d0c0d1b0f76103fdd09704ba5ecc862bc03095920847",
+                "size_in_bytes": 43639
+            },
+            {
+                "_path": "include/nlohmann/detail/macro_unscope.hpp",
+                "path_type": "hardlink",
+                "sha256": "5f7040df475e2c943d9b22c335b61600deb14b1e48a69b3450de4c4a08c320bc",
+                "sha256_in_prefix": "5f7040df475e2c943d9b22c335b61600deb14b1e48a69b3450de4c4a08c320bc",
+                "size_in_bytes": 1252
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/call_std/begin.hpp",
+                "path_type": "hardlink",
+                "sha256": "379660c15a30b84ff2a67e22734638f608cc37b34648461c7e9167da1153d861",
+                "sha256_in_prefix": "379660c15a30b84ff2a67e22734638f608cc37b34648461c7e9167da1153d861",
+                "size_in_bytes": 453
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/call_std/end.hpp",
+                "path_type": "hardlink",
+                "sha256": "deca609bf200442f452b848c19f28ee30879df0ca35e959ed3b41f861c92df55",
+                "sha256_in_prefix": "deca609bf200442f452b848c19f28ee30879df0ca35e959ed3b41f861c92df55",
+                "size_in_bytes": 451
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/cpp_future.hpp",
+                "path_type": "hardlink",
+                "sha256": "486ba5a3724131d0c1646e36d9a4a9877505b2914078347e6067bb65593f01ce",
+                "sha256_in_prefix": "486ba5a3724131d0c1646e36d9a4a9877505b2914078347e6067bb65593f01ce",
+                "size_in_bytes": 5178
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/detected.hpp",
+                "path_type": "hardlink",
+                "sha256": "f79aa1f107e4dfd4554753e6fe05364a1147ef4498d3125cfc939a5534d2d527",
+                "sha256_in_prefix": "f79aa1f107e4dfd4554753e6fe05364a1147ef4498d3125cfc939a5534d2d527",
+                "size_in_bytes": 2109
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/identity_tag.hpp",
+                "path_type": "hardlink",
+                "sha256": "bba9559dec8519de3044b537e96a59a601831797a5a3c38bf8023a6d949118d0",
+                "sha256_in_prefix": "bba9559dec8519de3044b537e96a59a601831797a5a3c38bf8023a6d949118d0",
+                "size_in_bytes": 526
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/is_sax.hpp",
+                "path_type": "hardlink",
+                "sha256": "1f81d6098b9aad02a95c27ec333bbb13eec3c5171b968e39b7ecb1b06b16c55b",
+                "sha256_in_prefix": "1f81d6098b9aad02a95c27ec333bbb13eec3c5171b968e39b7ecb1b06b16c55b",
+                "size_in_bytes": 6960
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/std_fs.hpp",
+                "path_type": "hardlink",
+                "sha256": "fb514154ea8c11c04a00efeb2e89edbfd40f149ed39ef36568d9b2a1062e85e0",
+                "sha256_in_prefix": "fb514154ea8c11c04a00efeb2e89edbfd40f149ed39ef36568d9b2a1062e85e0",
+                "size_in_bytes": 766
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/type_traits.hpp",
+                "path_type": "hardlink",
+                "sha256": "1f901f9e4bcd585ff22c6b0c0956566ba8a4a1238a490a64e7755a2c313040d5",
+                "sha256_in_prefix": "1f901f9e4bcd585ff22c6b0c0956566ba8a4a1238a490a64e7755a2c313040d5",
+                "size_in_bytes": 29454
+            },
+            {
+                "_path": "include/nlohmann/detail/meta/void_t.hpp",
+                "path_type": "hardlink",
+                "sha256": "581e7b157457eb9c488793f2cd7066b2c1ba31d5e9fea6f0d67c8c732b5088e4",
+                "sha256_in_prefix": "581e7b157457eb9c488793f2cd7066b2c1ba31d5e9fea6f0d67c8c732b5088e4",
+                "size_in_bytes": 597
+            },
+            {
+                "_path": "include/nlohmann/detail/output/binary_writer.hpp",
+                "path_type": "hardlink",
+                "sha256": "665ce1ea5fb2cb425896b713bdd8d8d5a6d69688924fa6e2efaffb4e9d132011",
+                "sha256_in_prefix": "665ce1ea5fb2cb425896b713bdd8d8d5a6d69688924fa6e2efaffb4e9d132011",
+                "size_in_bytes": 71152
+            },
+            {
+                "_path": "include/nlohmann/detail/output/output_adapters.hpp",
+                "path_type": "hardlink",
+                "sha256": "1e0bcc375b4d84180649198e2f8061f5968a10a6913231fee097689d281ed565",
+                "sha256_in_prefix": "1e0bcc375b4d84180649198e2f8061f5968a10a6913231fee097689d281ed565",
+                "size_in_bytes": 4067
+            },
+            {
+                "_path": "include/nlohmann/detail/output/serializer.hpp",
+                "path_type": "hardlink",
+                "sha256": "259c611d4b1147e3626d25bc05994b28f91f4fcca2e578e486dcf51c0234e5c8",
+                "sha256_in_prefix": "259c611d4b1147e3626d25bc05994b28f91f4fcca2e578e486dcf51c0234e5c8",
+                "size_in_bytes": 40163
+            },
+            {
+                "_path": "include/nlohmann/detail/string_concat.hpp",
+                "path_type": "hardlink",
+                "sha256": "e8001630045f800c0ebcfc19e2b2f90139a4d20a9a359e134657767fd6fa9aa2",
+                "sha256_in_prefix": "e8001630045f800c0ebcfc19e2b2f90139a4d20a9a359e134657767fd6fa9aa2",
+                "size_in_bytes": 5951
+            },
+            {
+                "_path": "include/nlohmann/detail/string_escape.hpp",
+                "path_type": "hardlink",
+                "sha256": "3bf6687ffa7f6fd3034591adfdd6ea073584df83694c6b57feed9ada965801e7",
+                "sha256_in_prefix": "3bf6687ffa7f6fd3034591adfdd6ea073584df83694c6b57feed9ada965801e7",
+                "size_in_bytes": 2168
+            },
+            {
+                "_path": "include/nlohmann/detail/value_t.hpp",
+                "path_type": "hardlink",
+                "sha256": "60a7e24b34e93b8ba40eecf310a40c55042754328271c246f9cc1069f6a25958",
+                "sha256_in_prefix": "60a7e24b34e93b8ba40eecf310a40c55042754328271c246f9cc1069f6a25958",
+                "size_in_bytes": 4326
+            },
+            {
+                "_path": "include/nlohmann/json.hpp",
+                "path_type": "hardlink",
+                "sha256": "2432cbf7f4258453538eca193cd937fc777462ae2ce8ee9f46e6ee460ef56bea",
+                "sha256_in_prefix": "2432cbf7f4258453538eca193cd937fc777462ae2ce8ee9f46e6ee460ef56bea",
+                "size_in_bytes": 198618
+            },
+            {
+                "_path": "include/nlohmann/json_fwd.hpp",
+                "path_type": "hardlink",
+                "sha256": "c5b950b428534861b5869254fd773afc724112fc9e141bd1fc89189640a3ae5d",
+                "sha256_in_prefix": "c5b950b428534861b5869254fd773afc724112fc9e141bd1fc89189640a3ae5d",
+                "size_in_bytes": 2541
+            },
+            {
+                "_path": "include/nlohmann/ordered_map.hpp",
+                "path_type": "hardlink",
+                "sha256": "31d1bb02500b734e09c27ce2cc216c8af188344fbc19a6946ae301a12c7b62df",
+                "sha256_in_prefix": "31d1bb02500b734e09c27ce2cc216c8af188344fbc19a6946ae301a12c7b62df",
+                "size_in_bytes": 11692
+            },
+            {
+                "_path": "include/nlohmann/thirdparty/hedley/hedley.hpp",
+                "path_type": "hardlink",
+                "sha256": "20d6c1c6d6c30365f68a45093798937971b593919fb3051431f0c015dfa671fb",
+                "sha256_in_prefix": "20d6c1c6d6c30365f68a45093798937971b593919fb3051431f0c015dfa671fb",
+                "size_in_bytes": 86068
+            },
+            {
+                "_path": "include/nlohmann/thirdparty/hedley/hedley_undef.hpp",
+                "path_type": "hardlink",
+                "sha256": "0f8902f26872f40a2514e9c9be2fcebfce6cde0022e9364fddd17fb49575b146",
+                "sha256_in_prefix": "0f8902f26872f40a2514e9c9be2fcebfce6cde0022e9364fddd17fb49575b146",
+                "size_in_bytes": 5500
+            },
+            {
+                "_path": "include/test_data.hpp",
+                "path_type": "hardlink",
+                "sha256": "49fcfe49b6b7cddd461cf518e73fc9438f7878166347e5cc56be5c2c576af741",
+                "sha256_in_prefix": "49fcfe49b6b7cddd461cf518e73fc9438f7878166347e5cc56be5c2c576af741",
+                "size_in_bytes": 121
+            },
+            {
+                "_path": "share/cmake/nlohmann_json/nlohmann_jsonConfig.cmake",
+                "path_type": "hardlink",
+                "sha256": "c7f377920b46cd6c89c6f2f1bccbd1cf7380addf545db0bf7046a27920e2bdd3",
+                "sha256_in_prefix": "c7f377920b46cd6c89c6f2f1bccbd1cf7380addf545db0bf7046a27920e2bdd3",
+                "size_in_bytes": 620
+            },
+            {
+                "_path": "share/cmake/nlohmann_json/nlohmann_jsonConfigVersion.cmake",
+                "path_type": "hardlink",
+                "sha256": "eab3072cb10517d03069e10ab1630796f72e6dd019c155de76eebec6ce4adcac",
+                "sha256_in_prefix": "eab3072cb10517d03069e10ab1630796f72e6dd019c155de76eebec6ce4adcac",
+                "size_in_bytes": 676
+            },
+            {
+                "_path": "share/cmake/nlohmann_json/nlohmann_jsonTargets.cmake",
+                "path_type": "hardlink",
+                "sha256": "3e4e794dbae03e1630411fd4e05d91f755e9b8b5e026b7aeb74c9d21ccb7c67d",
+                "sha256_in_prefix": "3e4e794dbae03e1630411fd4e05d91f755e9b8b5e026b7aeb74c9d21ccb7c67d",
+                "size_in_bytes": 4536
+            },
+            {
+                "_path": "share/pkgconfig/nlohmann_json.pc",
+                "path_type": "hardlink",
+                "sha256": "f5a115938589e8bf2995465605a98e4665e1bd166eeb28677571028f08919418",
+                "sha256_in_prefix": "91cae9ec9bd5dc562515593bfd97277114776ea17e1c3baeb3ecb00c02c12ae4",
+                "size_in_bytes": 343
+            }
+        ],
+        "paths_version": 1
+    },
+    "platform": "linux",
+    "requested_spec": "nlohmann_json==3.11.3=he02047a_1",
+    "sha256": "ce4bcced4f8eea71b7cac8bc3daac097abf7a5792f278cd811dedada199500c1",
+    "size": 122743,
+    "subdir": "linux-64",
+    "timestamp": 1723652407663,
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/nlohmann_json-3.11.3-he02047a_1.conda",
+    "version": "3.11.3"
+}

@@ -1,0 +1,53 @@
+{
+    "arch": "x86_64",
+    "build": "h1423503_1",
+    "build_number": 1,
+    "channel": "https://conda.anaconda.org/conda-forge",
+    "constrains": [
+        "binutils_impl_linux-64 2.44"
+    ],
+    "depends": [
+        "__glibc >=2.17,<3.0.a0"
+    ],
+    "extracted_package_dir": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/ld_impl_linux-64-2.44-h1423503_1",
+    "files": [
+        "bin/x86_64-conda-linux-gnu-ld",
+        "x86_64-conda-linux-gnu/bin/ld"
+    ],
+    "fn": "ld_impl_linux-64-2.44-h1423503_1.conda",
+    "license": "GPL-3.0-only",
+    "license_family": "GPL",
+    "link": {
+        "source": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/ld_impl_linux-64-2.44-h1423503_1",
+        "type": 1
+    },
+    "md5": "0be7c6e070c19105f966d3758448d018",
+    "name": "ld_impl_linux-64",
+    "package_tarball_full_path": "/home/ollie/Documents/tmp/nanoBragg/simforge/pkgs/ld_impl_linux-64-2.44-h1423503_1.tar.bz2",
+    "paths_data": {
+        "paths": [
+            {
+                "_path": "bin/x86_64-conda-linux-gnu-ld",
+                "path_type": "hardlink",
+                "sha256": "c39ddabf7897b0587a73d394f21e74a7638e5c4259763e8458b850bc9ad067d3",
+                "sha256_in_prefix": "91cae9ec9bd5dc562515593bfd97277114776ea17e1c3baeb3ecb00c02c12ae4",
+                "size_in_bytes": 3449352
+            },
+            {
+                "_path": "x86_64-conda-linux-gnu/bin/ld",
+                "path_type": "softlink",
+                "sha256_in_prefix": "91cae9ec9bd5dc562515593bfd97277114776ea17e1c3baeb3ecb00c02c12ae4",
+                "size_in_bytes": 3449352
+            }
+        ],
+        "paths_version": 1
+    },
+    "platform": "linux",
+    "requested_spec": "ld_impl_linux-64==2.44=h1423503_1",
+    "sha256": "1a620f27d79217c1295049ba214c2f80372062fd251b569e9873d4a953d27554",
+    "size": 676044,
+    "subdir": "linux-64",
+    "timestamp": 1752032747103,
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/ld_impl_linux-64-2.44-h1423503_1.conda",
+    "version": "2.44"
+}
