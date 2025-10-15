@@ -2874,3 +2874,14 @@
 - Updated `plans/active/test-suite-triage.md` Phase P3 to [D] and refreshed `docs/fix_plan.md` Active Focus/Next Actions with validation + implementation tasks (new TODOs #12–#13) plus Attempt #77 log.
 - Rewrote `input.md` (Perf mode) to direct the guarded rerun of `tests/test_gradients.py::TestAdvancedGradients::test_property_gradient_stability` and artifact capture under a fresh STAMP.
 - <Action State>: [ready_for_implementation]
+### 2025-10-15T06:40:03Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] C18 tolerance implementation
+- Action type: Planning
+- Mode: Docs
+
+### 2025-10-14T23:45:07-0700 (galph loop recap)
+- Added Phase Q to plans/active/test-suite-triage.md with tasks Q1–Q6 covering plugin audit, marker rollout, docs, rerun, and ledger closure.
+- Updated docs/fix_plan.md Next Action 13 to reference Phase Q deliverables and new artifact root.
+- Rewrote input.md to delegate Phase Q Q1–Q3 (plugin check, pyproject/test edits, targeted pytest run) with artifact expectations under phase_q/$STAMP.
+- <Action State>: [ready_for_implementation]
+
