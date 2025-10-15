@@ -3013,3 +3013,18 @@
 - Synced `docs/fix_plan.md` Attempts (#4/#5) and refreshed Next Actions 5–8 to queue CLI → Tools → Grad → Vec remediation with explicit commands.
 - Rewrote `input.md` handing Ralph the CLI asset regeneration task (Parity mode) with asset provenance + pytest selector guidance.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T13:20:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase D cluster brief sync
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-15T13:25:00Z (galph loop - focus note update)
+- Mode adjustment: switching to Parity for downstream delegation (evidence + remediation)
+
+### 2025-10-15T13:32:00Z (galph loop recap)
+- Updated plans/active/test-suite-triage-rerun.md:76 to mark CLUSTER-CLI-001 row [D] with Attempt #6 evidence path so Phase D checklist mirrors docs/fix_plan.md.
+- Issued new input.md directing Next Action 6 (CLUSTER-TOOLS-001) with precise pytest command, artifact workflow, and remediation guidance referencing reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-TOOLS-001.md.
+- Noted relevant findings API-001/API-002 for pix0 context while keeping tooling focus scoped; no additional doc drift detected.
+- <Action State>: [ready_for_implementation]
+
