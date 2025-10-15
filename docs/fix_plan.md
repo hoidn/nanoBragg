@@ -2,12 +2,14 @@
 
 **Last Updated:** 2025-10-15 (ralph loop, Attempt #85 -- TEST-SUITE-TRIAGE-001 archival)
 **Active Focus:**
+- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — Relaunch full `pytest tests/` execution, capture failures, and stage remediation sequencing before any new feature work.
 - CRITICAL: `[VECTOR-PARITY-001]` — Tap 5.3 accumulation instrumentation must land to unblock full-frame parity (Phase E16–E18 capture + synthesis).
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
+| [TEST-SUITE-TRIAGE-002](#test-suite-triage-002-full-pytest-rerun-and-triage-refresh) | Run full pytest rerun and triage refresh | Critical | in_progress |
 | [TEST-SUITE-TRIAGE-001](#test-suite-triage-001-full-pytest-run-and-triage) | Run full pytest suite and triage | Critical | done |
 | [CLI-DEFAULTS-001](#cli-defaults-001-minimal-default_f-cli-invocation) | Minimal -default_F CLI invocation | High | done |
 | [DETERMINISM-001](#determinism-001-pytorch-rng-determinism) | PyTorch RNG determinism | High | done |
@@ -33,6 +35,22 @@
 | [LEGACY-SUITE-001](#legacy-suite-001-legacy-translation-suite-upkeep) | Legacy translation suite upkeep | Low | in_planning |
 | [GRADIENT-FLOW-001](#gradient-flow-001-gradient-flow-regression) | Gradient flow regression | High | done |
 | [TRICLINIC-PARITY-001](#triclinic-parity-001-triclinic-parity-alignment) | Triclinic parity alignment | High | in_planning |
+
+## [TEST-SUITE-TRIAGE-002] Full pytest rerun and triage refresh
+- Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `docs/development/pytorch_runtime_checklist.md`, `specs/spec-a-core.md` (Acceptance Tests).
+- Priority: Critical
+- Status: in_progress
+- Owner/Date: galph/2025-10-15 (Attempt #0 baseline)
+- Plan Reference: `plans/active/test-suite-triage-rerun.md`
+- Reproduction: Guarded full suite per Phase B — `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/`
+- Artifacts Root: `reports/2026-01-test-suite-refresh/phase_<phase>/<STAMP>/`
+- Attempts History:
+  * _Pending — first execution to be logged after Phase A completion_
+- Next Actions:
+  1. Create Phase A STAMP folder, capture environment guard, and run `pytest --collect-only` smoke (store under `reports/2026-01-test-suite-refresh/phase_a/<STAMP>/`).
+  2. Execute guarded full suite (`pytest tests/`) with timeout cap, persisting `pytest.log`, junit XML, and timing stats under `phase_b/<STAMP>/`.
+  3. Extract failure clusters, map to prior IDs, and draft `phase_c/<STAMP>/triage_summary.md`; update Attempts History with counts and artifact links.
+  4. Produce remediation briefs per cluster (`phase_d/<STAMP>/cluster_<id>.md`) and refresh Next Actions across dependent plan entries for delegation.
 
 ## [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 - Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `specs/spec-a-core.md` (Acceptance Tests), `docs/development/pytorch_runtime_checklist.md` (runtime guardrails).

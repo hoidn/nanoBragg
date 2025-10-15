@@ -2972,3 +2972,15 @@
 - Refreshed plans/active/test-suite-triage.md (`lines 11-32`, `379-395`) to note Phase R completion, adjust R4 guidance, and add Phase S (archival checklist).
 - Rewrote input.md handing off Next Action 17 (Docs mode) so Ralph can move the plan into plans/archive and append the archival Attempt entry.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T08:45:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Full pytest rerun & triage relaunch
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T08:57:00Z (galph loop recap)
+- Stood up `[TEST-SUITE-TRIAGE-002]` as new critical initiative, updated docs/fix_plan.md Active Focus + index + Next Actions (lines 1-50) and noted Phase ladder + artifact root.
+- Authored `plans/active/test-suite-triage-rerun.md` with phased guidance (A–D) covering STAMP workflow, guarded pytest commands, clustering, and delegation prep.
+- Reissued `input.md` directing Ralph to execute Phase A preflight (`pytest --collect-only -q tests`) with env capture under `reports/2026-01-test-suite-refresh/` and to reuse STAMP for the full run.
+- Reviewed recent Ralph commits (95046543, 18508c80) — documentation-focused, no regressions detected; reiterated need to resume suite health tracking.
+- <Action State>: [planning]

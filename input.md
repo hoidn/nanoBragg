@@ -1,39 +1,38 @@
-Summary: Archive the test-suite triage initiative now that Phase R is complete.
-Mode: Docs
-Focus: [TEST-SUITE-TRIAGE-001] archival handoff (Next Action 17)
+Summary: Capture Phase A preflight for the full-suite rerun so we can relaunch test triage with fresh env + collection artifacts.
+Mode: Parity
+Focus: [TEST-SUITE-TRIAGE-002] Full pytest rerun and triage refresh
 Branch: feature/spec-based-2
-Mapped tests: none — docs-only
-Artifacts: plans/archive/test-suite-triage.md; docs/fix_plan.md; reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md
-Do Now: Next Action 17 — archive [TEST-SUITE-TRIAGE-001]; no pytest run
-If Blocked: Record the blocker under docs/fix_plan.md Attempt history for this initiative and ping in galph_memory.md with the partial edits; stop there.
+Mapped tests: pytest --collect-only -q tests; pytest -vv tests/
+Artifacts: reports/2026-01-test-suite-refresh/phase_a/$STAMP/; reports/2026-01-test-suite-refresh/phase_b/$STAMP/
+Do Now: [TEST-SUITE-TRIAGE-002] Phase A — Preflight & env guard; run `KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q tests`
+If Blocked: Capture stderr/stdout to phase_a/$STAMP/pytest-collect.log, update summary.md with failure signature, and stop for supervisor review.
 Priorities & Rationale:
-- docs/fix_plan.md:6 still flags the initiative as “READY TO ARCHIVE,” so clearing it unblocks downstream priorities.
-- docs/fix_plan.md:65 defines Next Action 17 (archive + ledger sync) that must be executed before we pivot to vectorization.
-- plans/active/test-suite-triage.md:379-386 confirms Phase R closure and states archival is the only remaining step.
-- plans/active/test-suite-triage.md:395 captures S1 instructions for moving the plan into the archive with a closure note.
-- reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md:1 anchors the final metrics the archival note must cite.
+- docs/fix_plan.md:39 — New critical directive requires immediate full-suite refresh before other initiatives continue.
+- plans/active/test-suite-triage-rerun.md:23 — Phase A checklist mandates STAMP creation, env capture, and collection log.
+- docs/development/testing_strategy.md:34 — Collect-only smoke is the sanctioned preflight before running `pytest tests/`.
+- plans/archive/test-suite-triage.md:13 — 905 s timeout tolerance validated in prior initiative; reuse ceiling during rerun planning.
+- docs/development/pytorch_runtime_checklist.md:41 — Slow gradient tests legitimately reach 905 s, so guard commands must preserve that tolerance.
 How-To Map:
-- export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md
-- Use `git mv plans/active/test-suite-triage.md plans/archive/test-suite-triage.md`.
-- Add a short closure preface at the top of the archived plan summarising Attempt #84 metrics (43 pass / 9 skip / 1 xfail, 846.60 s, 905 s tolerance) and link to the summary.md artifact.
-- Update docs/fix_plan.md: remove the “READY TO ARCHIVE” bullet, mark Next Action 17 complete, and append a new Attempt entry documenting the archival with STAMP + artifact references.
-- Ensure docs/fix_plan.md Index retains the row for [TEST-SUITE-TRIAGE-001] with Status `done` and, if helpful, note the plan now lives under plans/archive/.
-- Re-run `git status` to verify only the intended docs moved/edited; no tests to execute.
+- Preflight setup: `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-refresh/phase_a/$STAMP` (record STAMP for later phases).
+- Env capture: `printenv | sort > reports/2026-01-test-suite-refresh/phase_a/$STAMP/env.txt`; `python -m torch.utils.collect_env > reports/2026-01-test-suite-refresh/phase_a/$STAMP/torch_env.txt`.
+- Commands ledger: write the exact `pytest --collect-only` invocation to `commands.txt` in the phase folder before running it.
+- Collection run: `KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q tests | tee reports/2026-01-test-suite-refresh/phase_a/$STAMP/pytest-collect.log`; inspect exit code and note collected test count in `summary.md`.
+- If collection succeeds, reuse the same STAMP for Phase B preparation and start staging commands for the full suite (`timeout 3600 env CUDA_VISIBLE_DEVICES=-1 ... pytest -vv tests/`) but defer execution until logs + summaries from Phase A are complete.
 Pitfalls To Avoid:
-- Do not touch protected assets listed in docs/index.md.
-- Keep edits ASCII-only; no fancy Unicode in the archival preface.
-- Use `git mv` so history follows the plan into plans/archive/.
-- Do not alter archived evidence bundles under reports/ beyond new references.
-- Avoid changing statuses for unrelated fix_plan items or active plans.
-- Skip pytest runs; this is a documentation-only loop.
-- Preserve existing checklist tables and markers when editing markdown.
-- Note the STAMP from summary.md when logging the archival attempt.
-- Verify hyperlinks after moving the plan (e.g., update relative paths if needed).
-- Keep Tap 5.3 instrumentation plans untouched until this archival step is signed off.
+- Do not skip the STAMP folder or env capture; future loops depend on reproducible preflight state.
+- Keep `CUDA_VISIBLE_DEVICES=-1` unless explicitly instructed to gather GPU data.
+- No code edits during this loop; treat this as evidence gathering only.
+- Preserve Protected Assets (see docs/index.md); never move/delete `loop.sh`, `input.md`, or archived plans.
+- Ensure `pytest --collect-only` output is captured to file; console-only logs are insufficient for archival.
+- Don’t change the 905 s timeout unless supervisor approves a new ceiling.
+- Avoid running the full suite before summarizing Phase A results.
+- If `pytest` auto-configures cached bytecode, leave it in place—no manual cleanup.
+- Watch for lingering `.pytest_cache`; note it in summary if it grows unusually large.
+- Confirm `pip install -e .` remains valid; note if dependencies are missing before running tests.
 Pointers:
-- docs/fix_plan.md:3-7
-- docs/fix_plan.md:65
-- plans/active/test-suite-triage.md:379-395
-- plans/archive/ (target location for the plan)
-- reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/summary.md:1
-Next Up: 1) Kick off `[VECTOR-PARITY-001]` Phase E16 PyTorch Tap 5.3 capture once the archival attempt lands.
+- docs/fix_plan.md:39
+- plans/active/test-suite-triage-rerun.md:23
+- docs/development/testing_strategy.md:34
+- plans/archive/test-suite-triage.md:13
+- docs/development/pytorch_runtime_checklist.md:41
+Next Up: After Phase A artifacts are committed, proceed to Phase B full-suite execution using the same STAMP.
