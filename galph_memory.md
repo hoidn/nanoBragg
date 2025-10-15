@@ -2663,3 +2663,13 @@
 - Updated `docs/fix_plan.md` Next Actions for [DETECTOR-CONFIG-001] to require Option A design + implementation + chunk rerun.
 - Reissued `input.md` directing Ralph to author the design artifact under a fresh STAMP before coding.
 - <Action State>: [planning]
+### 2025-10-14T17:07:45-07:00 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase M3 status update & Sprint 1 delegation (C16 tolerance)
+- Action type: Review/housekeeping
+- Mode: Parity
+- Updated `plans/active/test-suite-triage.md` with Phase N (Sprint 1.2 detector orthogonality) checklist and added status snapshot note; new tasks N1–N4 capture baseline log, tolerance edit, regression run, and tracker sync.
+- Refreshed `docs/fix_plan.md` Next Actions to launch Sprint 1.2 (C16) and queued C15 mixed-units as next focus.
+- Rewrote `input.md` (Mode=Parity) directing Ralph to execute Phase N with STAMPed artifacts and uniform 1e-7 tolerance updates in `tests/test_at_parallel_017.py`.
+- No orthogonality-related findings found in `docs/findings.md`; proceeding under assumption documentation remains current.
+- Follow-up for Ralph: complete Phase N N1–N4, update remediation tracker, and log Attempt referencing new STAMP before moving to C15.
+- <Action State>: [ready_for_implementation]
