@@ -1,38 +1,36 @@
-Summary: Roll out the C18 slow-gradient timeout marker so Phase Q can close the tolerance cluster.
+Summary: Finish C18 Phase Q by pinning pytest-timeout in manifests and capturing the guarded slow-gradient rerun (≤900 s).
 Mode: Perf
 Focus: TEST-SUITE-TRIAGE-001 / Next Action 13 — Phase Q tolerance rollout
 Branch: feature/spec-based-2
 Mapped tests: tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
 Artifacts: reports/2026-01-test-suite-triage/phase_q/$STAMP/
-Do Now: STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_q/$STAMP && python -m pip show pytest-timeout > reports/2026-01-test-suite-triage/phase_q/$STAMP/precheck.md; after applying Phase Q Q2–Q3 edits to pyproject.toml and tests/test_gradients.py, timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03_part3b.xml | tee reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03_part3b.log
-If Blocked: If `python -m pip show pytest-timeout` fails, stop and log the output plus a brief note in reports/2026-01-test-suite-triage/phase_q/$STAMP/precheck.md before touching configs; ping supervisor for dependency guidance.
+Do Now: STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03 && python -m pip show pytest-timeout > reports/2026-01-test-suite-triage/phase_q/$STAMP/dependency_audit.md && timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03/pytest_part3b.xml | tee reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03/pytest_part3b.log
+If Blocked: If the command exits via timeout (124) or pytest-timeout is still missing, stop immediately, drop a note in reports/2026-01-test-suite-triage/phase_q/$STAMP/blocked.md with stderr/stdout, and ping me before rerunning.
 Priorities & Rationale:
-- docs/fix_plan.md:5 — Active focus now requires executing the pytest.ini marker rollout to retire C18.
-- plans/active/test-suite-triage.md:357 — Phase Q table defines Q1–Q3 as the immediate work before rerunning chunk 03.
-- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:15 — Option A mandates a slow-gradient marker with 900 s tolerance.
-- reports/2026-01-test-suite-triage/phase_p/20251015T061848Z/chunk_03_rerun/summary.md:21 — Validation rerun confirmed the baseline and green-lit implementation.
-- pyproject.toml:48 — Existing pytest markers section needs the new timeout defaults documented in Phase Q.
+- docs/fix_plan.md:61 — Next Action 13 now explicitly requires dependency bookkeeping plus the tolerance rollout.
+- plans/active/test-suite-triage.md:362 — Phase Q Q1-Q3 remain open until manifests, validation, and ledger updates land.
+- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:112 — 900 s tolerance is conditioned on rerunning the slow-gradient shard with matching guards.
+- reports/2026-01-test-suite-triage/phase_q/20251015T064831Z/summary.md:31 — Previous attempt timed out; we need a clean rerun with STAMPed artifacts.
 How-To Map:
-- Set STAMP once and reuse it for every artifact path in this loop. Keep all new files under reports/2026-01-test-suite-triage/phase_q/$STAMP/.
-- Capture the plugin audit via `python -m pip show pytest-timeout`; append a short sentence noting whether the package is installed.
-- Update pyproject.toml markers/timeouts per Phase Q Q2, then add the `@pytest.mark.slow_gradient(timeout=900)` (or equivalent) decorator above `tests/test_gradients.py:574`.
-- After edits, run the targeted pytest command with the guard env vars; on success, copy the duration string into chunk_03_part3b_timing.txt alongside the log and XML.
-- Draft reports/2026-01-test-suite-triage/phase_q/$STAMP/config_update.md that lists the edited files, key diff points, and references to c18_timing.md §5.1.
+- Before running anything, add `pytest-timeout` to requirements.txt and to a new `[project.optional-dependencies.test]` list in pyproject.toml (keep entries alphabetised); leave a short note in reports/2026-01-test-suite-triage/phase_q/$STAMP/config_update.md summarising both edits.
+- After edits, run `python -m pip show pytest-timeout >> reports/2026-01-test-suite-triage/phase_q/$STAMP/dependency_audit.md` to prove the plugin is discoverable from the editable install.
+- Execute the Do Now command; once it finishes, capture the wall-clock duration from pytest output into reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03/pytest_part3b_timing.txt and record the exit code in .../chunk_03/exit_code.txt.
+- Snap environment fingerprints: `python --version`, `pip list | grep torch`, and `lscpu | grep "Model name"` into env_python.txt, env_torch.txt, and env_cpu.txt under the same STAMP directory.
+- Summarise the outcome (runtime, pass/fail, tolerance margin) in reports/2026-01-test-suite-triage/phase_q/$STAMP/summary.md, citing the new artifacts and noting that docs + ledger updates remain for Q4/Q6.
+- Stage the dependency edits + new artifacts once verified; do not touch docs or trackers until the validation results are green.
 Pitfalls To Avoid:
-- Do not drop the existing `slow` marker; add the new entry without rewriting the list ordering.
-- Keep the test CPU-only (CUDA_VISIBLE_DEVICES=-1) and leave compile guard enabled.
-- Avoid broad pytest selectors; only run the single target until docs are updated.
-- Document plugin absence before installing anything—supervisor must approve dependency changes.
-- Note the new marker in code comments sparingly; rely on docs updates later.
-- Preserve ASCII; no fancy Unicode in config files or docs.
-- Do not touch docs/development/testing_strategy.md yet—Phase Q Q4 will handle docs in the next loop.
-- Respect protected assets listed in docs/index.md.
-- After pytest, record exit status in reports/2026-01-test-suite-triage/phase_q/$STAMP/chunk_03_part3b_exit_code.txt.
+- Do not rerun the full chunk list yet; only execute the singled-out gradient selector.
+- Keep the timeout env vars on the same line as pytest to avoid `/bin/bash: CUDA_VISIBLE_DEVICES=-1: command not found`.
+- Ensure NANOBRAGG_DISABLE_COMPILE=1 stays set; gradient timings rely on the compile guard.
+- Avoid rewriting the existing slow marker description; just append the new slow_gradient entry.
+- Preserve ASCII in all manifests and summaries; no Unicode symbols.
+- Don’t delete the previous STAMP directories; create a fresh one for this run.
+- Resist installing packages globally—edit manifests so future setups reproduce the plugin.
 Pointers:
-- docs/fix_plan.md:1
-- plans/active/test-suite-triage.md:357
-- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:15
-- reports/2026-01-test-suite-triage/phase_p/20251015T061848Z/chunk_03_rerun/summary.md:21
-- pyproject.toml:48
-- tests/test_gradients.py:574
-Next Up: After the marker lands and the targeted test passes, refresh docs (Phase Q Q4) and rerun all chunk 03 shards (Q5) before closing C18 in the tracker.
+- docs/fix_plan.md:59-65
+- plans/active/test-suite-triage.md:346-369
+- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:90-160
+- reports/2026-01-test-suite-triage/phase_q/20251015T064831Z/config_update.md
+- pyproject.toml:41-59
+- tests/test_gradients.py:571-580
+Next Up: Phase Q Q4 documentation refresh once the guarded rerun artifacts are locked in.

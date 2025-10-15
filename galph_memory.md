@@ -2885,3 +2885,13 @@
 - Rewrote input.md to delegate Phase Q Q1–Q3 (plugin check, pyproject/test edits, targeted pytest run) with artifact expectations under phase_q/$STAMP.
 - <Action State>: [ready_for_implementation]
 
+
+### 2025-10-15T07:06:55Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase Q C18 tolerance rollout
+- Action type: Evidence collection
+- Mode: Perf
+### 2025-10-15T07:11:38Z (galph loop recap)
+- Reviewed Ralph commit 7db2b75f: pytest-timeout plugin wired into pytest config but dependency manifests left untouched and the guarded rerun timed out; flagged this gap for follow-up.
+- Updated docs/fix_plan.md Next Action 13 to require recording pytest-timeout in requirements.txt and `[project.optional-dependencies.test]`; mirrored the reminder in plans/active/test-suite-triage.md Phase Q Q1 guidance.
+- Reissued input.md (Perf mode) directing dependency edits, environment capture, and the 1200 s guarded rerun for tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability.
+- <Action State>: [ready_for_implementation]
