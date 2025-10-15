@@ -3131,3 +3131,12 @@
 - Probed local tools: `cpupower` present, `sensors` missing (documented via input.md fallback). Reinforced need for system load capture ahead of rerun.
 - Rewrote input.md directing reports/2026-01-test-suite-refresh/phase_i/$STAMP workflow: environment snapshots, /usr/bin/time profile, gradient runtime summary, optional GPU check, and follow-up memo/log updates.
 - <Action State>: [gathering_evidence]
+### 2025-10-15T17:56:30Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase J collection guardrails pivot
+- Action type: Review/housekeeping
+- Mode: Docs
+### 2025-10-15T18:05:12Z (galph loop recap)
+- Updated docs/fix_plan.md:1-20,142-165 to pivot Active Focus to Phase J guardrails and added Next Action 17 (Phase J design bundle with STAMP deliverables + plan sync).
+- Replaced input.md with Docs-mode handoff (Next Action 17) instructing Ralph to draft session fixture + gradient guard designs and validation plan under reports/2026-01-test-suite-refresh/phase_j/$STAMP/.
+- No plan edits yet; J1–J3 remain open pending Ralph's documentation pass.
+- <Action State>: [ready_for_implementation]
