@@ -71,11 +71,11 @@ Exit Criteria: Each row below links to a committed brief under `reports/2026-01-
 | Cluster ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | CLUSTER-CREF-001 | Document C reference harness failure and NB_C_BIN requirements | [D] | Brief recorded in `phase_d/20251015T113531Z/cluster_CLUSTER-CREF-001.md`; captures resolved env-var precedence fix (Attempt #4) and references `[TEST-GOLDEN-001]` for ongoing binary upkeep. |
-| CLUSTER-PERF-001 | Record perf regression evidence + profiling plan | [ ] | Include bandwidth numbers from `phase_b/$STAMP/pytest.log`, mark dependency on `[PERF-PYTORCH-004]`, and define profiler command (`pytest -k ATPERF003` with `/usr/bin/time -v`). |
-| CLUSTER-TOOLS-001 | Capture nb-compare path resolution failure | [ ] | Reproduce CLI invocation, tie to `[TOOLING-DUAL-RUNNER-001]`, and list expected script path contract from `scripts/validation/README.md`. |
+| CLUSTER-PERF-001 | Record perf regression evidence + profiling plan | [ ] | Brief captured in `phase_d/20251015T113531Z/cluster_CLUSTER-PERF-001.md`; next loop must gather fresh timing (`/usr/bin/time -v` + profiler) and feed `[PERF-PYTORCH-004]`. |
+| CLUSTER-TOOLS-001 | Capture nb-compare path resolution failure | [D] | Resolved via Attempt #7; passing evidence and command log stored under `phase_d/20251015T113531Z/cluster_CLUSTER-TOOLS-001/20251015T132924Z/`. |
 | CLUSTER-CLI-001 | Outline missing CLI golden assets + pix0 findings | [D] | Brief recorded in `phase_d/20251015T113531Z/cluster_CLUSTER-CLI-001/20251015T131048Z/summary.md`; confirms assets present, tests passing (Attempt #6) and references findings `API-001/002` for historical context. |
-| CLUSTER-GRAD-001 | Summarize gradient timeout + data capture plan | [ ] | Quote 905 s timeout from Phase B run, highlight `[PERF-PYTORCH-004]` linkage, and propose targeted `pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability` rerun with extended timeout + profiler. |
-| CLUSTER-VEC-001 | Detail tricubic vectorization regression | [ ] | Record dtype mismatch symptoms, connect to `[VECTOR-TRICUBIC-002]` + findings `CONVENTION-004..006`, and provide reproduction command covering both failing nodeids. |
+| CLUSTER-GRAD-001 | Summarize gradient timeout + data capture plan | [ ] | Use `phase_d/20251015T113531Z/cluster_CLUSTER-GRAD-001.md` as the handoff brief; capture extended-timeout rerun (`pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability`) with profiler metrics before code edits. |
+| CLUSTER-VEC-001 | Detail tricubic vectorization regression | [ ] | Handoff brief lives at `phase_d/20251015T113531Z/cluster_CLUSTER-VEC-001.md`; rerun failing nodeids, log dtype mismatch, then update `[VECTOR-TRICUBIC-002]` with remediation plan. |
 
 ### Verification & Guardrails
 - Respect Protected Assets list in `docs/index.md`; never delete `loop.sh`, `input.md`, etc.
