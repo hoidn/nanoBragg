@@ -3102,3 +3102,15 @@
 - Updated input.md with guarded full-suite command, artifact layout, and ledger update requirements for the rerun.
 - Focus ready for Ralph to execute the Phase G suite run and report results.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T17:07:37Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase H remediation planning
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T17:16:02Z (galph loop recap)
+- Authored `plans/active/test-suite-triage-phase-h.md` with Phase H/I/J structure so Phase G findings feed into infrastructure + timeout remediation.
+- Updated `docs/fix_plan.md` Active Focus, plan references, and Next Actions 18–19 to point at the new plan and evidence expectations (Phase H/STAMP roots).
+- Rewrote `input.md` targeting Next Action 18 with explicit command chain to capture NB_C_BIN + golden asset checks; Mode remains Parity, mapped as evidence-only.
+- Focus now waits on Ralph to execute the infrastructure gate evidence loop before we revisit Phase I.
+- <Action State>: [ready_for_implementation]

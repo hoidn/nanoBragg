@@ -1,37 +1,39 @@
-Summary: Run the guarded full pytest suite to lock in Phase G results after clearing the Phase D/F cluster diagnostics.
+Summary: Capture Phase H infrastructure gate evidence so the suite rerun no longer surprises us with missing binaries or assets.
 Mode: Parity
-Focus: TEST-SUITE-TRIAGE-002 (Next Action 14 — Phase G rerun scheduling)
+Focus: TEST-SUITE-TRIAGE-002 (Next Action 18 — Phase H infrastructure gate)
 Branch: feature/spec-based-2
-Mapped tests: pytest -vv tests/
-Artifacts: reports/2026-01-test-suite-refresh/phase_g/$STAMP/{env/{env.txt,torch_env.txt,disk_usage.txt},logs/pytest_full.log,artifacts/{pytest.junit.xml,time.txt,exit_code.txt},analysis/summary.md}
-Do Now: TEST-SUITE-TRIAGE-002#14 — (export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-refresh/phase_g/$STAMP/{env,logs,artifacts,analysis}; printenv > reports/2026-01-test-suite-refresh/phase_g/$STAMP/env/env.txt; python -m torch.utils.collect_env > reports/2026-01-test-suite-refresh/phase_g/$STAMP/env/torch_env.txt; df -h . > reports/2026-01-test-suite-refresh/phase_g/$STAMP/env/disk_usage.txt; /usr/bin/time -v -o reports/2026-01-test-suite-refresh/phase_g/$STAMP/artifacts/time.txt timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ --junitxml=reports/2026-01-test-suite-refresh/phase_g/$STAMP/artifacts/pytest.junit.xml | tee reports/2026-01-test-suite-refresh/phase_g/$STAMP/logs/pytest_full.log; echo $? > reports/2026-01-test-suite-refresh/phase_g/$STAMP/artifacts/exit_code.txt)
-If Blocked: If the suite aborts (timeout/non-zero exit), keep all artifacts under the same $STAMP, add the failure signature plus collected counts to analysis/summary.md, and note the blocker + exit status in docs/fix_plan.md before stopping.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-test-suite-refresh/phase_h/$STAMP/{env/env.txt,checks/{nb_c_bin.txt,c_binary.txt,c_binary_help.txt,golden_assets.txt},analysis/infrastructure_gate.md}
+Do Now: TEST-SUITE-TRIAGE-002#18 — (export STAMP=$(date -u +%Y%m%dT%H%M%SZ); BASE=reports/2026-01-test-suite-refresh/phase_h/$STAMP; mkdir -p $BASE/{env,checks,analysis}; printenv | sort > $BASE/env/env.txt; printf 'NB_C_BIN=%s
+fallback_golden=./golden_suite_generator/nanoBragg
+fallback_root=./nanoBragg
+' "${NB_C_BIN:-<unset>}" > $BASE/checks/nb_c_bin.txt; NB_C_BIN_PATH=${NB_C_BIN:-./golden_suite_generator/nanoBragg}; ls -l "$NB_C_BIN_PATH" > $BASE/checks/c_binary.txt; stat "$NB_C_BIN_PATH" >> $BASE/checks/c_binary.txt; sha256sum "$NB_C_BIN_PATH" >> $BASE/checks/c_binary.txt; timeout 10 "$NB_C_BIN_PATH" -help > $BASE/checks/c_binary_help.txt 2>&1 || true; ls -l scaled.hkl > $BASE/checks/golden_assets.txt; sha256sum scaled.hkl >> $BASE/checks/golden_assets.txt; ls -l reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json >> $BASE/checks/golden_assets.txt; sha256sum reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json >> $BASE/checks/golden_assets.txt; cat <<EOF2 > $BASE/analysis/infrastructure_gate.md
+# Phase H Infrastructure Gate Notes
+
+- NB_C_BIN resolved: ${NB_C_BIN:-<unset>}
+- Primary binary used: ${NB_C_BIN_PATH}
+- Golden asset hashes recorded in checks/golden_assets.txt
+- Next steps: outline pytest collection-time fixture assertions per plans/active/test-suite-triage-phase-h.md
+EOF2
+)
+If Blocked: If the binary check fails (missing or non-executable), stop after capturing the failure output, note it in analysis/infrastructure_gate.md, and update docs/fix_plan.md Attempts History with the blocking signature before proceeding.
 Priorities & Rationale:
-- docs/fix_plan.md:68-87 now calls for Phase G rerun (Next Action 14) after resolving F5 diagnostics.
-- reports/2026-01-test-suite-refresh/phase_b/20251015T113531Z/summary.md documents the baseline we must supersede.
-- reports/2026-01-test-suite-refresh/phase_f/20251015T160436Z/analysis/summary.md shows F5 resolved, so a fresh full-suite measurement is required.
-- docs/development/testing_strategy.md:40-110 provides the authoritative full-suite command and guardrails.
-- plans/archive/test-suite-triage-rerun.md: Phase B section defines artifact expectations we should mirror for Phase G.
+- docs/fix_plan.md:3-47 elevates Phase H gate as the critical next action before any new suite runs.
+- plans/active/test-suite-triage-phase-h.md:6-47 spells out the deliverables we need (env snapshot, C binary exec check, golden asset audit, fixture sketch).
+- reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/analysis/summary.md:35-120 shows why infrastructure gaps keep resurfacing when we only run isolated tests.
 How-To Map:
-- Run the Do Now command inside bash so `timeout`, `/usr/bin/time`, and tee cooperate; confirm `/usr/bin/time` output exists before exiting.
-- After pytest finishes, append pass/fail/skip/xpass counts from pytest output into analysis/summary.md along with any failure clusters.
-- Use `rg -n "FAILED" reports/2026-01-test-suite-refresh/phase_g/$STAMP/logs/pytest_full.log` to extract nodeids for any remaining failures; include them in summary and docs/fix_plan.md.
-- Update docs/fix_plan.md under TEST-SUITE-TRIAGE-002 with Attempt #15, citing the new STAMP and outcome.
-- If the suite finishes clean (0 failures), note the success and recommend moving the initiative to closure; otherwise classify the failures by cluster before stopping.
+- After running Do Now, append reasoning and fixture ideas to $BASE/analysis/infrastructure_gate.md (add bullet list for collection-time assertions, gradient policy hook references, and unanswered questions).
+- Run `sha256sum $NB_C_BIN_PATH scaled.hkl reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json >> $BASE/checks/golden_assets.txt` again if hashes were missing or stderr warned about permissions.
+- Capture `python -m torch.utils.collect_env > $BASE/env/torch_env.txt` if you need device/dtype context for fix_plan logging.
+- Once evidence is ready, log Attempt #16 under docs/fix_plan.md `[TEST-SUITE-TRIAGE-002]` with the STAMP, file list, and findings, then stage the new plan reference for Phase I (Next Action 19).
 Pitfalls To Avoid:
-- Do not rerun the suite multiple times this loop; a single guarded attempt only.
-- Keep `timeout 3600` and `PYTEST_ADDOPTS="--maxfail=200 --timeout=905"`; changing them breaks comparability.
-- Ensure `NANOBRAGG_DISABLE_COMPILE=1` is set or gradcheck timings will be invalid.
-- Do not overwrite existing Phase B/F artifacts; all new files must live under phase_g/$STAMP.
-- Verify `/usr/bin/time` output is not truncated; rerun only if the file is empty.
-- Avoid editing production code or tests while running this diagnostic loop.
-- Maintain ASCII-only content in summary.md and docs/fix_plan.md updates.
-- Capture env snapshots before running pytest; missing env.txt is considered an incomplete attempt.
-- Keep `CUDA_VISIBLE_DEVICES=-1`; running on GPU breaks parity with the existing baseline.
+- No pytest suites this loop; only the `-help` probe is allowed.
+- Keep outputs ASCII; avoid clipboard manipulations that inject smart quotes.
+- Do not rebuild nanoBragg binaries—only verify existing artefacts.
+- Respect Protected Assets; never move files listed in docs/index.md.
+- Preserve the STAMP directory structure exactly; duplicate STAMPs require supervisor signoff.
 Pointers:
-- docs/fix_plan.md:68-87, 12-14 entries
-- reports/2026-01-test-suite-refresh/phase_b/20251015T113531Z/summary.md
-- reports/2026-01-test-suite-refresh/phase_f/20251015T160436Z/analysis/summary.md
-- docs/development/testing_strategy.md:40-110
-- plans/archive/test-suite-triage-rerun.md: Phase B artifact checklist
-Next Up: If the suite passes cleanly, prepare the Phase G summary plus ledger update so we can decide on initiative closure next loop.
+- docs/fix_plan.md:3-47
+- plans/active/test-suite-triage-phase-h.md:6-99
+- reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/analysis/summary.md:1-220
+Next Up: Phase I gradient timeout mitigation study (Next Action 19) once the infrastructure gate evidence is logged.

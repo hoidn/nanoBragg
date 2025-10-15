@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop, Next Action 14 scheduling)
+**Last Updated:** 2025-10-15 (galph loop, Phase H gate planning kickoff)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — Relaunch full `pytest tests/` execution, capture failures, and stage remediation sequencing before any new feature work.
+- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — Execute Phase H infrastructure gate and Phase I gradient timeout study (see `plans/active/test-suite-triage-phase-h.md`) before scheduling the next full-suite rerun.
 - CRITICAL: `[VECTOR-PARITY-001]` — Tap 5.3 accumulation instrumentation must land to unblock full-frame parity (Phase E16–E18 capture + synthesis).
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -41,7 +41,7 @@
 - Priority: Critical
 - Status: in_progress
 - Owner/Date: galph/2025-10-15 (Attempt #0 baseline)
-- Plan Reference: `plans/archive/test-suite-triage-rerun.md`
+- Plan References: `plans/archive/test-suite-triage-rerun.md`, `plans/active/test-suite-triage-phase-h.md`
 - Reproduction: Guarded full suite per Phase B — `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/`
 - Artifacts Root: `reports/2026-01-test-suite-refresh/phase_<phase>/<STAMP>/`
 - Attempts History:
@@ -99,6 +99,9 @@
 15. ✅ COMPLETE (2025-10-15 ralph Phase Q Q6 ledger closure, STAMP 20251015T071423Z) — Docs-only loop per input.md Mode: Docs. Closed C18 tolerance review by updating remediation_tracker.md with Phase Q validation evidence and tolerance approval. **Tracker Updates:** Updated `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` Executive Summary (10 total failures, 1 active cluster, 0 implementation bugs, Phase Q closure notes added), marked C18 row ✅ RESOLVED with 839.14s runtime validation and 900s tolerance approval. **Evidence Chain:** Phase Q validation (STAMP 20251015T071423Z) test passed with 839.14s runtime and 6.7% margin below 900s ceiling; Phase P timing packet (20251015T060354Z) documented tolerance derivation with 6% headroom above 845.68s baseline. **Artifacts:** `reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/ledger_update.md` summarizes tracker edits, evidence chain, and documentation references. **Outcome:** C18 cluster fully closed; only C2 (gradcheck guard with documented workaround) remains in tracker as known infrastructure limitation. No pytest execution (evidence-only per mode). All Phase Q tasks (Q1-Q6) now complete.
 16. ✅ COMPLETE (2025-10-15 ralph Phase R closure, STAMP 20251015T102654Z) — Guarded chunk ladder executed under compile guard (43 passed / 9 skipped / 1 xfailed; `test_property_gradient_stability` 846.60 s < 905 s). Aggregated summary, env snapshots, timing table, and ledger/tracker updates recorded in `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/`.
 17. ✅ COMPLETE (2025-10-15 ralph loop, Attempt #85) — Archive `[TEST-SUITE-TRIAGE-001]`: moved `plans/active/test-suite-triage.md` to `plans/archive/test-suite-triage.md` via `git mv`, added closure preface citing final metrics (43 passed / 9 skipped / 1 xfailed, 0 active failures, 846.60s < 905s tolerance, 78.5% pass rate suite-wide), updated this ledger index/status (status=done, plan_reference updated), and linked Phase R summary. Docs-only loop; no pytest execution.
+18. 🔜 TODO (2025-10-15 galph) — Launch Phase H infrastructure gate per `plans/active/test-suite-triage-phase-h.md` §Phase H. Scope: capture NB_C_BIN env snapshot, verify C binary executability, confirm golden assets (`scaled.hkl`, `pix0_expected.json`) hashes, and draft infrastructure fixture strategy. Artifacts → `reports/2026-01-test-suite-refresh/phase_h/$STAMP/`. Evidence-only; no pytest test execution beyond `timeout 10 $NB_C_BIN -help`.
+19. 🔜 TODO (blocked by #18) — Phase I gradient timeout mitigation study per `plans/active/test-suite-triage-phase-h.md` §Phase I. Run isolated `/usr/bin/time -v timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest tests/test_gradients.py::test_property_gradient_stability -vv`, capture system load diagnostics, and draft timeout decision memo under `reports/2026-01-test-suite-refresh/phase_i/$STAMP/`.
+
 - Attempts History:
   * [2025-10-10] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), disk audit (77G available, 83% used), and pytest collection baseline (692 tests, 0 errors). Artifacts: `reports/2026-01-test-suite-triage/phase_a/20251010T131000Z/{preflight.md,commands.txt,env.txt,torch_env.txt,disk_usage.txt,collect_only.log}`. All Phase A tasks (A1-A3 per `plans/active/test-suite-triage.md`) complete. Ready for Phase B full-suite execution.
   * [2025-10-10] Attempt #2 — Result: ⚠️ partial (Phase B timeout). Full suite execution reached ~75% completion (520/692 tests) before 10-minute timeout. Captured 34 failures across determinism (6), sourcefile handling (6), grazing incidence (4), detector geometry (5), debug/trace (4), CLI flags (3), and others. Runtime: 600s. Exit: timeout. Artifacts: `reports/2026-01-test-suite-triage/phase_b/20251010T132406Z/{logs/pytest_full.log,failures_raw.md,summary.md,commands.txt}`. junit XML may be incomplete. Remaining 172 tests (~25%) not executed. Observations: Large detector parity tests and gradient checks likely contributors to timeout. Recommendation: split suite execution or extend timeout to 30-60min for complete run.
