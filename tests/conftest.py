@@ -72,11 +72,11 @@ def _check_c_binary_executable(binary_path):
             timeout=10,
             text=True
         )
-        # nanoBragg exits with non-zero but produces help text on stderr
-        if 'usage: nanoBragg' in result.stderr.lower():
+        # nanoBragg exits with non-zero but produces help text on stdout
+        if 'usage: nanobragg' in result.stdout.lower():
             return True, None
         else:
-            return False, f"Binary failed to produce help text (stderr: {result.stderr[:200]})"
+            return False, f"Binary failed to produce help text (stdout: {result.stdout[:200]}, stderr: {result.stderr[:200]})"
     except subprocess.TimeoutExpired:
         return False, f"Binary -help command timed out (>10s): {binary_path}"
     except Exception as e:
