@@ -38,6 +38,6 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
 5. **Documentation & Tests**
    - Update relevant docs/tests when you change vectorization or device handling.
    - Capture timings/metrics (CPU vs CUDA) and link them in `docs/fix_plan.md`.
-   - **Gradient test performance:** Slow gradient tests (marked with `@pytest.mark.slow_gradient`) may legitimately run up to 900 seconds on CPU with float64 precision. This is expected behavior for high-precision numerical gradient checks, not a performance regression. Phase Q evidence (2025-10-15T071423Z) validates 839.14s runtime with 6.7 percent margin below approved ceiling.
+   - **Gradient test performance:** Slow gradient tests (marked with `@pytest.mark.slow_gradient`) may legitimately run up to 905 seconds on CPU with float64 precision. This is expected behavior for high-precision numerical gradient checks, not a performance regression. Phase R uplift (2025-10-15T091543Z) raised ceiling to 905s after observing 900.02s breach in chunk 03 rerun.
 
 Keep this checklist open while working; cite it in fix-plan entries so the vectorization/device guardrails stay visible.

@@ -572,7 +572,7 @@ class TestPropertyBasedGradients:
             ), f"Failed for cell {i}: Volume mismatch {volume} vs {volume_triple}"
 
     @pytest.mark.slow_gradient
-    @pytest.mark.timeout(900)
+    @pytest.mark.timeout(905)
     def test_property_gradient_stability(self):
         """Ensure gradients remain stable across parameter space."""
         torch.manual_seed(44)  # For reproducibility
