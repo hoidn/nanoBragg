@@ -15,6 +15,7 @@
 - Phase A dependency gate ✅ (Attempts logged Dec 2025; SOURCE-WEIGHT contract propagated to docs/fix_plan.md).
 - Phase B regression refresh ✅ (Attempt #2 2025-10-09 captured CPU/CUDA tricubic + absorption suites under `reports/2026-01-vectorization-refresh/phase_b/20251010T013437Z/`).
 - Phase C parity gate ✅ (Attempt #10 delivered `first_divergence.md` and `[VECTOR-PARITY-001]` Phase D5/D6 corrections landed; ROI parity retested against regenerated golden data in Attempt #20).
+- **Tricubic tests stable** ✅ (2025-10-15 TEST-SUITE-TRIAGE-002 CLUSTER-VEC-001 diagnostic: both tricubic vectorization tests pass on CPU/GPU; dtype neutrality confirmed; Phase B failure was transient; see `reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-VEC-001/20251015T143055Z/summary.md`).
 - Phase D backlog refresh remains **blocked** pending `[VECTOR-PARITY-001]` Phase E full-frame validation with the refreshed assets and `[TEST-GOLDEN-001]` Phase D ledger handoff; do not capture new profiler traces until `reports/2026-01-vectorization-parity/phase_e/<STAMP>/` records corr ≥0.999 / |sum_ratio−1| ≤5×10⁻³. Attempts #29–#35 completed Tap 5 evidence (PyTorch + C), confirming HKL indexing + bounds semantics; oversample-accumulation instrumentation (E15–E18) now gates Phase F remediation.
 - Phase E/F design packets are staged but stay paused until Phase D1 unlocks; tricubic addendum will launch first once the Phase E gating artifacts land.
 

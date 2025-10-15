@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 2 items
+
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar PASSED [ 50%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire ✓ Phase C2: OOB warning single-fire behavior validated
+  - First OOB: warning printed, interpolation disabled, returned default_F=100.0
+  - Second OOB: no warning, still returns default_F=100.0
+  - In-bounds post-disable: uses fallback path, returns 50.0
+PASSED [100%]
+
+============================== 2 passed in 2.06s ===============================

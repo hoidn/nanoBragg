@@ -1,0 +1,159 @@
+WARNING: out of range for three point interpolation
+WARNING: further warnings will not be printed!
+{
+  "default_torch_dtype": "torch.float32",
+  "expected_default_tensor_dtype": "torch.float32",
+  "cases": [
+    {
+      "tag": "scalar_float32",
+      "input_shapes": {
+        "h": [
+          1
+        ],
+        "k": [
+          1
+        ],
+        "l": [
+          1
+        ]
+      },
+      "input_dtypes": {
+        "h": "torch.float32",
+        "k": "torch.float32",
+        "l": "torch.float32"
+      },
+      "output_dtype": "torch.float32",
+      "crystal_dtype": "torch.float32",
+      "device": "cpu",
+      "values": [
+        117.3499984741211
+      ],
+      "warning_shown": false,
+      "interpolate_flag": false
+    },
+    {
+      "tag": "batch3_float32",
+      "input_shapes": {
+        "h": [
+          3
+        ],
+        "k": [
+          3
+        ],
+        "l": [
+          3
+        ]
+      },
+      "input_dtypes": {
+        "h": "torch.float32",
+        "k": "torch.float32",
+        "l": "torch.float32"
+      },
+      "output_dtype": "torch.float32",
+      "crystal_dtype": "torch.float32",
+      "device": "cpu",
+      "values": [
+        117.3499984741211,
+        122.67999267578125,
+        90.90000915527344
+      ],
+      "warning_shown": false,
+      "interpolate_flag": false
+    },
+    {
+      "tag": "grid2x3_float32",
+      "input_shapes": {
+        "h": [
+          2,
+          3
+        ],
+        "k": [
+          2,
+          3
+        ],
+        "l": [
+          2,
+          3
+        ]
+      },
+      "input_dtypes": {
+        "h": "torch.float32",
+        "k": "torch.float32",
+        "l": "torch.float32"
+      },
+      "output_dtype": "torch.float32",
+      "crystal_dtype": "torch.float32",
+      "device": "cpu",
+      "values": [
+        [
+          117.3499984741211,
+          122.67999267578125,
+          109.0999984741211
+        ],
+        [
+          90.90000915527344,
+          129.02999877929688,
+          119.75
+        ]
+      ],
+      "warning_shown": false,
+      "interpolate_flag": false
+    },
+    {
+      "tag": "edge_oob_float32",
+      "input_shapes": {
+        "h": [
+          1
+        ],
+        "k": [
+          1
+        ],
+        "l": [
+          1
+        ]
+      },
+      "input_dtypes": {
+        "h": "torch.float32",
+        "k": "torch.float32",
+        "l": "torch.float32"
+      },
+      "output_dtype": "torch.float32",
+      "crystal_dtype": "torch.float32",
+      "device": "cpu",
+      "values": [
+        100.0
+      ],
+      "warning_shown": true,
+      "interpolate_flag": false
+    },
+    {
+      "tag": "batch3_float64_inputs",
+      "input_shapes": {
+        "h": [
+          3
+        ],
+        "k": [
+          3
+        ],
+        "l": [
+          3
+        ]
+      },
+      "input_dtypes": {
+        "h": "torch.float64",
+        "k": "torch.float64",
+        "l": "torch.float64"
+      },
+      "output_dtype": "torch.float32",
+      "crystal_dtype": "torch.float32",
+      "device": "cpu",
+      "values": [
+        117.3499984741211,
+        122.67999267578125,
+        90.90000915527344
+      ],
+      "warning_shown": false,
+      "interpolate_flag": false
+    }
+  ]
+}
