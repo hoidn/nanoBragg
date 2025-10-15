@@ -48,7 +48,7 @@
   * [2025-10-15] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), collection baseline (700 tests, 0 errors, +8 vs expected 692 = +1.2% drift). Artifacts: `reports/2026-01-test-suite-refresh/phase_a/20251015T113531Z/{summary.md,commands.txt,env.txt,torch_env.txt,pytest-collect.log}`. Exit code 0. All Phase A tasks (A1-A4 per plan) complete. Ready for Phase B full-suite execution.
 - Next Actions:
   1. ✅ COMPLETE (Attempt #1) — Phase A preflight with STAMP 20251015T113531Z; 700 tests collected successfully; environment guard recorded.
-  2. Execute guarded full suite (`pytest tests/`) with timeout cap, persisting `pytest.log`, junit XML, and timing stats under `phase_b/<STAMP>/`.
+  2. Execute guarded full suite (`pytest tests/`) with timeout cap, persisting `pytest.log`, junit XML, and timing stats under `phase_b/<STAMP>/`; reuse STAMP 20251015T113531Z (Phase A bundle) and capture updated collected/failed counts (expect ~700 collected based on preflight).
   3. Extract failure clusters, map to prior IDs, and draft `phase_c/<STAMP>/triage_summary.md`; update Attempts History with counts and artifact links.
   4. Produce remediation briefs per cluster (`phase_d/<STAMP>/cluster_<id>.md`) and refresh Next Actions across dependent plan entries for delegation.
 

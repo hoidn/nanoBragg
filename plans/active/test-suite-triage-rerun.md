@@ -20,10 +20,12 @@ Exit Criteria: Collection succeeds (no ImportErrors); guard env recorded; artifa
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| A1 | Create STAMP + artifact skeleton | [ ] | `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-refresh/phase_a/$STAMP`. Record `STAMP` in attempts log. |
-| A2 | Capture environment guard | [ ] | Write `env.txt` documenting `CUDA_VISIBLE_DEVICES`, `NANOBRAGG_DISABLE_COMPILE`, `KMP_DUPLICATE_LIB_OK`. Use `printenv` redirected to `env.txt`; include Python/torch versions via `python -m torch.utils.collect_env`. |
-| A3 | Run collection-only smoke | [ ] | `KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q tests > pytest-collect.log 2>&1`; store log + `commands.txt`. Success threshold: exit 0, 692 tests collected (note any drift). |
-| A4 | Summarize preflight outcome | [ ] | Draft `summary.md` with collection counts, notable skips, and environment guard confirmation. |
+| A1 | Create STAMP + artifact skeleton | [D] | `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; `mkdir -p reports/2026-01-test-suite-refresh/phase_a/$STAMP`. Record `STAMP` in attempts log. |
+| A2 | Capture environment guard | [D] | Write `env.txt` documenting `CUDA_VISIBLE_DEVICES`, `NANOBRAGG_DISABLE_COMPILE`, `KMP_DUPLICATE_LIB_OK`. Use `printenv` redirected to `env.txt`; include Python/torch versions via `python -m torch.utils.collect_env`. |
+| A3 | Run collection-only smoke | [D] | `KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q tests > pytest-collect.log 2>&1`; store log + `commands.txt`. Success threshold: exit 0, 692 tests collected (note any drift). |
+| A4 | Summarize preflight outcome | [D] | Draft `summary.md` with collection counts, notable skips, and environment guard confirmation. |
+
+Phase A status: Completed via Attempt #1 (STAMP 20251015T113531Z; 700 tests collected, env guard captured).
 
 ### Phase B — Full Suite Execution & Capture
 Goal: Execute `pytest tests/` once under guarded environment, recording timing and failure set.

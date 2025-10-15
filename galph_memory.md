@@ -2984,3 +2984,13 @@
 - Reissued `input.md` directing Ralph to execute Phase A preflight (`pytest --collect-only -q tests`) with env capture under `reports/2026-01-test-suite-refresh/` and to reuse STAMP for the full run.
 - Reviewed recent Ralph commits (95046543, 18508c80) — documentation-focused, no regressions detected; reiterated need to resume suite health tracking.
 - <Action State>: [planning]
+### 2025-10-15T11:44:59Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase B full-suite execution prep
+- Action type: Review/housekeeping
+- Mode: Parity
+### 2025-10-15T11:48:37Z (galph loop recap)
+- Marked TEST-SUITE-TRIAGE-002 Phase A tasks as [D] in plans/active/test-suite-triage-rerun.md and noted STAMP 20251015T113531Z completion.
+- Refined docs/fix_plan.md Next Action 2 to reuse the Phase A STAMP and log the 700-test baseline before running Phase B.
+- Rewrote input.md handing Ralph the guarded full-suite command, artifact checklist, and timeout guard for Phase B.
+- Focus for next loop: execute Phase B full-suite run and capture results under phase_b/20251015T113531Z.
+- <Action State>: [ready_for_implementation]
