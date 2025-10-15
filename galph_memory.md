@@ -2895,3 +2895,16 @@
 - Updated docs/fix_plan.md Next Action 13 to require recording pytest-timeout in requirements.txt and `[project.optional-dependencies.test]`; mirrored the reminder in plans/active/test-suite-triage.md Phase Q Q1 guidance.
 - Reissued input.md (Perf mode) directing dependency edits, environment capture, and the 1200 s guarded rerun for tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T07:25:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase Q documentation & ledger closure
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-15T07:40:00Z (galph loop recap)
+- Reviewed Phase Q artifacts; noted docs/tracker remain open after 839.14s validation.
+- Updated plans/active/test-suite-triage.md Phase Q table (Q1-Q3/Q5 ➜ [D]; Q4/Q6 left pending with refreshed guidance).
+- Refreshed docs/fix_plan.md Active Focus and logged Next Actions 14-15 for doc refresh + tracker closure.
+- Rewrote input.md (Docs mode) directing Phase Q Q4 documentation edits with STAMPed artifact expectations.
+- <Action State>: [ready_for_implementation]
+
