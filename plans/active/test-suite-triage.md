@@ -24,9 +24,9 @@
 - Phase M0 ✅ complete — Attempt #21 (20251011T153931Z) executed the chunked rerun: 504 passed / 46 failed / 136 skipped, triage_summary.md refreshed with nine active clusters (C1–C9) and new quick-win priorities.
 - Phase M1 ✅ complete — Sprint 0 clusters C1/C3/C4/C5/C7 closed (Attempts #21/#22/#25/#26/#27); Attempt #28 logged the M1f ledger/tracker refresh, Attempt #29 verified the compile guard (10/10 gradchecks pass), and Attempt #30 documented the compile-guard doc updates.
 - Phase M2 ✅ complete (Attempt #41 — `reports/2026-01-test-suite-triage/phase_m/20251011T193829Z/`): 561 passed / 13 failed / 112 skipped recorded with chunked execution (<110 s per chunk).
-- Phase M3 ✅ documentation complete (STAMP: 20251011T193829Z) — Evidence bundles captured for the active clusters (C2 gradient guard, C8 detector config follow-up, C15 mixed units, C17 polarization, C18 performance) under `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/`; tracker and analysis summaries reflect the Phase M2 results.
+- Phase M3 ✅ documentation complete (STAMP: 20251011T193829Z) — Evidence bundles captured for the active clusters (C2 gradient guard, C8 detector config follow-up, C15 mixed units, C17 polarization, C18 performance) under `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/`; tracker and analysis summaries reflect the Phase M2 results. ✅ Attempt #45 (STAMP 20251015T002610Z) subsequently validated that C15 is already resolved (see `reports/2026-01-test-suite-triage/phase_m3/20251015T002610Z/mixed_units/summary.md`).
 - Phase N ✅ complete — Sprint 1.2 (C16 detector orthogonality) closed via Attempt #44 (STAMP 20251015T001345Z); tolerance relaxed to 1e-7 with geometry regression green.
-- Phase M ⏳ pending — 12 residual failures (clusters C2 gradient guard, C8 detector config follow-up, C15 mixed units, C17 polarization, C18 performance) await specialist handoffs + remediation execution before final post-fix validation rerun.
+- Phase M ⏳ pending — 12 residual failures remain, all concentrated in clusters C2 (gradient guard infrastructure), C8 (detector config follow-up), C17 (polarization semantics), and C18 (performance expectation). Await specialist handoffs + remediation execution before the final post-fix validation rerun.
 
 ### Phase A — Preflight & Inventory
 Goal: Confirm environment readiness and enumerate suite metadata so the full run is reproducible and guarded.
@@ -289,4 +289,15 @@ Exit Criteria: Targeted grazing-incidence test passes with updated tolerance, re
 | N3 | Validate geometry regression suite | [D] | Attempt #44 reran `pytest -vv tests/test_detector_basis_vectors.py tests/test_detector_geometry.py tests/test_at_parallel_017.py`; `reports/2026-01-test-suite-triage/phase_m3/20251015T001345Z/detector_ortho/pytest_after.log` shows 25/25 passing. |
 | N4 | Sync documentation and trackers | [D] | Attempt #44 updated `implementation_notes.md`, marked C16 resolved in the Phase J tracker, and logged the attempt in `docs/fix_plan.md` / this status snapshot. |
 
-Next focus: Stage Phase O — Sprint 1.3 mixed-units callchain (cluster C15). Use `reports/2026-01-test-suite-triage/phase_m3/20251011T193829Z/mixed_units/summary.md` as the specialist brief before launching evidence collection.
+### Phase O — Sprint 1.4 Post-Sprint Baseline (Chunked Rerun)
+Goal: Capture a fresh full-suite baseline after Sprint 1 resolutions so the ledger, tracker, and remediation summaries reflect the current 12-failure state before prioritising C17/C18.
+Prereqs: Review Attempt #45 validation (`phase_m3/20251015T002610Z/mixed_units/summary.md`) and confirm no new code changes landed since the last chunked run; ensure Phase A preflight artifacts remain valid (<7 days old) or refresh if environment drifted.
+Exit Criteria: Chunk ladder executed under a new STAMP with aggregated metrics (pass/fail/skipped counts, durations, slowest tests) stored in `reports/2026-01-test-suite-triage/phase_o/<STAMP>/summary.md`; tracker, fix_plan, and plan status snapshot updated with the new baseline counts.
+
+| ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
+| --- | --- | --- | --- |
+| O1 | Prepare STAMP + command scaffolding | [ ] | Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; create `reports/2026-01-test-suite-triage/phase_o/$STAMP/{chunks,logs}` and capture the 10-command ladder in `commands.txt`. Reference Phase M0 chunk list above; keep the environment prefix (`env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE`) on the same line. |
+| O2 | Execute 10-chunk pytest ladder | [ ] | Run each chunk command sequentially; tee outputs to `chunks/chunk_##/pytest.log`, capture junit XML via `--junitxml`, and record exit codes in `chunks/chunk_##/exit_code.txt`. Maintain harness runtime <360 s per chunk. |
+| O3 | Aggregate metrics + sync ledgers | [ ] | Summarise results in `summary.md` (pass/fail/skipped totals, durations, slowest 25 tests). Update `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` executive summary, `docs/fix_plan.md` Next Actions/Attempts (Attempt #46), and this plan’s Status Snapshot with the new counts. |
+
+Next focus: Execute Phase O to refresh the baseline, then reassess whether C17 (polarization semantics) or C18 (performance expectation) should lead Sprint 1.5.

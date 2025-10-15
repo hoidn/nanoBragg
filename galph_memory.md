@@ -2684,3 +2684,14 @@
 - Reissued `input.md` directing C15 reproduction plus callchain capture with STAMPed artifact expectations.
 - Action State: [ready_for_implementation]
 
+
+### 2025-10-15T00:33:25Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O focus realignment
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T00:37:31Z (galph loop recap)
+- Updated plans/active/test-suite-triage.md Phase O to pivot from C15 callchain to the post-Sprint chunked baseline; Phase snapshot now cites Attempt #45 and lists C2/C8/C17/C18 as remaining clusters.
+- Refreshed docs/fix_plan.md Active Focus + Next Actions (item 4 marked complete, new item 5 for Phase O) and logged Attempt #45 redundancy evidence from reports/2026-01-test-suite-triage/phase_m3/20251015T002610Z/mixed_units/.
+- Rewrote input.md with Phase O chunk ladder commands (env guards, STAMP scaffolding, 10 chunk commands, aggregation + tracker sync).
+- Action State: [ready_for_implementation] (Phase O chunk rerun delegated to Ralph).
