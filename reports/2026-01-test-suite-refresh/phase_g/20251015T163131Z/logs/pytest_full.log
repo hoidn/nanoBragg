@@ -1,0 +1,1572 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 905.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 692 items / 1 skipped
+
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_disabled_when_zero[cpu] PASSED [  0%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[False-cpu] PASSED [  0%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_capture_fraction_calculation[True-cpu] PASSED [  0%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_last_value_vs_accumulation_semantics[cpu] PASSED [  0%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[False-cpu] PASSED [  0%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_parallax_dependence[True-cpu] PASSED [  0%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[False-cpu] PASSED [  1%]
+tests/test_at_abs_001.py::TestAT_ABS_001::test_absorption_with_tilted_detector[True-cpu] PASSED [  1%]
+tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_calculation PASSED [  1%]
+tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_zero PASSED [  1%]
+tests/test_at_bkg_001.py::TestAT_BKG_001::test_water_background_additive PASSED [  1%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag PASSED [  1%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag PASSED [  1%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_invocable PASSED      [  2%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples PASSED [  2%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms PASSED [  2%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms PASSED [  2%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_default_F PASSED [  2%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_minimal_render_with_hkl_file PASSED [  2%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_data_ordering_fast_major PASSED [  2%]
+tests/test_at_cli_002.py::TestAT_CLI_002::test_error_without_required_inputs PASSED [  3%]
+tests/test_at_cli_003.py::TestATCLI003::test_mosflm_default_pivot_beam PASSED [  3%]
+tests/test_at_cli_003.py::TestATCLI003::test_xds_default_pivot_sample PASSED [  3%]
+tests/test_at_cli_003.py::TestATCLI003::test_pivot_override_mosflm_to_sample PASSED [  3%]
+tests/test_at_cli_003.py::TestATCLI003::test_pivot_override_xds_to_beam PASSED [  3%]
+tests/test_at_cli_003.py::TestATCLI003::test_convention_header_keys_consistency PASSED [  3%]
+tests/test_at_cli_004.py::test_header_precedence_img_then_mask PASSED    [  3%]
+tests/test_at_cli_004.py::test_mask_zeros_are_skipped PASSED             [  4%]
+tests/test_at_cli_004.py::test_mask_beam_center_y_flip PASSED            [  4%]
+tests/test_at_cli_004.py::test_conflicting_detector_size PASSED          [  4%]
+tests/test_at_cli_004.py::test_img_only_no_mask PASSED                   [  4%]
+tests/test_at_cli_005.py::test_cli_roi_basic PASSED                      [  4%]
+tests/test_at_cli_005.py::test_cli_roi_with_noise PASSED                 [  4%]
+tests/test_at_cli_005.py::test_cli_roi_edge_cases PASSED                 [  4%]
+tests/test_at_cli_005.py::test_cli_roi_different_conventions PASSED      [  5%]
+tests/test_at_cli_006.py::test_autoscale_without_scale_flag PASSED       [  5%]
+tests/test_at_cli_006.py::test_explicit_scale_flag PASSED                [  5%]
+tests/test_at_cli_006.py::test_pgm_without_pgmscale PASSED               [  5%]
+tests/test_at_cli_006.py::test_pgm_with_explicit_pgmscale PASSED         [  5%]
+tests/test_at_cli_006.py::test_pgm_format_compliance PASSED              [  5%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_identical_seed_produces_identical_noise PASSED [  5%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_different_seed_produces_different_noise PASSED [  6%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_seed_determinism_without_roi PASSED [  6%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_negative_seed_accepted PASSED [  6%]
+tests/test_at_cli_007.py::TestATCLI007NoiseDeterminism::test_overload_count_determinism PASSED [  6%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_filtering_reduces_intensity PASSED [  6%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_very_strict_removes_most_intensity PASSED [  6%]
+tests/test_at_cli_008.py::TestATCLI008DminFiltering::test_dmin_zero_has_no_effect PASSED [  6%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_and_fdump_with_default_f_zero PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_hkl_but_has_default_f PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_missing_cell_parameters PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_fdump_fallback PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_help_message PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_dispstep PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_hdiv PASSED [  7%]
+tests/test_at_cli_009.py::TestATCLI009ErrorHandling::test_unsupported_flag_vdiv PASSED [  8%]
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_triclinic_absolute_positions PASSED [  8%]
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_cubic_vs_triclinic_systematic_difference PASSED [  8%]
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_known_reflection_d_spacings PASSED [  8%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_from_flux_exposure_beamsize PASSED [  8%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_fluence_calculation_when_flux_zero PASSED [  8%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_fluence_calculation_when_exposure_zero PASSED [  8%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_with_beamsize_zero PASSED [  9%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_flux_recomputation_from_fluence_and_exposure PASSED [  9%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning PASSED [  9%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_larger PASSED [  9%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_zero PASSED [  9%]
+tests/test_at_geo_001.py::test_at_geo_001_mosflm_beam_center_mapping PASSED [  9%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_a_distance_only PASSED   [  9%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_b_close_distance_only PASSED [ 10%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_c_explicit_override PASSED [ 10%]
+tests/test_at_geo_002.py::test_at_geo_002_setup_c_beam_override PASSED   [ 10%]
+tests/test_at_geo_002.py::test_at_geo_002_direct_instantiation PASSED    [ 10%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_r_factor_calculation PASSED [ 10%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_distance_update_with_close_distance PASSED [ 10%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_preservation_beam_pivot PASSED [ 10%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_preservation_sample_pivot PASSED [ 11%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_no_rotations_r_factor_equals_one PASSED [ 11%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_with_various_rotations[DetectorPivot.BEAM] PASSED [ 11%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_beam_center_with_various_rotations[DetectorPivot.SAMPLE] PASSED [ 11%]
+tests/test_at_geo_003.py::TestATGEO003RFactorAndBeamCenter::test_gradients_flow_through_r_factor PASSED [ 11%]
+tests/test_at_geo_004.py::test_twotheta_axis_defaults PASSED             [ 11%]
+tests/test_at_geo_004.py::test_twotheta_axis_override PASSED             [ 11%]
+tests/test_at_geo_004.py::test_twotheta_rotation_applied PASSED          [ 12%]
+tests/test_at_geo_004.py::test_twotheta_value_preserved PASSED           [ 12%]
+tests/test_at_geo_004.py::test_mosflm_twotheta_rotation PASSED           [ 12%]
+tests/test_at_geo_004.py::test_dials_twotheta_rotation PASSED            [ 12%]
+tests/test_at_geo_005.py::TestATGEO005CurvedDetector::test_curved_detector_equal_distance PASSED [ 12%]
+tests/test_at_geo_005.py::TestATGEO005CurvedDetector::test_curved_vs_planar_difference PASSED [ 12%]
+tests/test_at_geo_005.py::TestATGEO005CurvedDetector::test_small_angle_rotation_consistency PASSED [ 13%]
+tests/test_at_geo_005.py::TestATGEO005CurvedDetector::test_gradient_flow_curved_detector PASSED [ 13%]
+tests/test_at_geo_005.py::TestATGEO005CurvedDetector::test_beam_center_affects_curvature PASSED [ 13%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_point_pixel_solid_angle PASSED [ 13%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_default_solid_angle_with_obliquity PASSED [ 13%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_off_center_pixel_comparison PASSED [ 13%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_gradient_flow PASSED [ 13%]
+tests/test_at_geo_006.py::TestATGEO006PointPixelSolidAngle::test_corner_pixel_values PASSED [ 14%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_header_required_keys PASSED [ 14%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_data_ordering PASSED    [ 14%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_convention_specific_headers PASSED [ 14%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_torch_tensor_input PASSED [ 14%]
+tests/test_at_io_001.py::TestAT_IO_001::test_smv_byte_order PASSED       [ 14%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_header_format PASSED    [ 14%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_pixel_scaling PASSED    [ 15%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_with_default_scale PASSED [ 15%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_torch_tensor_input PASSED [ 15%]
+tests/test_at_io_002.py::TestAT_IO_002::test_pgm_clipping_behavior PASSED [ 15%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_write_and_read PASSED [ 15%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_cache_behavior PASSED [ 15%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_no_files_with_default_F PASSED [ 15%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_no_files_zero_default PASSED [ 16%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_preserves_default_F PASSED [ 16%]
+tests/test_at_io_003.py::TestAT_IO_003::test_fdump_header_structure PASSED [ 16%]
+tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format PASSED   [ 16%]
+tests/test_at_io_004.py::TestAT_IO_004::test_five_column_with_phase PASSED [ 16%]
+tests/test_at_io_004.py::TestAT_IO_004::test_six_column_with_sigma_and_phase PASSED [ 16%]
+tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling PASSED [ 16%]
+tests/test_at_io_004.py::TestAT_IO_004::test_all_formats_produce_same_pattern PASSED [ 17%]
+tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats PASSED [ 17%]
+tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling PASSED [ 17%]
+tests/test_at_noise_001.py::TestATNoise001::test_small_mean_exact_poisson PASSED [ 17%]
+tests/test_at_noise_001.py::TestATNoise001::test_medium_mean_rejection_sampling PASSED [ 17%]
+tests/test_at_noise_001.py::TestATNoise001::test_large_mean_gaussian_approximation PASSED [ 17%]
+tests/test_at_noise_001.py::TestATNoise001::test_seed_reproducibility PASSED [ 17%]
+tests/test_at_noise_001.py::TestATNoise001::test_adc_and_clipping PASSED [ 18%]
+tests/test_at_noise_001.py::TestATNoise001::test_all_regimes_in_single_image PASSED [ 18%]
+tests/test_at_noise_001.py::TestATNoise001::test_noise_config_integration PASSED [ 18%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[64] PASSED [ 18%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[128] PASSED [ 18%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[256] PASSED [ 18%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[512] PASSED [ 18%]
+tests/test_at_parallel_001.py::TestATParallel001::test_beam_center_scales_with_detector_size[1024] PASSED [ 19%]
+tests/test_at_parallel_001.py::TestATParallel001::test_peak_position_at_beam_center PASSED [ 19%]
+tests/test_at_parallel_001.py::TestATParallel001::test_cli_beam_center_calculation PASSED [ 19%]
+tests/test_at_parallel_001.py::TestATParallel001::test_intensity_scaling_with_solid_angle PASSED [ 19%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_scales_with_pixel_size PASSED [ 19%]
+tests/test_at_parallel_002.py::TestATParallel002::test_peak_position_scales_inversely_with_pixel_size PASSED [ 19%]
+tests/test_at_parallel_002.py::TestATParallel002::test_pattern_correlation_across_pixel_sizes PASSED [ 19%]
+tests/test_at_parallel_002.py::TestATParallel002::test_beam_center_parameter_consistency PASSED [ 20%]
+tests/test_at_parallel_003.py::TestATParallel003::test_detector_offset_preservation PASSED [ 20%]
+tests/test_at_parallel_003.py::TestATParallel003::test_peak_position_at_offset_beam_centers PASSED [ 20%]
+tests/test_at_parallel_003.py::TestATParallel003::test_offset_ratio_preservation PASSED [ 20%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_mosflm_adds_half_pixel_offset PASSED [ 20%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_xds_has_no_pixel_offset PASSED [ 20%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_peak_position_difference PASSED [ 20%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_pattern_correlation_when_aligned PASSED [ 21%]
+tests/test_at_parallel_004.py::TestAT_PARALLEL_004::test_beam_center_calculation_consistency PASSED [ 21%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_mosflm_xbeam_ybeam_mapping SKIPPED [ 21%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_xds_orgx_orgy_mapping SKIPPED [ 21%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_pivot_mode_consistency SKIPPED [ 21%]
+tests/test_at_parallel_005.py::TestAT_PARALLEL_005_BeamCenterMapping::test_equivalent_configurations_produce_same_pattern SKIPPED [ 21%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_bragg_angle_prediction_single_distance PASSED [ 21%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_distance_scaling PASSED [ 22%]
+tests/test_at_parallel_006.py::TestATParallel006SingleReflection::test_combined_wavelength_and_distance PASSED [ 22%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_peak_positions_with_rotations SKIPPED [ 22%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_peak_intensity_ordering SKIPPED [ 22%]
+tests/test_at_parallel_007.py::TestATParallel007PeakPositionWithRotations::test_rotation_effect_on_pattern SKIPPED [ 22%]
+tests/test_at_parallel_008.py::TestAT_PARALLEL_008::test_triclinic_multi_peak_pattern SKIPPED [ 22%]
+tests/test_at_parallel_008.py::TestAT_PARALLEL_008::test_peak_intensity_ordering SKIPPED [ 22%]
+tests/test_at_parallel_008.py::TestAT_PARALLEL_008::test_non_max_suppression SKIPPED [ 23%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_point_pixel_distance_scaling SKIPPED [ 23%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_obliquity_distance_scaling SKIPPED [ 23%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_obliquity_with_tilts SKIPPED [ 23%]
+tests/test_at_parallel_010.py::TestATParallel010SolidAngleCorrections::test_combined_distance_and_tilt SKIPPED [ 23%]
+tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_unpolarized_theory PASSED [ 23%]
+tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_polarized_kahn_model PASSED [ 23%]
+tests/test_at_parallel_011.py::TestATParallel011PolarizationFactor::test_c_pytorch_equivalence SKIPPED [ 24%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_simple_cubic_correlation PASSED [ 24%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_triclinic_P1_correlation PASSED [ 24%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_cubic_tilted_detector_correlation PASSED [ 24%]
+tests/test_at_parallel_012.py::TestATParallel012ReferencePatternCorrelation::test_high_resolution_variant PASSED [ 24%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed PASSED [ 24%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_different_seeds PASSED [ 25%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_consistency_across_runs PASSED [ 25%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_c_pytorch_equivalence SKIPPED [ 25%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_platform_fingerprint PASSED [ 25%]
+tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_numerical_precision_float64 PASSED [ 25%]
+tests/test_at_parallel_014.py::TestATParallel014NoiseRobustness::test_mean_preservation_after_scaling PASSED [ 25%]
+tests/test_at_parallel_014.py::TestATParallel014NoiseRobustness::test_peak_centroid_stability PASSED [ 25%]
+tests/test_at_parallel_014.py::TestATParallel014NoiseRobustness::test_overload_count_consistency PASSED [ 26%]
+tests/test_at_parallel_014.py::TestATParallel014NoiseRobustness::test_noise_statistics PASSED [ 26%]
+tests/test_at_parallel_014.py::TestATParallel014NoiseRobustness::test_deterministic_noise_with_seed PASSED [ 26%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_distance_units_consistency PASSED [ 26%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_wavelength_units_consistency PASSED [ 26%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_angle_units_consistency PASSED [ 26%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_mixed_units_comprehensive PASSED [ 26%]
+tests/test_at_parallel_015.py::TestATParallel015MixedUnits::test_detector_rotation_units PASSED [ 27%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_tiny_scale PASSED [ 27%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_large_cell PASSED [ 27%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_long_distance PASSED [ 27%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_extreme_scale_c_comparison SKIPPED [ 27%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_combined_extremes PASSED [ 27%]
+tests/test_at_parallel_016.py::TestATParallel016ExtremeScale::test_numerical_stability_metrics PASSED [ 27%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_detector_tilts PASSED [ 28%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_large_twotheta PASSED [ 28%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_combined_extreme_angles PASSED [ 28%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_near_90_degree_incidence PASSED [ 28%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_solid_angle_obliquity_corrections PASSED [ 28%]
+tests/test_at_parallel_017.py::TestATParallel017GrazingIncidence::test_extreme_rotation_stability PASSED [ 28%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_cubic_crystal_aligned_axes PASSED [ 28%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_zero_angle_rotations PASSED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_near_singular_cell_angles PASSED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_aligned_spindle_and_beam PASSED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_very_small_unit_cell PASSED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_very_large_unit_cell PASSED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_continuity_near_90_degrees PASSED [ 29%]
+tests/test_at_parallel_018.py::TestATParallel018CrystalBoundaryConditions::test_identity_misset_matrix PASSED [ 29%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_integration SKIPPED [ 30%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_without_absorption SKIPPED [ 30%]
+tests/test_at_parallel_020.py::TestATParallel020::test_phi_rotation_only SKIPPED [ 30%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_minimal_features SKIPPED [ 30%]
+tests/test_at_parallel_021.py::TestCrystalPhiRotation::test_single_step_phi_rotation SKIPPED [ 30%]
+tests/test_at_parallel_021.py::TestCrystalPhiRotation::test_multi_step_phi_rotation SKIPPED [ 30%]
+tests/test_at_parallel_022.py::TestATParallel022::test_single_step_with_detector_rotations SKIPPED [ 30%]
+tests/test_at_parallel_022.py::TestATParallel022::test_multi_step_with_detector_rotations SKIPPED [ 31%]
+tests/test_at_parallel_022.py::TestATParallel022::test_large_detector_rotations SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles0-cubic-cell_params0] SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles0-triclinic-cell_params1] SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles1-cubic-cell_params0] SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles1-triclinic-cell_params1] SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles2-cubic-cell_params0] SKIPPED [ 31%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles2-triclinic-cell_params1] SKIPPED [ 32%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles3-cubic-cell_params0] SKIPPED [ 32%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles3-triclinic-cell_params1] SKIPPED [ 32%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles4-cubic-cell_params0] SKIPPED [ 32%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_explicit_misset_equivalence[misset_angles4-triclinic-cell_params1] SKIPPED [ 32%]
+tests/test_at_parallel_023.py::TestAT_PARALLEL_023_MissetAnglesEquivalence::test_misset_changes_pattern SKIPPED [ 32%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_pytorch_determinism PASSED [ 32%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_seed_independence PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_c_pytorch_equivalence SKIPPEDtions. Interface fix is complete - C code correctly
+receives misset parameters.)                                             [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_lcg_compatibility PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_mosaic_rotation_umat_determinism PASSED [ 33%]
+tests/test_at_parallel_024.py::TestAT_PARALLEL_024::test_umat2misset_round_trip PASSED [ 33%]
+tests/test_at_parallel_025.py::test_maximum_intensity_simple_case SKIPPED [ 33%]
+tests/test_at_parallel_025.py::test_maximum_intensity_with_offset SKIPPED [ 33%]
+tests/test_at_parallel_025.py::test_maximum_intensity_triclinic SKIPPED  [ 34%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_pytorch_only PASSED [ 34%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c FAILED [ 34%]
+tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_vs_cubic_peak_difference PASSED [ 34%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_structure_factor_loading PASSED [ 34%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_intensity_ratios PASSED [ 34%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_pattern_structure PASSED [ 34%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_c_pytorch_equivalence SKIPPED [ 35%]
+tests/test_at_parallel_027.py::TestAT_PARALLEL_027::test_f_squared_scaling PASSED [ 35%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_cpu_performance_parity SKIPPED.) [ 35%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_gpu_performance_superiority SKIPPED.) [ 35%]
+tests/test_at_parallel_028.py::TestATParallel028PerformanceParity::test_performance_measurement_validity PASSED [ 35%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_pytorch_aliasing_reduction PASSED [ 35%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_pytorch_peak_stability PASSED [ 35%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_pytorch_fwhm_convergence PASSED [ 36%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_c_pytorch_oversample_equivalence SKIPPED [ 36%]
+tests/test_at_parallel_029.py::TestSubpixelSamplingAT029::test_issue_subpixel_aliasing SKIPPED [ 36%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling PASSED [ 36%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c SKIPPED [ 36%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling PASSED [ 36%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_cpu_thread_scaling PASSED [ 36%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_pytorch_cpu_vs_c_performance SKIPPED [ 37%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_gpu_acceleration SKIPPED [ 37%]
+tests/test_at_perf_002.py::TestATPERF002ParallelExecution::test_thread_efficiency PASSED [ 37%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage PASSED [ 37%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance PASSED [ 37%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access PASSED [ 37%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization FAILED [ 38%]
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization PASSED [ 38%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_sincg_throughput PASSED [ 38%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_dot_product_throughput PASSED [ 38%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_profile_hot_paths PASSED [ 38%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_vectorization_efficiency PASSED [ 38%]
+tests/test_at_perf_004.py::TestATPERF004HotPathOptimization::test_critical_operations_performance PASSED [ 38%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_torch_compile_speedup PASSED [ 39%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_hot_function_compilation PASSED [ 39%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_compilation_amortization PASSED [ 39%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_gpu_kernel_compilation SKIPPED [ 39%]
+tests/test_at_perf_005.py::TestATPERF005CompilationOptimization::test_dtype_optimization_impact PASSED [ 39%]
+tests/test_at_perf_006.py::TestATPERF006TensorVectorization::test_no_python_loops_in_core_path PASSED [ 39%]
+tests/test_at_perf_006.py::TestATPERF006TensorVectorization::test_profile_tensor_operations_ratio PASSED [ 39%]
+tests/test_at_perf_006.py::TestATPERF006TensorVectorization::test_vectorized_speedup PASSED [ 40%]
+tests/test_at_perf_006.py::TestATPERF006TensorVectorization::test_tensor_shapes_include_all_dimensions SKIPPED [ 40%]
+tests/test_at_perf_006.py::test_oversample_performance_scaling[1] PASSED [ 40%]
+tests/test_at_perf_006.py::test_oversample_performance_scaling[2] PASSED [ 40%]
+tests/test_at_perf_006.py::test_oversample_performance_scaling[3] PASSED [ 40%]
+tests/test_at_perf_006.py::test_oversample_performance_scaling[4] PASSED [ 40%]
+tests/test_at_perf_006.py::test_detector_thickness_vectorization PASSED  [ 40%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_suite_execution SKIPPED [ 41%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_pytorch_performance_basic PASSED [ 41%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_memory_scaling PASSED [ 41%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_gpu_performance SKIPPED [ 41%]
+tests/test_at_perf_007.py::TestATPerf007ComprehensiveBenchmark::test_benchmark_output_format PASSED [ 41%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_large_tensor_gpu_residency SKIPPED [ 41%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_auto_device_selection_uses_cuda SKIPPED [ 41%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_skip_when_cuda_unavailable PASSED [ 42%]
+tests/test_at_perf_008.py::TestATPERF008CUDATensorResidency::test_memory_efficient_gpu_usage SKIPPED [ 42%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_calculation PASSED [ 42%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_nopolar_toggle PASSED [ 42%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics PASSED [ 42%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector PASSED [ 42%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_factor_range PASSED [ 42%]
+tests/test_at_pre_001.py::test_header_precedence_img_then_mask PASSED    [ 43%]
+tests/test_at_pre_001.py::test_mask_beam_center_y_flip PASSED            [ 43%]
+tests/test_at_pre_001.py::test_img_only_no_mask PASSED                   [ 43%]
+tests/test_at_pre_002.py::test_xbeam_ybeam_forces_beam_pivot PASSED      [ 43%]
+tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot PASSED  [ 43%]
+tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot PASSED      [ 43%]
+tests/test_at_pre_002.py::test_explicit_pivot_override PASSED            [ 43%]
+tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults PASSED [ 44%]
+tests/test_at_pre_002.py::test_convention_default_pivots PASSED          [ 44%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_bounds_default_to_full_detector PASSED [ 44%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_bounds_validation PASSED [ 44%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_limits_rendering_area PASSED [ 44%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_mask_array_filtering PASSED [ 44%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_roi_and_mask_combination PASSED [ 44%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_mask_array_dimension_validation PASSED [ 45%]
+tests/test_at_roi_001.py::TestAT_ROI_001::test_statistics_exclude_masked_pixels PASSED [ 45%]
+tests/test_at_sam_001.py::test_at_sam_001_steps_normalization PASSED     [ 45%]
+tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_omega_last_value_semantics PASSED [ 45%]
+tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_without_subpixel_flags PASSED [ 45%]
+tests/test_at_sam_002.py::TestAT_SAM_002_OversampleLastValue::test_oversample_flag_precedence PASSED [ 45%]
+tests/test_at_sam_003.py::test_dmin_culling_basic PASSED                 [ 45%]
+tests/test_at_sam_003.py::test_dmin_culling_exact_threshold PASSED       [ 46%]
+tests/test_at_sam_003.py::test_dmin_zero_no_culling PASSED               [ 46%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_all_columns PASSED [ 46%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_missing_columns PASSED [ 46%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_default_position PASSED [ 46%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_multiple_sources_normalization PASSED [ 46%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_empty_sourcefile PASSED [ 46%]
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_weighted_sources_integration PASSED [ 47%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_loading_via_cli PASSED [ 47%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_with_missing_columns PASSED [ 47%]
+tests/test_at_src_001_cli.py::TestAT_SRC_001_CLI::test_sourcefile_takes_precedence_over_divergence PASSED [ 47%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype0] PASSED [ 47%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[dtype1] PASSED [ 47%]
+tests/test_at_src_001_simple.py::test_sourcefile_dtype_propagation[None] PASSED [ 47%]
+tests/test_at_src_001_simple.py::test_sourcefile_parsing PASSED          [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_no_parameters_provided PASSED [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_step_provided PASSED [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_range_provided PASSED [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_count_provided_angles PASSED [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_only_count_provided_thickness PASSED [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_range_and_step_provided PASSED [ 48%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_count_and_range_provided PASSED [ 49%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_divergence_auto_selection PASSED [ 49%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_dispersion_auto_selection PASSED [ 49%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_thickness_auto_selection PASSED [ 49%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_all_parameters_provided PASSED [ 49%]
+tests/test_at_src_002.py::TestAT_SRC_002::test_conflicting_parameters PASSED [ 49%]
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_single_source PASSED [ 50%]
+tests/test_at_src_003.py::TestSourcefileLambdaOverride::test_lambda_override_multiple_sources PASSED [ 50%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_warning_emitted_on_mismatch PASSED [ 50%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_matching PASSED [ 50%]
+tests/test_at_src_003.py::TestSourcefileWarningEmission::test_no_warning_when_column_missing PASSED [ 50%]
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_steps_count_includes_zero_weight_sources PASSED [ 50%]
+tests/test_at_src_003.py::TestStepsNormalizationParity::test_equal_weighting_preserved PASSED [ 50%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic PASSED   [ 51%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_roi PASSED [ 51%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_mask PASSED [ 51%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_empty_roi PASSED [ 51%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_last_max_location PASSED [ 51%]
+tests/test_at_str_001.py::test_at_str_001_nearest_neighbor_lookup PASSED [ 51%]
+tests/test_at_str_002.py::test_tricubic_interpolation_enabled PASSED     [ 51%]
+tests/test_at_str_002.py::test_tricubic_out_of_bounds_fallback PASSED    [ 52%]
+tests/test_at_str_002.py::test_auto_enable_interpolation PASSED          [ 52%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_square_shape_model PASSED [ 52%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_round_shape_model PASSED [ 52%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_gauss_shape_model PASSED [ 52%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_tophat_shape_model PASSED [ 52%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_model_comparison PASSED [ 52%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_fudge_parameter_scaling PASSED [ 53%]
+tests/test_at_str_003.py::TestAT_STR_003_LatticeShapeModels::test_shape_models_at_bragg_peak PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_sparse_hkl_loading PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_missing_reflection_uses_default_f PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_intensity_ratios_with_sparse_hkl PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_fallback_with_no_hkl_uses_default_f PASSED [ 53%]
+tests/test_at_str_004.py::TestAT_STR_004::test_fdump_preserves_sparse_behavior PASSED [ 53%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_find_c_binary_resolution PASSED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_find_py_binary_resolution PASSED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_load_float_image PASSED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_resample_image PASSED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_compute_metrics PASSED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_find_peaks PASSED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_script_integration FAILED [ 54%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_metrics_with_identical_images PASSED [ 55%]
+tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_metrics_with_scaled_images PASSED [ 55%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_mosflm_auto_calculated_applies_offset PASSED [ 55%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_mosflm_explicit_no_offset PASSED [ 55%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_xds_no_offset_regardless_of_source PASSED [ 55%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_explicit_matches_default_value PASSED [ 55%]
+tests/test_beam_center_source.py::TestBeamCenterSource::test_default_beam_center_source_is_auto PASSED [ 55%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_alias PASSED [ 56%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_millimeter_alias PASSED [ 56%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_meters_and_mm_equivalence PASSED [ 56%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_dual_pix0_flag_rejection PASSED [ 56%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m0-pix0_mm0] PASSED [ 56%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m1-pix0_mm1] PASSED [ 56%]
+tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_signed_combinations[pix0_m2-pix0_mm2] PASSED [ 56%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cpu PASSED [ 57%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_persistence_cuda SKIPPED [ 57%]
+tests/test_cli_flags.py::TestDetectorOverridePersistence::test_detector_override_dtype_preservation PASSED [ 57%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_suppresses_noise_output PASSED [ 57%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_noisefile_without_nonoise PASSED [ 57%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_preserves_seed PASSED [ 57%]
+tests/test_cli_flags.py::TestNoiseSuppressionFlag::test_nonoise_without_noisefile PASSED [ 57%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_does_not_alter_beam_vector PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_pix0_triggers_custom_convention PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_roi_unaffected_by_new_flags PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIIntegrationSanity::test_convention_preserved_without_pix0 PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIBeamVector::test_custom_beam_vector_propagates PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cpu-dtype0] PASSED [ 58%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_override_beam_pivot_transform[cuda-dtype1] SKIPPED [ 58%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] FAILED [ 59%]
+tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cuda] SKIPPED [ 59%]
+tests/test_cli_flags.py::TestCLIPolarization::test_default_polarization_parity PASSED [ 59%]
+tests/test_cli_flags.py::TestCLIPolarization::test_nopolar_flag PASSED   [ 59%]
+tests/test_cli_flags.py::TestCLIPolarization::test_polar_override PASSED [ 59%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cpu] PASSED [ 59%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float32-cuda] SKIPPED [ 59%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cpu] PASSED [ 60%]
+tests/test_cli_flags.py::TestCLIPivotSelection::test_custom_vectors_force_sample_pivot[float64-cuda] SKIPPED [ 60%]
+tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip FAILED [ 60%]
+tests/test_cli_scaling.py::TestMOSFLMCellVectors::test_mosflm_cell_vectors SKIPPED [ 60%]
+tests/test_cli_scaling.py::TestFlattSquareMatchesC::test_f_latt_square_matches_c SKIPPED [ 60%]
+tests/test_cli_scaling.py::TestSourceWeights::test_source_weights_ignored_per_spec PASSED [ 60%]
+tests/test_cli_scaling.py::TestSourceWeights::test_cli_lambda_overrides_sourcefile PASSED [ 60%]
+tests/test_cli_scaling.py::TestSourceWeights::test_uniform_weights_ignored PASSED [ 61%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_zero_sum_accepted PASSED [ 61%]
+tests/test_cli_scaling.py::TestSourceWeights::test_edge_case_negative_weights_accepted PASSED [ 61%]
+tests/test_cli_scaling.py::TestSourceWeights::test_single_source_fallback PASSED [ 61%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_c_divergence_reference SKIPPED [ 61%]
+tests/test_cli_scaling.py::TestSourceWeightsDivergence::test_sourcefile_divergence_warning SKIPPED [ 61%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float32] SKIPPED [ 61%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cpu-float64] SKIPPED [ 62%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cuda-float32] SKIPPED [ 62%]
+tests/test_cli_scaling.py::TestHKLDevice::test_hkl_tensor_respects_device[cuda-float64] SKIPPED [ 62%]
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_rot_b_matches_c SKIPPED [ 62%]
+tests/test_cli_scaling_phi0.py::TestPhiZeroParity::test_k_frac_phi0_matches_c SKIPPED [ 62%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_defaults_equal_implicit XFAILUSTOM mode) [ 62%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_configuration_echo_present SKIPPEDoesn't exist in
+standard build)                                                          [ 63%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_mode_detection_accuracy SKIPPED [ 63%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_trigger_tracking SKIPPED [ 63%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_all_vector_parameters_trigger_custom SKIPPED [ 63%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_cubic_regression PASSED [ 63%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_triclinic_correctness PASSED [ 63%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_metric_duality PASSED [ 63%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_volume_identity PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_resolution_shell_consistency PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_rotation_invariance PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_gradient_flow PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_identity PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_x_rotation PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_y_rotation PASSED [ 64%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_z_rotation PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_order PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_properties PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_angles_to_rotation_matrix_tensor_types PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_orientation PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_zero_rotation PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_tensor_inputs PASSED [ 65%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_rotation_order PASSED [ 66%]
+tests/test_crystal_geometry.py::TestCrystalGeometry::test_misset_gradient_flow PASSED [ 66%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_vectors_in_detector_config PASSED [ 66%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_vectors_in_detector PASSED [ 66%]
+tests/test_custom_vectors.py::TestCustomVectors::test_cli_custom_vectors PASSED [ 66%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_convention_detection PASSED [ 66%]
+tests/test_custom_vectors.py::TestCustomVectors::test_custom_spindle_axis PASSED [ 66%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_flag PASSED [ 67%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_printout_pixel_flag PASSED [ 67%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_trace_pixel_flag PASSED [ 67%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_combined_debug_flags PASSED [ 67%]
+tests/test_debug_trace.py::TestDebugTraceFeatures::test_out_of_bounds_pixel PASSED [ 67%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_mosflm_convention PASSED [ 67%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_default_xds_convention PASSED [ 67%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_single_axis_rotations PASSED [ 68%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_combined_rotations PASSED [ 68%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_twotheta_rotation PASSED [ 68%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_all_rotations_combined PASSED [ 68%]
+tests/test_detector_basis_vectors.py::TestDetectorBasisVectors::test_tensor_rotation_parameters PASSED [ 68%]
+tests/test_detector_config.py::TestDetectorConfig::test_default_values PASSED [ 68%]
+tests/test_detector_config.py::TestDetectorConfig::test_post_init_defaults PASSED [ 68%]
+tests/test_detector_config.py::TestDetectorConfig::test_custom_twotheta_axis PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorConfig::test_xds_convention_defaults PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_counts PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_distance PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_pixel_size PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorConfig::test_invalid_oversample PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorConfig::test_tensor_parameters PASSED [ 69%]
+tests/test_detector_config.py::TestDetectorInitialization::test_default_initialization PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_initialization PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_backward_compatibility_check PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_custom_config_not_default PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_basis_vectors_initialization PASSED [ 70%]
+tests/test_detector_config.py::TestDetectorInitialization::test_device_and_dtype PASSED [ 70%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_convention_basis_vectors PASSED [ 70%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_convention_basis_vectors PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_beam_center_mapping PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_beam_direction PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_twotheta_axis_default PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_denzo_twotheta_axis_default PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_adxv_default_beam_centers PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_all_conventions_orthonormal PASSED [ 71%]
+tests/test_detector_conventions.py::TestDetectorConventions::test_conventions_with_rotations PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_rotated_basis_vectors_match_c_reference PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_pix0_vector_matches_c_reference_in_beam_pivot PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorGeometryRegressions::test_mosflm_axis_mapping_correctness PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_parameter_gradients PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_basis_vector_gradients PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_pixel_coords_basis_vector_gradients PASSED [ 72%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_comprehensive_gradcheck PASSED [ 73%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_beam_strike_invariant_in_beam_pivot_mode PASSED [ 73%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_xds_convention_basic_geometry PASSED [ 73%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_real_valued_gradients PASSED [ 73%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_detector_complex_gradient_edge_cases PASSED [ 73%]
+tests/test_detector_geometry.py::TestDetectorDifferentiability::test_simulator_real_valued_gradients PASSED [ 73%]
+tests/test_detector_pivots.py::test_beam_pivot_keeps_beam_indices_and_alignment PASSED [ 73%]
+tests/test_detector_pivots.py::test_sample_pivot_moves_beam_indices_with_twotheta PASSED [ 74%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_round_div_applies_elliptical_trimming PASSED [ 74%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_square_div_uses_full_grid PASSED [ 74%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_round_vs_square_source_count_difference PASSED [ 74%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_single_divergence_point_unaffected PASSED [ 74%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_elliptical_trimming_threshold PASSED [ 74%]
+tests/test_divergence_culling.py::TestDivergenceCullingModes::test_combined_divergence_and_dispersion PASSED [ 75%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_a PASSED [ 75%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_b PASSED [ 75%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_c PASSED [ 75%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_alpha PASSED [ 75%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_beta PASSED [ 75%]
+tests/test_gradients.py::TestCellParameterGradients::test_gradcheck_cell_gamma PASSED [ 75%]
+tests/test_gradients.py::TestAdvancedGradients::test_joint_gradcheck PASSED [ 76%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradgradcheck_cell_params PASSED [ 76%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation PASSED [ 76%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality PASSED [ 76%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency PASSED [ 76%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability FAILED [ 76%]
+tests/test_gradients.py::TestOptimizationRecovery::test_optimization_recovers_cell PASSED [ 76%]
+tests/test_gradients.py::TestOptimizationRecovery::test_multiple_optimization_scenarios PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_read_identity_matrix PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_read_cubic_matrix PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_wavelength_scaling PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_triclinic_matrix PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_missing_file PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_invalid_format PASSED [ 77%]
+tests/test_mosflm_matrix.py::TestMOSFLMMatrixLoading::test_comments_and_whitespace PASSED [ 78%]
+tests/test_multi_source_integration.py::test_multi_source_intensity_normalization PASSED [ 78%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_auto_select_formula PASSED [ 78%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_different_crystal_sizes PASSED [ 78%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_explicit_oversample_overrides_auto PASSED [ 78%]
+tests/test_oversample_autoselect.py::TestOversampleAutoSelect::test_different_wavelengths PASSED [ 78%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_finds_repo_root PASSED [ 78%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_linter_loads_yaml PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_yaml_structure_validation PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_missing_yaml_file PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_invalid_yaml PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_real_repo_linting PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_spec_ats PASSED [ 79%]
+tests/test_parity_coverage_lint.py::TestParityCoverageLinter::test_extraction_of_yaml_ats PASSED [ 79%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-001-detpixels-64] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-001-detpixels-128] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-001-detpixels-256] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-001-detpixels-512] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-002-pixel-0.05mm] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-002-pixel-0.1mm] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-002-pixel-0.2mm] SKIPPED [ 80%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-002-pixel-0.4mm] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-003-beam-20-20-detpixels-256] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-003-beam-30-40-detpixels-256] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-003-beam-45-25-detpixels-512] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-003-beam-60-60-detpixels-1024] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-004-mosflm] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-004-xds] SKIPPED [ 81%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-005-mosflm-xbeam-ybeam-beam-pivot] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-005-xds-xbeam-ybeam-sample-pivot] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-005-mosflm-close-distance-sample-pivot] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-005-xds-close-distance-sample-pivot] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-006-dist-50mm-lambda-1.0] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-006-dist-100mm-lambda-1.5] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-006-dist-200mm-lambda-2.0] SKIPPED [ 82%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-007-rot-0-0-0] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-007-rot-5-3-2] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-007-rot-10-5-3] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-012-simple_cubic] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-011-unpolarized] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-011-polarized] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-020-comprehensive] SKIPPED [ 83%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-021-single_step_phi] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-021-multi_step_phi] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-022-single_step_phi] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-022-multi_step_phi] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-cubic-misset-0-0-0] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-cubic-misset-10p5-0-0] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-cubic-misset-0-10p25-0] SKIPPED [ 84%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-cubic-misset-0-0-9p75] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-cubic-misset-15-20p5-30p25] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-triclinic-misset-0-0-0] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-triclinic-misset-10p5-0-0] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-triclinic-misset-0-10p25-0] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-triclinic-misset-0-0-9p75] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-023-triclinic-misset-15-20p5-30p25] SKIPPED [ 85%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-024-random-misset-seed-12345] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-024-random-misset-seed-54321] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-point-pixel-distance-50mm] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-point-pixel-distance-100mm] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-point-pixel-distance-200mm] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-point-pixel-distance-400mm] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-obliquity-distance-100mm-tilt-0deg] SKIPPED [ 86%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-obliquity-distance-100mm-tilt-10deg] SKIPPED [ 87%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-obliquity-distance-100mm-tilt-20deg] SKIPPED [ 87%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-010-obliquity-distance-100mm-tilt-30deg] SKIPPED [ 87%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-016-extreme-tiny] SKIPPED [ 87%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-016-extreme-large-cell] SKIPPED [ 87%]
+tests/test_parity_matrix.py::test_parity_case[AT-PARALLEL-016-extreme-long-distance] SKIPPED [ 87%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cpu] PASSED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_basic_execution[cuda] SKIPPED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cuda_multiple_runs SKIPPED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_gradient_flow_preserved PASSED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cpu] PASSED [ 88%]
+tests/test_perf_pytorch_005_cudagraphs.py::TestCUDAGraphsCompatibility::test_cpu_cuda_correlation[cuda] SKIPPED [ 88%]
+tests/test_perf_pytorch_006.py::test_dtype_support[dtype0] PASSED        [ 88%]
+tests/test_perf_pytorch_006.py::test_dtype_support[dtype1] PASSED        [ 89%]
+tests/test_perf_pytorch_006.py::test_float32_float64_correlation PASSED  [ 89%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_against_c_value PASSED [ 89%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_fractional_miller_index PASSED [ 89%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_at_zero PASSED   [ 89%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_vectorized PASSED [ 89%]
+tests/test_physics.py::TestPhysicsFunctions::test_sincg_broadcast_N PASSED [ 89%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_twotheta_zero_uses_config_pivot PASSED [ 90%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_twotheta_nonzero_forces_sample_pivot PASSED [ 90%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_small_twotheta_values PASSED [ 90%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_negative_twotheta_forces_sample_pivot PASSED [ 90%]
+tests/test_pivot_mode_selection.py::TestPivotModeSelection::test_pivot_fix_integration PASSED [ 90%]
+tests/test_show_config.py::TestShowConfig::test_show_config_basic PASSED [ 90%]
+tests/test_show_config.py::TestShowConfig::test_show_config_with_divergence PASSED [ 90%]
+tests/test_show_config.py::TestShowConfig::test_show_config_with_rotations PASSED [ 91%]
+tests/test_show_config.py::TestShowConfig::test_echo_config_alias PASSED [ 91%]
+tests/test_suite.py::TestGeometryFunctions::test_dot_product PASSED      [ 91%]
+tests/test_suite.py::TestGeometryFunctions::test_cross_product PASSED    [ 91%]
+tests/test_suite.py::TestGeometryFunctions::test_magnitude PASSED        [ 91%]
+tests/test_suite.py::TestGeometryFunctions::test_unitize PASSED          [ 91%]
+tests/test_suite.py::TestGeometryFunctions::test_rotate_axis PASSED      [ 91%]
+tests/test_suite.py::TestGeometryFunctions::test_rotate_umat PASSED      [ 92%]
+tests/test_suite.py::TestCrystalModel::test_zero_rotation PASSED         [ 92%]
+tests/test_suite.py::TestCrystalModel::test_phi_rotation_90_deg PASSED   [ 92%]
+tests/test_suite.py::TestCrystalModel::test_rotation_gradients PASSED    [ 92%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_golden_data_exists PASSED [ 92%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_reproduction XFAILatives/parallel-trace-validation/) [ 92%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_cubic_tilted_detector_reproduction PASSED [ 92%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_triclinic_P1_reproduction PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_peak_position_validation PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_sensitivity_to_cell_params PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_simple_cubic PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_performance_triclinic PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_memory_usage_analysis PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_extreme_cell_parameters PASSED [ 93%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_rotation_compatibility PASSED [ 94%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simple_cubic_mosaic_reproduction PASSED [ 94%]
+tests/test_suite.py::TestTier1TranslationCorrectness::test_simulator_phi_rotation PASSED [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_crystal_params PASSED [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_detector_params PASSED [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_phi_rotation SKIPPEDted 3, got 2)) [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradcheck_mosaic_spread SKIPPEDack (expected 3, got 2)) [ 94%]
+tests/test_suite.py::TestTier2GradientCorrectness::test_gradient_numerical_stability SKIPPEDexpected 3, got 2)) [ 95%]
+tests/test_suite.py::TestTier3ScientificValidation::test_bragg_spot_position SKIPPED [ 95%]
+tests/test_suite.py::TestTier3ScientificValidation::test_polarization_limits SKIPPED [ 95%]
+tests/test_suite.py::test_import PASSED                                  [ 95%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cpu] PASSED [ 95%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype0-cuda] SKIPPED [ 95%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cpu] PASSED [ 95%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_matches_physics[dtype1-cuda] SKIPPED [ 96%]
+tests/test_trace_pixel.py::TestScalingTrace::test_scaling_trace_with_absorption[cpu] PASSED [ 96%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar FAILED [ 96%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_neighborhood_gathering_internals PASSED [ 96%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire FAILED [ 96%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cpu] PASSED [ 96%]
+tests/test_tricubic_vectorized.py::TestTricubicGather::test_device_neutrality[cuda] SKIPPED [ 96%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_matches_scalar_batched PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polint_gradient_flow PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_matches_scalar_batched PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin2_gradient_flow PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_matches_scalar_batched PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_gradient_flow PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polin3_batch_shape_preserved PASSED [ 97%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype0] PASSED [ 98%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_support_float64[dtype1] PASSED [ 98%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cpu] PASSED [ 98%]
+tests/test_tricubic_vectorized.py::TestTricubicPoly::test_polynomials_device_neutral[cuda] SKIPPED [ 98%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_scalar PASSED [ 98%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_tensor PASSED [ 98%]
+tests/test_units.py::TestUnitConversions::test_mm_to_angstroms_gradient PASSED [ 98%]
+tests/test_units.py::TestUnitConversions::test_meters_to_angstroms_scalar PASSED [ 99%]
+tests/test_units.py::TestUnitConversions::test_meters_to_angstroms_tensor PASSED [ 99%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_scalar PASSED [ 99%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_tensor PASSED [ 99%]
+tests/test_units.py::TestUnitConversions::test_degrees_to_radians_gradient PASSED [ 99%]
+tests/test_units.py::TestUnitConversions::test_inverse_conversions PASSED [ 99%]
+tests/test_units.py::TestUnitConversions::test_batch_tensor_conversions PASSED [100%]
+
+=================================== FAILURES ===================================
+_ TestAT_PARALLEL_026_TriclinicAbsolutePosition.test_triclinic_absolute_peak_position_vs_c _
+
+self = <tests.test_at_parallel_026.TestAT_PARALLEL_026_TriclinicAbsolutePosition object at 0x7b328f821d10>
+
+    @pytest.mark.requires_c_binary
+    def test_triclinic_absolute_peak_position_vs_c(self):
+        """Test that PyTorch and C produce peaks at the same absolute position"""
+    
+        from scripts.c_reference_runner import CReferenceRunner
+    
+        # Setup configuration
+        crystal_config, detector_config, beam_config = self.setup_triclinic_config()
+    
+        # Create models
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+    
+        # Create PyTorch simulator
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    
+        # Run PyTorch simulation
+        pytorch_image = simulator.run()
+        pytorch_slow, pytorch_fast, pytorch_intensity = self.find_peak_position(pytorch_image)
+    
+        # Setup C runner
+        runner = CReferenceRunner()
+    
+        # Run C simulation with same configs
+        c_image = runner.run_simulation(
+            detector_config,
+            crystal_config,
+            beam_config,
+            label="Triclinic absolute position test"
+        )
+    
+>       assert c_image is not None, "C reference run failed"
+E       AssertionError: C reference run failed
+E       assert None is not None
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:147: AssertionError
+----------------------------- Captured stdout call -----------------------------
+❌ nanoBragg executable not available: golden_suite_generator/nanoBragg
+________ TestATPERF003MemoryBandwidth.test_memory_bandwidth_utilization ________
+
+self = <tests.test_at_perf_003.TestATPERF003MemoryBandwidth object at 0x7b328f4ba190>
+
+    def test_memory_bandwidth_utilization(self):
+        """Test memory bandwidth utilization efficiency."""
+        print("\n" + "="*60)
+        print("AT-PERF-003: Memory Bandwidth Utilization")
+        print("="*60)
+    
+        # Test with different detector sizes to see bandwidth scaling
+        sizes = [512, 1024, 2048]
+        bandwidths = {}
+    
+        for size in sizes:
+            crystal_config = CrystalConfig(
+                cell_a=100.0, cell_b=100.0, cell_c=100.0,
+                cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+                N_cells=(5, 5, 5),
+                default_F=100.0
+            )
+    
+            detector_config = DetectorConfig(
+                distance_mm=100.0,
+                pixel_size_mm=0.1,
+                spixels=size,
+                fpixels=size,
+                detector_convention=DetectorConvention.MOSFLM
+            )
+    
+            beam_config = BeamConfig(wavelength_A=6.2)
+    
+            # Create Crystal and Detector objects first
+            crystal = Crystal(crystal_config)
+            detector = Detector(detector_config)
+    
+            simulator = Simulator(
+                crystal=crystal,
+                detector=detector,
+                beam_config=beam_config,
+            )
+    
+            # Measure time
+            times = []
+            for _ in range(3):
+                start = time.perf_counter()
+                _ = simulator.run()
+                end = time.perf_counter()
+                times.append(end - start)
+    
+            median_time = np.median(times)
+    
+            # Estimate bandwidth (very rough)
+            # Assume we read/write the image at least 3 times
+            # Using float64 by default (8 bytes per element)
+            bytes_moved = size * size * 8 * 3  # float64, 3 passes
+            bandwidth = bytes_moved / median_time / (1024**3)  # GB/s
+    
+            bandwidths[size] = bandwidth
+            print(f"  {size}×{size}: {median_time:.3f}s, "
+                  f"~{bandwidth:.1f} GB/s effective")
+    
+        # For complex simulations with many intermediate operations,
+        # bandwidth may decrease with size due to cache effects.
+        # We expect at least 50% of the small-size bandwidth for large arrays
+        # (relaxed from 80% to account for realistic cache and memory effects)
+>       assert bandwidths[2048] >= bandwidths[512] * 0.5, \
+            f"Bandwidth utilization decreases too much with size: " \
+            f"{bandwidths[2048]:.3f} GB/s vs {bandwidths[512]:.3f} GB/s"
+E       AssertionError: Bandwidth utilization decreases too much with size: 0.178 GB/s vs 0.394 GB/s
+E       assert np.float64(0.17775062834427505) >= (np.float64(0.39386686499440327) * 0.5)
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_003.py:298: AssertionError
+----------------------------- Captured stdout call -----------------------------
+
+============================================================
+AT-PERF-003: Memory Bandwidth Utilization
+============================================================
+auto-selected 1-fold oversampling
+auto-selected 1-fold oversampling
+auto-selected 1-fold oversampling
+  512×512: 0.015s, ~0.4 GB/s effective
+auto-selected 1-fold oversampling
+auto-selected 1-fold oversampling
+auto-selected 1-fold oversampling
+  1024×1024: 0.088s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+auto-selected 1-fold oversampling
+auto-selected 1-fold oversampling
+  2048×2048: 0.527s, ~0.2 GB/s effective
+________ TestAT_TOOLS_001_DualRunnerComparison.test_script_integration _________
+
+self = <tests.test_at_tools_001.TestAT_TOOLS_001_DualRunnerComparison object at 0x7b328f4185a0>
+
+    @pytest.mark.skipif(
+        not Path("./nanoBragg").exists() and not Path("./golden_suite_generator/nanoBragg").exists(),
+        reason="Requires C binary for integration test"
+    )
+    def test_script_integration(self):
+        """Test the full script execution."""
+        # Run with minimal arguments
+        cmd = [
+            'python', 'scripts/nb_compare.py',
+            '--outdir', 'test_comparison',
+            '--',
+            '-default_F', '100',
+            '-cell', '100', '100', '100', '90', '90', '90',
+            '-lambda', '1.0',
+            '-distance', '100',
+            '-detpixels', '64',
+            '-floatfile', 'test.bin'
+        ]
+    
+        # Run the script
+        result = subprocess.run(cmd, capture_output=True, text=True)
+    
+        # Check that it ran without critical errors per spec
+        # Exit codes: 0=success, 1=usage error, 2=runner failure, 3=correlation<threshold, 4=shape mismatch, 5=I/O error
+>       assert result.returncode in [0, 3]  # 0=pass, 3=correlation below threshold
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       assert 2 in [0, 3]
+E        +  where 2 = CompletedProcess(args=['python', 'scripts/nb_compare.py', '--outdir', 'test_comparison', '--', '-default_F', '100', '-cell', '100', '100', '100', '90', '90', '90', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-floatfile', 'test.bin'], returncode=2, stdout='', stderr="python: can't open file '/tmp/pytest-of-ollie/pytest-552/test_fdump_preserves_sparse_be0/scripts/nb_compare.py': [Errno 2] No such file or directory\n").returncode
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_at_tools_001.py:191: AssertionError
+___________ TestCLIPix0Override.test_pix0_vector_mm_beam_pivot[cpu] ____________
+
+self = <tests.test_cli_flags.TestCLIPix0Override object at 0x7b328f3a7a80>
+device = 'cpu'
+
+    @pytest.mark.parametrize("device", ["cpu", pytest.param("cuda", marks=pytest.mark.skipif(
+        not torch.cuda.is_available(), reason="CUDA not available"))])
+    def test_pix0_vector_mm_beam_pivot(self, device):
+        """
+        Regression test for CLI-FLAGS-003 Phase H3b.
+    
+        CRITICAL FINDING from Phase H3b1:
+        When custom detector vectors are provided, C code IGNORES -pix0_vector_mm entirely.
+        The custom vectors already define the detector geometry completely.
+    
+        This test verifies BOTH scenarios:
+        1. WITH custom vectors: pix0_override has NO EFFECT (matches C behavior)
+        2. WITHOUT custom vectors: pix0_override IS applied
+    
+        Expected pix0 vector from C trace (phase_h) WITH custom vectors:
+        -0.216336514802265, 0.215206668836451, -0.230198010448577 meters
+    
+        Reference: plans/active/cli-noise-pix0/plan.md Phase H3b
+        Evidence: reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md
+        """
+        import json
+        from pathlib import Path
+    
+        # Load expected C pix0 vector
+        expected_json_path = Path("reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json")
+>       with open(expected_json_path) as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json'
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_cli_flags.py:477: FileNotFoundError
+_________________ TestHKLFdumpParity.test_scaled_hkl_roundtrip _________________
+
+self = <tests.test_cli_flags.TestHKLFdumpParity object at 0x7b328f4556d0>
+
+    def test_scaled_hkl_roundtrip(self):
+        """
+        Roundtrip test: HKL text → PyTorch grid → Fdump → PyTorch grid.
+    
+        Expected failure (before fix):
+        - read_fdump will fail to match HKL grid due to padding mismatch
+        - C allocates (range+1) dimensions but PyTorch currently uses range
+    
+        After fix:
+        - Both readers should produce identical grids
+        - Max |ΔF| ≤ 1e-6 electrons (spec-a-core.md:460)
+        """
+        from pathlib import Path
+        import tempfile
+        from nanobrag_torch.io.hkl import read_hkl_file, write_fdump, read_fdump
+    
+        # Input files from Phase L1b analysis
+        hkl_path = "scaled.hkl"
+        c_fdump_path = "reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin"
+    
+        # Verify files exist
+>       assert Path(hkl_path).exists(), f"Missing {hkl_path}"
+E       AssertionError: Missing scaled.hkl
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('scaled.hkl').exists
+E        +      where PosixPath('scaled.hkl') = <class 'pathlib._local.Path'>('scaled.hkl')
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_cli_flags.py:851: AssertionError
+_________ TestPropertyBasedGradients.test_property_gradient_stability __________
+
+self = <tests.test_gradients.TestPropertyBasedGradients object at 0x7b328f486ea0>
+
+    @pytest.mark.slow_gradient
+    @pytest.mark.timeout(905)
+    def test_property_gradient_stability(self):
+        """Ensure gradients remain stable across parameter space."""
+        torch.manual_seed(44)  # For reproducibility
+    
+        for i in range(25):  # Fewer tests as gradcheck is expensive
+            # Generate random cell
+            cell_params = self.generate_random_cell()
+    
+            # Create tensor parameters
+            cell_params_tensor = torch.tensor(
+                [
+                    cell_params["cell_a"],
+                    cell_params["cell_b"],
+                    cell_params["cell_c"],
+                    cell_params["cell_alpha"],
+                    cell_params["cell_beta"],
+                    cell_params["cell_gamma"],
+                ],
+                dtype=torch.float64,
+                requires_grad=True,
+            )
+    
+            def loss_fn(params):
+                device = torch.device("cpu")
+                dtype = torch.float64
+    
+                # Unpack parameters
+                cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma = params
+    
+                # Create config
+                config = CrystalConfig(
+                    cell_a=cell_a,
+                    cell_b=cell_b,
+                    cell_c=cell_c,
+                    cell_alpha=cell_alpha,
+                    cell_beta=cell_beta,
+                    cell_gamma=cell_gamma,
+                    mosaic_spread_deg=0.0,
+                    mosaic_domains=1,
+                    N_cells=(5, 5, 5),
+                )
+    
+                # Create objects
+                crystal = Crystal(config=config, device=device, dtype=dtype)
+                detector = Detector(device=device, dtype=dtype)
+    
+                # Run simulation
+                simulator = Simulator(
+                    crystal, detector, crystal_config=config, device=device, dtype=dtype
+                )
+                image = simulator.run()
+    
+                return image.sum()
+    
+            # Verify gradcheck passes for this random geometry
+            try:
+>               assert gradcheck(
+                    loss_fn,
+                    (cell_params_tensor,),
+                    eps=1e-6,
+                    atol=1e-5,  # Slightly relaxed for stability
+                    rtol=0.05,
+                    raise_exception=True,
+                )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:632: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1630: in _slow_gradcheck
+    analytical = _check_analytical_jacobian_attributes(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:779: in _check_analytical_jacobian_attributes
+    vjps1 = _compute_analytical_jacobian_rows(vjp_fn, output.clone())
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:897: in _compute_analytical_jacobian_rows
+    grad_inputs = vjp_fn(grad_out_base)
+                  ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:770: in vjp_fn
+    return torch.autograd.grad(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:451: in grad
+    return handle_torch_function(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/overrides.py:1721: in handle_torch_function
+    result = mode.__torch_function__(public_api, types, args, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: in __torch_function__
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/__init__.py:502: in grad
+    result = _engine_run_backward(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+t_outputs = (tensor(0., grad_fn=<SumBackward0>),)
+args = ((tensor(1.),), True, False, (tensor([ 62.6236,  51.2905, 161.7528, 101.3378,  97.2310,  81.4797],
+       requires_grad=True),), True)
+kwargs = {'accumulate_grad': False}, attach_logging_hooks = False
+
+    def _engine_run_backward(
+        t_outputs: Sequence[Union[torch.Tensor, GradientEdge]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> tuple[torch.Tensor, ...]:
+        attach_logging_hooks = log.getEffectiveLevel() <= logging.DEBUG
+        if attach_logging_hooks:
+            unregister_hooks = _register_logging_hooks_on_whole_graph(t_outputs)
+        try:
+>           return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+                t_outputs, *args, **kwargs
+            )  # Calls into the C++ engine to run the backward pass
+E           Failed: Timeout (>905.0s) from pytest-timeout.
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/graph.py:824: Failed
+----------------------------- Captured stdout call -----------------------------
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+auto-selected 3-fold oversampling
+______________ TestTricubicGather.test_vectorized_matches_scalar _______________
+
+self = <tests.test_tricubic_vectorized.TestTricubicGather object at 0x7b328f1e25d0>
+crystal_with_data = <nanobrag_torch.models.crystal.Crystal object at 0x7b328d421040>
+
+    def test_vectorized_matches_scalar(self, crystal_with_data):
+        """
+        Verify that batched gather produces correct neighborhoods.
+    
+        Phase C1 requirement: Build (B, 4, 4, 4) neighborhoods via advanced indexing.
+        This test validates the gather mechanism by comparing:
+        1. Scalar interpolation (existing path, B=1)
+        2. Shape assertions on batched gather output
+        3. Neighborhood contents match expected HKL data
+    
+        Reference: design_notes.md Section 2.2, Section 5.1
+        """
+        crystal = crystal_with_data
+    
+        # Test case 1: Single query point (scalar path, B=1)
+        h_scalar = torch.tensor([1.5], dtype=torch.float32)
+        k_scalar = torch.tensor([2.3], dtype=torch.float32)
+        l_scalar = torch.tensor([0.5], dtype=torch.float32)
+    
+        # This should use the scalar path (B=1)
+        F_scalar = crystal._tricubic_interpolation(h_scalar, k_scalar, l_scalar)
+    
+        assert F_scalar.shape == h_scalar.shape, f"Scalar output shape mismatch: {F_scalar.shape} vs {h_scalar.shape}"
+        assert not torch.isnan(F_scalar).any(), "Scalar output contains NaNs"
+        assert not torch.isinf(F_scalar).any(), "Scalar output contains Infs"
+    
+        # Test case 2: Batched query points (gather path, B>1)
+        # Use a small batch to verify neighborhood gathering
+        h_batch = torch.tensor([1.5, 2.3, -1.2], dtype=torch.float32)
+        k_batch = torch.tensor([2.3, -0.5, 3.1], dtype=torch.float32)
+        l_batch = torch.tensor([0.5, 1.8, -2.0], dtype=torch.float32)
+    
+        # This triggers the batched gather path (B=3)
+        # Currently falls back to nearest-neighbor but builds neighborhoods internally
+        F_batch = crystal._tricubic_interpolation(h_batch, k_batch, l_batch)
+    
+        assert F_batch.shape == h_batch.shape, f"Batch output shape mismatch: {F_batch.shape} vs {h_batch.shape}"
+        assert not torch.isnan(F_batch).any(), "Batch output contains NaNs"
+        assert not torch.isinf(F_batch).any(), "Batch output contains Infs"
+    
+        # Test case 3: Multi-dimensional batch (detector grid simulation)
+        # Simulate a small detector region: (S=2, F=3)
+        h_grid = torch.tensor([[1.5, 2.3, 0.8], [-1.2, 3.1, 1.9]], dtype=torch.float32)
+        k_grid = torch.tensor([[2.3, -0.5, 1.2], [3.1, -2.0, 0.5]], dtype=torch.float32)
+        l_grid = torch.tensor([[0.5, 1.8, -1.0], [-2.0, 0.3, 2.5]], dtype=torch.float32)
+    
+        # Flatten to (B=6) internally
+        F_grid = crystal._tricubic_interpolation(h_grid, k_grid, l_grid)
+    
+        assert F_grid.shape == h_grid.shape, f"Grid output shape mismatch: {F_grid.shape} vs {h_grid.shape}"
+        assert not torch.isnan(F_grid).any(), "Grid output contains NaNs"
+        assert not torch.isinf(F_grid).any(), "Grid output contains Infs"
+    
+        # Test case 4: Verify neighborhood bounds checking still works
+        # Query point near edge (h=4.5 → floor=4 → needs neighbors 3,4,5,6; 6>h_max=5)
+        h_edge = torch.tensor([4.5], dtype=torch.float32)
+        k_edge = torch.tensor([0.0], dtype=torch.float32)
+        l_edge = torch.tensor([0.0], dtype=torch.float32)
+    
+        # Capture warning state before test
+        warning_shown_before = crystal._interpolation_warning_shown
+    
+        # This should trigger OOB fallback and return default_F
+        F_edge = crystal._tricubic_interpolation(h_edge, k_edge, l_edge)
+    
+        # Should fallback to default_F due to OOB
+        expected_default = crystal.config.default_F
+        # Allow small tolerance due to potential floating point ops
+>       assert torch.allclose(F_edge, torch.tensor(expected_default), atol=1e-5), \
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            f"OOB fallback failed: expected {expected_default}, got {F_edge.item()}"
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_tricubic_vectorized.py:144: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.utils._device.DeviceContext object at 0x7b3284f6b850>
+func = <built-in method allclose of type object at 0x7b3400580fc0>, types = ()
+args = (tensor([100.], dtype=torch.float32), tensor(100.))
+kwargs = {'atol': 1e-05}
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        kwargs = kwargs or {}
+        if func in _device_constructors() and kwargs.get('device') is None:
+            kwargs['device'] = self.device
+>       return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Float did not match Double
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: RuntimeError
+----------------------------- Captured stdout call -----------------------------
+WARNING: out of range for three point interpolation
+WARNING: further warnings will not be printed!
+_______________ TestTricubicGather.test_oob_warning_single_fire ________________
+
+self = <tests.test_tricubic_vectorized.TestTricubicGather object at 0x7b328f3769e0>
+simple_crystal_config = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0, cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0, misset_deg=[...square'>, fudge=1.0, sample_x=5.0000000000000004e-08, sample_y=5.0000000000000004e-08, sample_z=5.0000000000000004e-08)
+
+    def test_oob_warning_single_fire(self, simple_crystal_config):
+        """
+        Verify that out-of-bounds warning fires exactly once and disables interpolation.
+    
+        Phase C2 requirement: Lock the single-warning behavior for OOB fallback.
+        When tricubic interpolation encounters an out-of-bounds neighborhood query:
+        1. First occurrence triggers warning message (printed once only)
+        2. Interpolation is permanently disabled (self.interpolate = False)
+        3. Subsequent OOB queries return default_F without additional warnings
+    
+        Reference: plans/active/vectorization.md Phase C2
+        """
+        # Create crystal with small HKL data range to easily trigger OOB
+        crystal = Crystal(simple_crystal_config)
+    
+        h_range, k_range, l_range = 11, 11, 11  # covers h,k,l ∈ [-5, 5]
+        hkl_data = torch.ones((h_range, k_range, l_range), dtype=torch.float32) * 50.0
+        crystal.hkl_data = hkl_data
+        crystal.hkl_metadata = {
+            'h_min': -5, 'h_max': 5,
+            'k_min': -5, 'k_max': 5,
+            'l_min': -5, 'l_max': 5,
+            'h_range': 10, 'k_range': 10, 'l_range': 10
+        }
+    
+        # Enable interpolation explicitly
+        crystal.interpolate = True
+        initial_warning_state = crystal._interpolation_warning_shown
+        assert not initial_warning_state, "Warning flag should start False"
+        assert crystal.interpolate, "Interpolation should start enabled"
+    
+        # First OOB query: h=4.8 → floor=4 → needs neighbors [3,4,5,6]
+        # Since h_max=5, neighbor h=6 is out of range
+        h_oob = torch.tensor([4.8], dtype=torch.float32)
+        k_oob = torch.tensor([0.0], dtype=torch.float32)
+        l_oob = torch.tensor([0.0], dtype=torch.float32)
+    
+        # Capture stdout to verify warning message
+        import io
+        import sys
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+    
+        # First call: should trigger warning
+        F_first = crystal._tricubic_interpolation(h_oob, k_oob, l_oob)
+    
+        # Restore stdout
+        sys.stdout = sys.__stdout__
+        warning_text = captured_output.getvalue()
+    
+        # Verify warning was printed
+        assert "WARNING: out of range for three point interpolation" in warning_text, \
+            "First OOB call should print warning"
+        assert "further warnings will not be printed" in warning_text, \
+            "Warning should indicate no further warnings"
+    
+        # Verify state changes
+        assert crystal._interpolation_warning_shown, "Warning flag should be set"
+        assert not crystal.interpolate, "Interpolation should be disabled"
+    
+        # Verify fallback to default_F
+        expected_default = crystal.config.default_F
+>       assert torch.allclose(F_first, torch.tensor(expected_default), atol=1e-5), \
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            f"First OOB call should return default_F={expected_default}, got {F_first.item()}"
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_tricubic_vectorized.py:261: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <torch.utils._device.DeviceContext object at 0x7b3284f6b850>
+func = <built-in method allclose of type object at 0x7b3400580fc0>, types = ()
+args = (tensor([100.], dtype=torch.float32), tensor(100.))
+kwargs = {'atol': 1e-05}
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        kwargs = kwargs or {}
+        if func in _device_constructors() and kwargs.get('device') is None:
+            kwargs['device'] = self.device
+>       return func(*args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^
+E       RuntimeError: Float did not match Double
+
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/utils/_device.py:104: RuntimeError
+=============================== warnings summary ===============================
+tests/test_at_parallel_026.py:23
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:23: PytestUnknownMarkWarning: Unknown pytest.mark.parallel_validation - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    pytest.mark.parallel_validation
+
+tests/test_at_parallel_026.py:116
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_026.py:116: PytestUnknownMarkWarning: Unknown pytest.mark.requires_c_binary - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.requires_c_binary
+
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_triclinic_absolute_positions
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_crystal_absolute.py:205: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    triclinic_error = np.sqrt(
+
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_triclinic_absolute_positions
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_crystal_absolute.py:228: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    cubic_dist_from_center = np.sqrt(
+
+tests/test_at_crystal_absolute.py::TestATCrystalAbsolute::test_cubic_vs_triclinic_systematic_difference
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_crystal_absolute.py:292: DeprecationWarning: __array_wrap__ must accept context and return_scalar arguments (positionally) in the future. (Deprecated NumPy 2.0)
+    position_diff = np.sqrt(
+
+tests/test_at_src_001.py::TestAT_SRC_001_SourcefileAndWeighting::test_sourcefile_with_all_columns
+  /home/ollie/Documents/tmp/nanoBragg/tests/test_at_src_001.py:51: UserWarning: Sourcefile wavelength column differs from CLI -lambda value. Per spec-a-core.md:150-151, sourcefile wavelengths are ignored. All sources will use CLI wavelength 6.200000e-10 m.
+    directions, weights, wavelengths = read_sourcefile(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/artifacts/pytest.junit.xml -
+=========================== short test summary info ============================
+FAILED tests/test_at_parallel_026.py::TestAT_PARALLEL_026_TriclinicAbsolutePosition::test_triclinic_absolute_peak_position_vs_c - AssertionError: C reference run failed
+assert None is not None
+FAILED tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization - AssertionError: Bandwidth utilization decreases too much with size: 0.178 GB/s vs 0.394 GB/s
+assert np.float64(0.17775062834427505) >= (np.float64(0.39386686499440327) * 0.5)
+FAILED tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_script_integration - assert 2 in [0, 3]
+ +  where 2 = CompletedProcess(args=['python', 'scripts/nb_compare.py', '--outdir', 'test_comparison', '--', '-default_F', '100', '-cell', '100', '100', '100', '90', '90', '90', '-lambda', '1.0', '-distance', '100', '-detpixels', '64', '-floatfile', 'test.bin'], returncode=2, stdout='', stderr="python: can't open file '/tmp/pytest-of-ollie/pytest-552/test_fdump_preserves_sparse_be0/scripts/nb_compare.py': [Errno 2] No such file or directory\n").returncode
+FAILED tests/test_cli_flags.py::TestCLIPix0Override::test_pix0_vector_mm_beam_pivot[cpu] - FileNotFoundError: [Errno 2] No such file or directory: 'reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json'
+FAILED tests/test_cli_flags.py::TestHKLFdumpParity::test_scaled_hkl_roundtrip - AssertionError: Missing scaled.hkl
+assert False
+ +  where False = exists()
+ +    where exists = PosixPath('scaled.hkl').exists
+ +      where PosixPath('scaled.hkl') = <class 'pathlib._local.Path'>('scaled.hkl')
+FAILED tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability - Failed: Timeout (>905.0s) from pytest-timeout.
+FAILED tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar - RuntimeError: Float did not match Double
+FAILED tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire - RuntimeError: Float did not match Double
+= 8 failed, 540 passed, 143 skipped, 2 xfailed, 6 warnings in 1655.73s (0:27:35) =
