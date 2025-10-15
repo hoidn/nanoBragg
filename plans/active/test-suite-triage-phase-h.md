@@ -15,10 +15,10 @@ Exit Criteria: A STAMPed evidence bundle under `reports/2026-01-test-suite-refre
 
 | ID | Task Description | State | How/Why & Guidance (including API / document / artifact / source file references) |
 | --- | --- | --- | --- |
-| H1 | Capture env snapshot + NB_C_BIN resolution | [ ] | `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; mkdir `reports/2026-01-test-suite-refresh/phase_h/$STAMP/{env,checks}`. Record `printenv NB_C_BIN` and fallbacks (`./golden_suite_generator/nanoBragg`, `./nanoBragg`). Cross-reference `docs/development/c_to_pytorch_config_map.md` NB_C_BIN precedence notes. |
-| H2 | Validate C binary executability | [ ] | `NB_C_BIN=${NB_C_BIN:-./golden_suite_generator/nanoBragg}`; run `stat` + `ls -l` + `sha256sum` into `checks/c_binary.txt`. Execute `timeout 10 $NB_C_BIN -help > checks/c_binary_help.txt 2>&1`; failure indicates rebuild or PATH fix needed. |
-| H3 | Verify golden asset availability | [ ] | Confirm `scaled.hkl` and `reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json` exist and match recorded hashes (see `reports/2025-10-cli-flags/phase_h/implementation/sha256.txt`). Store results in `checks/golden_assets.txt`. |
-| H4 | Document pytest fixture strategy | [ ] | Draft `analysis/infrastructure_gate.md` describing proposed `conftest.py` fixture that asserts NB_C_BIN and asset readiness during collection. Cite `plans/active/cli-noise-pix0/plan.md` for asset provenance and `docs/development/testing_strategy.md` §1.5 for Do Now expectations. |
+| H1 | Capture env snapshot + NB_C_BIN resolution | [D] | ✅ STAMP `20251015T171757Z` bundle recorded under `phase_h/$STAMP/env/`; references `docs/development/c_to_pytorch_config_map.md`. |
+| H2 | Validate C binary executability | [D] | ✅ Same STAMP — `checks/c_binary.txt` + `c_binary_help.txt` confirm fallback_golden binary runnable within 10s. |
+| H3 | Verify golden asset availability | [D] | ✅ Hashes for `scaled.hkl` and `pix0_expected.json` captured in `checks/golden_assets.txt`; aligns with `reports/2025-10-cli-flags/phase_h/.../sha256.txt`. |
+| H4 | Document pytest fixture strategy | [D] | ✅ `analysis/infrastructure_gate.md` authored (Phase H exit packet) outlining NB_C_BIN precedence + asset guard blueprint. |
 
 ### Phase I — Gradient Timeout Mitigation Study
 Goal: Quantify variance of `test_property_gradient_stability` in isolation and establish the remediation path (timeout uplift vs. dedicated chunk vs. skip criteria).
@@ -43,8 +43,21 @@ Exit Criteria: Prototype fixtures/tests committed to feature branch (after imple
 | J2 | Draft gradient policy fixture plan | [D] | Outline how to check `NANOBRAGG_DISABLE_COMPILE` and skip/xfail gradient tests when policy unmet. Tie to Phase I memo outcomes. **COMPLETE (STAMP 20251015T180301Z):** Delivered `analysis/gradient_policy_guard.md` with module-scoped fixture design, skip/xfail analysis (recommends skip), environment enforcement logic, integration notes, and 5 open questions. |
 | J3 | Validation strategy | [D] | Define targeted pytest selectors to exercise new fixtures (e.g., `pytest -k infrastructure_gate --collect-only`). Plan to capture artifacts under `reports/2026-01-test-suite-refresh/phase_j/<STAMP>/`. **COMPLETE (STAMP 20251015T180301Z):** Created `analysis/validation_plan.md` with 9 targeted validation selectors (V1-V9) covering positive/negative/bypass/integration scenarios, expected artifacts, exit criteria, and summary template. |
 
+### Phase K — Fixture Implementation & Validation
+Goal: Turn the Phase J designs into working fixtures, validate them via targeted selectors, and update ledgers so the guarded full-suite rerun can resume without infrastructure regressions.
+Prereqs: ✅ Stakeholder sign-off on Phase J deliverables (galph 2025-10-15; resolves Open Questions Q1–Q14 with emphasis on Q14). Ensure editable install remains current; confirm `reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/` artifacts are accessible.
+Exit Criteria: Fixtures committed with validation evidence under `reports/2026-01-test-suite-refresh/phase_k/<STAMP>/`, fix_plan Attempt logged closing Next Action 18, and Phase L rerun gate unblocked.
+
+| ID | Task Description | State | How/Why & Guidance |
+| --- | --- | --- | --- |
+| K1 | Implement `session_infrastructure_gate` | [ ] | Add session-scoped autouse fixture to `tests/conftest.py` per `analysis/session_fixture_design.md` §§Implementation/Failure messaging. Include bypass env (`NB_SKIP_INFRA_GATE`) and ensure errors cite remediation commands. |
+| K2 | Implement `gradient_policy_guard` | [ ] | Integrate module-scoped fixture into `tests/test_gradients.py` (or shared helper) following `analysis/gradient_policy_guard.md`. Use `pytest.skip` with canonical env instructions; retain single responsibility (compile guard only). |
+| K3 | Run validation matrix V1–V9 | [ ] | Execute commands from `analysis/validation_plan.md` storing logs under `reports/2026-01-test-suite-refresh/phase_k/$STAMP/validation/`. Restore binaries/assets between negative cases; capture exit codes + summary.md using provided template. |
+| K4 | Update docs + ledgers | [ ] | Log Attempt in `docs/fix_plan.md` (Next Action 18), note sign-off resolution, and append outcomes to `plans/active/test-suite-triage-phase-h.md` + `reports/.../phase_k/summary.md`. Prep bullet for Phase L rerun trigger. |
+| K5 | Prepare Phase L rerun brief | [ ] | Draft short `analysis/rerun_gate.md` outlining criteria to launch guarded `pytest tests/` (fixtures active, validation bundle complete, env guards satisfied). Reference `docs/development/testing_strategy.md` §1.5 and Phase A command. |
+
 ## Exit & Handoff
-- Phase H completion is required before revisiting any cluster-specific remediation to avoid repeating transient "fixes".
-- Once Phases H–J are complete, rerun the full suite (Phase K, to be scoped later) only after fixtures/timeouts are merged into the branch.
+- Phases H–J are complete with evidence bundles stamped 20251015; Phase K now holds the active implementation workload.
+- Execute Phase K tasks before scheduling the next guarded full-suite rerun (Phase L checkpoint). Launch Phase L only after validation artifacts and ledger updates from Phase K are committed.
 - Update `docs/fix_plan.md` Attempts History after each phase with STAMP references and artifacts, and refresh Next Actions accordingly.
 - Reference this plan from `docs/fix_plan.md` `[TEST-SUITE-TRIAGE-002]` section so future loops locate it quickly.

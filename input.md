@@ -1,72 +1,44 @@
-Summary: Draft the Phase J guardrails design bundle so collection-time fixtures are fully specified before implementation.
-Mode: Docs
-Focus: TEST-SUITE-TRIAGE-002 (Next Action 17 — Phase J collection guardrails design package)
+Summary: Land the Phase K guardrail fixtures and prove they work via the V1–V9 validation matrix so we can resume full-suite reruns.
+Mode: Parity
+Focus: [TEST-SUITE-TRIAGE-002] Next Action 18 — Phase K implementation loop
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-refresh/phase_j/$STAMP/{analysis/session_fixture_design.md,analysis/gradient_policy_guard.md,analysis/validation_plan.md,notes/open_questions.md}
-Do Now: TEST-SUITE-TRIAGE-002#17 — (export STAMP=$(date -u +%Y%m%dT%H%M%SZ); BASE=reports/2026-01-test-suite-refresh/phase_j/$STAMP; mkdir -p $BASE/{analysis,notes}; printenv | sort > $BASE/notes/env_snapshot.txt; cat <<'DOC' > $BASE/analysis/session_fixture_design.md
-# Session Infrastructure Fixture (Phase J — Task J1)
-
-## Purpose & Scope
-
-## Preconditions
-
-## Failure Messaging & Remediation Steps
-
-DOC
-cat <<'DOC' > $BASE/analysis/gradient_policy_guard.md
-# Gradient Policy Guard Fixture (Phase J — Task J2)
-
-## Purpose & Scope
-
-## Environment Checks & Enforcement
-
-## Skip/Xfail Handling
-
-DOC
-cat <<'DOC' > $BASE/analysis/validation_plan.md
-# Validation Strategy (Phase J — Task J3)
-
-## Targeted Selectors
-
-## Artifact Expectations
-
-## Exit Criteria
-
-DOC
-cat <<'DOC' > $BASE/notes/open_questions.md
-# Phase J Guardrails — Open Questions
-
-- 
-
-DOC
-printf "%s\n" "$STAMP" > $BASE/STAMP.txt)
-If Blocked: Capture unresolved design questions in $BASE/notes/open_questions.md (with rationale + owners), note the blocker at the top of each analysis file, and log the partial status in docs/fix_plan.md before exiting.
+Mapped tests: env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q (V1); NB_SKIP_INFRA_GATE=1 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q (V4); env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py (V9)
+Artifacts: reports/2026-01-test-suite-refresh/phase_k/$STAMP/validation/
+Do Now: [TEST-SUITE-TRIAGE-002] Next Action 18 — implement fixtures (K1/K2) then run `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q` (V1) capturing output to `validation/v1_infra_gate_pass.log`.
+If Blocked: If fixtures compile but V1 fails unexpectedly, capture `validation/v1_infra_gate_pass.log` and the traceback, then stop and log the issue before touching other validations.
 Priorities & Rationale:
-- docs/fix_plan.md:1-20,142-165 elevates Next Action 17 to design the guardrails before the next rerun.
-- plans/active/test-suite-triage-phase-h.md:14-64,95-123 defines Phase J tasks (J1–J3) and required deliverables; we need concrete fixture specs before implementation.
-- reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/analysis/infrastructure_gate.md summarises Phase H findings we must carry forward into the fixture design.
-- docs/development/testing_strategy.md:20-120 (device/dtype & Do Now policies) ensure fixtures enforce existing guardrails without violating runtime discipline.
+- Ensure infrastructure gate fixture matches the approved design so NB_C_BIN/asset regressions fail fast (plans/active/test-suite-triage-phase-h.md:46-57).
+- Mirror the gradient policy guard plan so grad tests only run with compile disabled (reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/gradient_policy_guard.md:1-120).
+- Follow the validation playbook to exercise success + failure paths before resuming full-suite work (reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/validation_plan.md:1-200).
+- Record evidence under the Phase K STAMP so the ledger and future audits have the artifacts they expect (docs/fix_plan.md:15-18, plans/active/test-suite-triage-phase-h.md:51-57).
 How-To Map:
-- Populate each analysis/*.md file with detailed prose, pseudocode, and references that satisfy the corresponding plan task (J1–J3); cite specs/arch/testing docs where behavior is defined.
-- Update plans/active/test-suite-triage-phase-h.md to record Task J1/J2/J3 status (mark [P]/[D] as appropriate) and capture cross-links to the new STAMP.
-- Log Attempt #18 in docs/fix_plan.md with STAMP, summary of guardrail decisions, and explicit follow-up actions for implementation.
-- No pytest execution this loop; focus on documentation quality, reproducibility guidance, and ready-to-implement instructions.
+- Set `STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and create `reports/2026-01-test-suite-refresh/phase_k/$STAMP/validation` plus `analysis` and `notes` subdirs; tee every command there.
+- Implement K1: add `session_infrastructure_gate` to `tests/conftest.py` per the pseudocode (resolve C binary → run `-help` with 10s timeout → check golden assets) and wire an env bypass (`NB_SKIP_INFRA_GATE=1`).
+- Implement K2: add the module-scoped `gradient_policy_guard` in `tests/test_gradients.py` (or shared helper) that `pytest.skip`s when `NANOBRAGG_DISABLE_COMPILE != '1'`, with the canonical remediation message.
+- Run validation suite sequentially, restoring assets between negatives:
+  • V1: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q | tee validation/v1_infra_gate_pass.log`.
+  • V2: temporarily mv C binaries aside, rerun the same command, capture to `validation/v2_infra_gate_missing_binary.log`, record exit code, then restore binaries.
+  • V3: mv `scaled.hkl` aside, rerun command, capture to `validation/v3_infra_gate_missing_asset.log`, record exit code, restore asset.
+  • V4: set `NB_SKIP_INFRA_GATE=1` and rerun collect-only to prove bypass; capture to `validation/v4_infra_gate_bypass.log`.
+  • V5: run gradient module with env guard satisfied: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -q tests/test_gradients.py | tee validation/v5_gradients_pass.log`.
+  • V6: unset `NANOBRAGG_DISABLE_COMPILE` (or set to 0) and rerun gradient command, capture skip output in `validation/v6_gradients_skip.log` and restore env.
+  • V7: set `NANOBRAGG_DISABLE_COMPILE=2` to capture wrong value messaging, log to `validation/v7_gradients_bad_value.log`.
+  • V8: rerun `pytest --collect-only -q` with both fixtures active (no bypass) to confirm integration, capture to `validation/v8_integration.log`.
+  • V9: full verbose gradient run with guard enabled `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py | tee validation/v9_gradients_verbose.log` (expect passes, durations output).
+- After each run, write `exit_code.txt` in the validation folder and fill out `reports/2026-01-test-suite-refresh/phase_k/$STAMP/validation/summary.md` (matrix of V1–V9 outcomes, remediation notes, restoration steps for negatives).
+- Update docs: append Attempt #19 entry + sign-off note to `[TEST-SUITE-TRIAGE-002]` in docs/fix_plan.md, add Phase K completion notes to plans/active/test-suite-triage-phase-h.md, and drop a short `analysis/rerun_gate.md` with the Phase L criteria.
 Pitfalls To Avoid:
-- Do not edit simulator or test code; this loop is planning only.
-- Keep STAMP directories immutable after creation; never overwrite an existing STAMP.
-- Ensure fixtures respect NB_C_BIN precedence and gradient guard requirements documented in Phase H/I artifacts.
-- Avoid hand-waving; provide concrete failure messages, enforcement rules, and reproduction selectors.
-- Remember to update both the plan and fix_plan ledger once deliverables are drafted.
-- Maintain ASCII-only formatting in all new documentation files.
-- Reference authoritative docs (specs/arch/testing_strategy) instead of introducing new conventions.
-- Do not run pytest or nb-compare; evidence-only per directive.
-- Preserve environment snapshots under notes/ for traceability.
-- Keep artifact paths aligned with plans/active expectations (`reports/2026-01-test-suite-refresh/phase_j/$STAMP/`).
+- Do not leave binaries/assets renamed after negative tests; always restore before the next command.
+- Keep fixtures device/dtype neutral—no hardcoded `.cpu()`/`.float64()` conversions.
+- Maintain ASCII-only edits and avoid touching protected assets listed in docs/index.md (loop.sh, input.md, etc.).
+- Ensure session fixture failure messages include remediation commands exactly as in the design doc.
+- Capture environment variables in logs; missing them will invalidate the evidence bundle.
+- Do not run the full `pytest tests/` suite this loop; stick to the targeted validations.
+- Avoid suppressing the guard via try/except; let pytest surface the failure/skip directly.
 Pointers:
-- docs/fix_plan.md:142-165
-- plans/active/test-suite-triage-phase-h.md:14-123
-- reports/2026-01-test-suite-refresh/phase_h/20251015T171757Z/analysis/infrastructure_gate.md
-- docs/development/testing_strategy.md:20-180
-- arch.md:200-360
-Next Up: (1) Translate the approved fixture designs into pytest fixture implementations once documentation clears review.
+- plans/active/test-suite-triage-phase-h.md:46-57 — Phase K checklist and exit criteria.
+- reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/session_fixture_design.md:1-160 — infrastructure fixture blueprint.
+- reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/gradient_policy_guard.md:1-160 — gradient guard design.
+- reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/validation_plan.md:1-220 — V1–V9 commands and expectations.
+- docs/development/testing_strategy.md:1-160 — authoritative device/dtype + Do Now requirements.
+Next Up: If Phase K wraps cleanly, draft the guarded full-suite rerun checklist for Phase L so we can schedule the next `pytest tests/` execution.
