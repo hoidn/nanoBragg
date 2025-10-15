@@ -1,0 +1,12 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 2 items
+
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics PASSED [ 50%]
+tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector PASSED [100%]
+
+============================== 2 passed in 4.77s ===============================

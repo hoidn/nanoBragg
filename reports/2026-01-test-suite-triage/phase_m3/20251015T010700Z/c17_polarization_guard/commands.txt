@@ -1,0 +1,16 @@
+# C17 Polarization Guard Fix
+# Date: 2025-10-15
+# Branch: feature/spec-based-2
+# Commit (pre-fix): b1b033f4 (SYNC i=466 actor=ralph status=running)
+
+# Test reproduction command (targeted selectors from input.md line 16)
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv \
+  tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics \
+  tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector \
+  --maxfail=1 --tb=short
+
+# Full polarization module validation
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_pol_001.py --tb=short
+
+# Debug trace regression check (verifies guard doesn't break trace instrumentation)
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_debug_trace.py --tb=short
