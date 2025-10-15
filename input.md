@@ -1,31 +1,49 @@
-Summary: Fix C17 polarization regression so Phase O baseline can be rerun without AttributeError.
+Summary: Refresh the Phase O baseline by rerunning the 10-chunk pytest ladder with the updated selectors and publishing a new summary bundle.
 Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
+Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage — Stage Phase O chunk rerun
 Branch: main
-Mapped tests: tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics; tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector
-Artifacts: reports/2026-01-test-suite-triage/phase_m3/$STAMP/c17_polarization_guard/
-Do Now: [TEST-SUITE-TRIAGE-001] Guard the nopolar path before reshaping `physics_intensity_pre_polar_flat`, then run `KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector --maxfail=1 --tb=short`
-If Blocked: Capture the failure stack trace under reports/…/blocked.log and push the partial patch with notes in docs/fix_plan.md Attempts History.
+Mapped tests: Phase O chunk ladder (chunks 01–10; selectors detailed below)
+Artifacts: reports/2026-01-test-suite-triage/phase_o/$STAMP/, reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md
+Do Now: [TEST-SUITE-TRIAGE-001] Stage Phase O chunk rerun — start with `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_abs_001.py tests/test_at_cli_009.py tests/test_at_io_002.py tests/test_at_parallel_007.py tests/test_at_parallel_017.py tests/test_at_parallel_028.py tests/test_at_pol_001.py tests/test_at_src_002.py tests/test_cli_scaling.py tests/test_detector_pivots.py tests/test_physics.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_01/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_01/pytest.log"` and work through the remaining nine chunk commands listed in the How-To Map.
+If Blocked: If any chunk bombs out (missing file, timeout, unexpected failure), capture the full log under `$PHASE_O/chunks/chunk_##/blocked.log`, record exit code, and update docs/fix_plan.md Attempts with the blocker summary instead of forcing the rest of the ladder.
 Priorities & Rationale:
-- Polarization guard per specs/spec-a-core.md (AT-POL-001) — `nopolar` must keep intensities finite, current crash blocks C17 fixes.
-- Attempt #46 baseline (reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/summary.md) shows this regression gates Phase O rerun and Sprint 1.4 status updates.
-- plans/active/test-suite-triage.md Phase O marks O2 `[P]`; resolving this unblock moves Phase O forward.
-- docs/fix_plan.md Next Actions #5–6 require this guard before the next chunk ladder rerun.
+- Phase O is still open in docs/fix_plan.md:48 and must close before any further triage or remediations (long-term goal #5).
+- plans/active/test-suite-triage.md:302 now records the refreshed chunk 09/10 selectors; executing them validates that the coverage gap is gone.
+- reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/summary.md logged the last baseline; we need a newer STAMP reflecting the C17 fix (Attempt #47).
+- docs/development/testing_strategy.md:60 requires chunked execution under 360s with CPU env guards; rerunning confirms compliance.
+- Tracker updates in reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md depend on fresh pass/fail counts.
 How-To Map:
-1. Edit `src/nanobrag_torch/simulator.py` around lines 960-995 so the single-source branch skips reshaping/logging when `physics_intensity_pre_polar_flat is None` (BeamConfig.nopolar). Ensure downstream uses (e.g., `I_before_normalization_pre_polar`) tolerate the optional tensor.
-2. Rerun the targeted tests: `env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_pol_001.py::TestATPOL001KahnModel::test_oversample_polar_last_value_semantics tests/test_at_pol_001.py::TestATPOL001KahnModel::test_polarization_with_tilted_detector --maxfail=1 --tb=short`.
-3. Export `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`; collect command log + pytest output under `reports/2026-01-test-suite-triage/phase_m3/$STAMP/c17_polarization_guard/{commands.txt,pytest.log,summary.md}` (record pass/fail counts and note the guard change).
-4. Update docs/fix_plan.md Attempts History and plans/active/test-suite-triage.md Phase O table with the new result; note readiness for rerunning chunk 10.
+1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` and set `PHASE_O=reports/2026-01-test-suite-triage/phase_o/$STAMP`; create directories via `mkdir -p "$PHASE_O"/chunks/chunk_{01..10}`.
+2. For each chunk below, run the command exactly as written (single line with env vars) and dump exit code with `echo $? > "$PHASE_O/chunks/chunk_##/exit_code.txt"` right after the pytest command.
+   - Chunk 01: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_abs_001.py tests/test_at_cli_009.py tests/test_at_io_002.py tests/test_at_parallel_007.py tests/test_at_parallel_017.py tests/test_at_parallel_028.py tests/test_at_pol_001.py tests/test_at_src_002.py tests/test_cli_scaling.py tests/test_detector_pivots.py tests/test_physics.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_01/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_01/pytest.log"`
+   - Chunk 02: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_bkg_001.py tests/test_at_crystal_absolute.py tests/test_at_io_003.py tests/test_at_parallel_008.py tests/test_at_parallel_018.py tests/test_at_parallel_029.py tests/test_at_pre_001.py tests/test_at_src_003.py tests/test_cli_scaling_phi0.py tests/test_divergence_culling.py tests/test_pivot_mode_selection.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_02/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_02/pytest.log"`
+   - Chunk 03: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py tests/test_gradients.py tests/test_show_config.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_03/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_03/pytest.log"`
+   - Chunk 04: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_002.py tests/test_at_geo_001.py tests/test_at_noise_001.py tests/test_at_parallel_010.py tests/test_at_parallel_021.py tests/test_at_perf_002.py tests/test_at_roi_001.py tests/test_at_str_001.py tests/test_crystal_geometry.py tests/test_mosflm_matrix.py tests/test_suite.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_04/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_04/pytest.log"`
+   - Chunk 05: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_003.py tests/test_at_geo_002.py tests/test_at_parallel_001.py tests/test_at_parallel_011.py tests/test_at_parallel_022.py tests/test_at_perf_003.py tests/test_at_sam_001.py tests/test_at_str_002.py tests/test_custom_vectors.py tests/test_multi_source_integration.py tests/test_trace_pixel.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_05/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_05/pytest.log"`
+   - Chunk 06: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_004.py tests/test_at_geo_003.py tests/test_at_parallel_002.py tests/test_at_parallel_012.py tests/test_at_parallel_023.py tests/test_at_perf_004.py tests/test_at_sam_002.py tests/test_at_str_003.py tests/test_debug_trace.py tests/test_oversample_autoselect.py tests/test_tricubic_vectorized.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_06/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_06/pytest.log"`
+   - Chunk 07: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_005.py tests/test_at_geo_004.py tests/test_at_parallel_003.py tests/test_at_parallel_013.py tests/test_at_parallel_024.py tests/test_at_perf_005.py tests/test_at_sam_003.py tests/test_at_str_004.py tests/test_detector_basis_vectors.py tests/test_parity_coverage_lint.py tests/test_units.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_07/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_07/pytest.log"`
+   - Chunk 08: `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_006.py tests/test_at_geo_005.py tests/test_at_parallel_004.py tests/test_at_parallel_014.py tests/test_at_parallel_025.py tests/test_at_perf_006.py tests/test_at_src_001.py tests/test_at_tools_001.py tests/test_detector_config.py tests/test_parity_matrix.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_08/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_08/pytest.log"`
+   - Chunk 09 (refreshed selectors): `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_cli_007.py tests/test_at_cli_008.py tests/test_at_io_001.py tests/test_at_parallel_005.py tests/test_at_parallel_006.py tests/test_at_parallel_009.py tests/test_at_parallel_015.py tests/test_at_parallel_016.py tests/test_at_parallel_026.py tests/test_at_parallel_027.py tests/test_at_perf_007.py tests/test_at_perf_008.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_09/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_09/pytest.log"`
+   - Chunk 10 (refreshed selectors): `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_geo_006.py tests/test_at_src_001_cli.py tests/test_at_src_001_simple.py tests/test_beam_center_offset.py tests/test_beam_center_source.py tests/test_cli_flags.py tests/test_detector_conventions.py tests/test_detector_geometry.py tests/test_perf_pytorch_005_cudagraphs.py tests/test_perf_pytorch_006.py --maxfail=0 --durations=25 --junitxml "$PHASE_O/chunks/chunk_10/pytest.xml" 2>&1 | tee "$PHASE_O/chunks/chunk_10/pytest.log"`
+3. After the ladder, capture aggregated metrics. Use `python scripts/analyze_differences.py` if helpful, otherwise manually total passed/failed/skipped counts from the junit XMLs and record runtimes/durations (keep the slowest-25 table from chunk logs).
+4. Draft `$PHASE_O/summary.md` (copy the 20251015T003950Z version as a template) with the new totals, per-chunk table, and failure breakdown (note if C2/C18 remain and whether anything new appeared).
+5. Update trackers:
+   - `cp reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md{,.bak.$STAMP}` before editing.
+   - Update pass/fail/skip counts, C17 status (should remain resolved), and add Attempt reference for the new STAMP.
+   - Record Attempt details in docs/fix_plan.md under `[TEST-SUITE-TRIAGE-001]` (counts, major findings, chunk exit codes).
+6. Commit artifacts: ensure each chunk folder contains `pytest.log`, `pytest.xml`, `exit_code.txt`; keep summary and tracker diffs staged for review.
 Pitfalls To Avoid:
-- Do not drop multi-source handling; the guard must only bypass reshape when the pre-polar tensor is actually None.
-- Preserve vectorization (no per-subpixel Python loops) and keep device/dtype neutrality.
-- Maintain trace instrumentation expectations (don’t remove `I_before_normalization_pre_polar` logging when available).
-- Avoid `.item()` on tensors that require gradients; keep Torch ops differentiable.
-- Don’t rerun the full pytest ladder yet; targeted tests only until guard is fixed.
-- Keep Protected Assets intact (`docs/index.md`, `loop.sh`, `supervisor.sh`).
+- Forgetting to set `STAMP`/`PHASE_O`; hard-coded paths will overwrite the 20251015 bundle.
+- Splitting env vars and the `pytest` command across lines — keep them on one line to avoid `/bin/bash` errors.
+- Dropping the refreshed chunk 09/10 selectors; the run is invalid if missing modules remain uncollected.
+- Letting pytest reuse caches from the previous run; delete `.pytest_cache` if you see stale collection counts.
+- Editing plan files mid-run; only update trackers and docs/fix_plan.md after results are in hand.
+- Skipping exit-code capture; we need exact return codes for attempts history.
+- Forgetting to set `CUDA_VISIBLE_DEVICES=-1`; Phase O is CPU-only per testing_strategy.md.
 Pointers:
-- specs/spec-a-core.md §AT-POL-001 (polarization semantics)
-- reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/summary.md
-- plans/active/test-suite-triage.md:302-315 (Phase O tasks)
-- docs/fix_plan.md:5-6, 19-21 (Next Actions #5–6)
-Next Up: After the guard lands, rerun Phase O chunk ladder with refreshed chunk 10 selectors.
+- docs/fix_plan.md:48 (Phase O next action requirements)
+- plans/active/test-suite-triage.md:300 (updated chunk selectors and exit criteria)
+- reports/2026-01-test-suite-triage/phase_o/20251015T003950Z/summary.md (baseline template)
+- docs/development/testing_strategy.md:60 (chunked execution guardrails)
+- docs/development/pytorch_runtime_checklist.md:12 (device/dtype env expectations)
+Next Up: If time remains after the rerun, prep notes on whether C18 tolerances need adjustment (gather slowest timings + vectorization ratios for supervisor review).

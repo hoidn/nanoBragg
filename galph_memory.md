@@ -2695,3 +2695,16 @@
 - Refreshed docs/fix_plan.md Active Focus + Next Actions (item 4 marked complete, new item 5 for Phase O) and logged Attempt #45 redundancy evidence from reports/2026-01-test-suite-triage/phase_m3/20251015T002610Z/mixed_units/.
 - Rewrote input.md with Phase O chunk ladder commands (env guards, STAMP scaffolding, 10 chunk commands, aggregation + tracker sync).
 - Action State: [ready_for_implementation] (Phase O chunk rerun delegated to Ralph).
+
+### 2026-01-21 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O chunk rerun completion
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2026-01-21 (galph loop recap)
+- Reviewed Phase O status; no relevant findings in docs/findings.md for chunk rerun.
+- Updated `plans/active/test-suite-triage.md` O2 guidance with refreshed chunk 09/10 selectors covering the 22 previously uncollected modules.
+- Synced `docs/fix_plan.md` Next Action #5 to reference the new selector roster and the ready state post-C17 fix.
+- Rewrote `input.md` to direct the full 10-chunk ladder with STAMP scaffolding, refreshed commands, and tracker/summary expectations.
+- Focus issue remains Phase O rerun; awaiting Ralph to execute the ladder and publish the new baseline.
+- <Action State> [ready_for_implementation]
