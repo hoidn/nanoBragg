@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 34 items / 8 deselected / 26 selected
+
+tests/test_at_pre_002.py::test_xbeam_ybeam_forces_beam_pivot PASSED      [  3%]
+tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot PASSED  [  7%]
+tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot PASSED      [ 11%]
+tests/test_at_pre_002.py::test_explicit_pivot_override PASSED            [ 15%]
+tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults PASSED [ 19%]
+tests/test_at_pre_002.py::test_convention_default_pivots PASSED          [ 23%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic PASSED   [ 26%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_roi PASSED [ 30%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_mask PASSED [ 34%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_empty_roi PASSED [ 38%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_last_max_location PASSED [ 42%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_defaults_equal_implicit XFAILUSTOM mode) [ 46%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_configuration_echo_present SKIPPEDoesn't exist in
+standard build)                                                          [ 50%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_mode_detection_accuracy SKIPPED [ 53%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_trigger_tracking SKIPPED [ 57%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_all_vector_parameters_trigger_custom SKIPPED [ 61%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation FAILED [ 65%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality PASSED [ 69%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency PASSED [ 73%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability 

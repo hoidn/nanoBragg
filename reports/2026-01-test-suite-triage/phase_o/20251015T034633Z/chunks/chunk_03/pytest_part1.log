@@ -1,0 +1,65 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 28 items
+
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag PASSED [  3%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag PASSED [  7%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_invocable PASSED      [ 10%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples PASSED [ 14%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms PASSED [ 17%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms PASSED [ 21%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_from_flux_exposure_beamsize PASSED [ 25%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_fluence_calculation_when_flux_zero PASSED [ 28%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_fluence_calculation_when_exposure_zero PASSED [ 32%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_with_beamsize_zero PASSED [ 35%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_flux_recomputation_from_fluence_and_exposure PASSED [ 39%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning PASSED [ 42%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_larger PASSED [ 46%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_zero PASSED [ 50%]
+tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format PASSED   [ 53%]
+tests/test_at_io_004.py::TestAT_IO_004::test_five_column_with_phase PASSED [ 57%]
+tests/test_at_io_004.py::TestAT_IO_004::test_six_column_with_sigma_and_phase PASSED [ 60%]
+tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling PASSED [ 64%]
+tests/test_at_io_004.py::TestAT_IO_004::test_all_formats_produce_same_pattern PASSED [ 67%]
+tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats PASSED [ 71%]
+tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling PASSED [ 75%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_integration SKIPPED [ 78%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_without_absorption SKIPPED [ 82%]
+tests/test_at_parallel_020.py::TestATParallel020::test_phi_rotation_only SKIPPED [ 85%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_minimal_features SKIPPED [ 89%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling PASSED [ 92%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c SKIPPED [ 96%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling PASSED [100%]
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_o/20251015T034633Z/chunks/chunk_03/pytest_part1.xml -
+============================= slowest 25 durations =============================
+2.16s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
+1.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms
+0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples
+0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag
+0.99s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms
+0.98s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag
+0.13s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
+0.02s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
+0.01s call     tests/test_at_io_004.py::TestAT_IO_004::test_all_formats_produce_same_pattern
+0.00s call     tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_invocable
+0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning
+0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats
+0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats
+0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format
+0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling
+0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_five_column_with_phase
+0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_six_column_with_sigma_and_phase
+0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
+0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling
+0.00s setup    tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning
+0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_zero
+0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_from_flux_exposure_beamsize
+0.00s call     tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_larger
+0.00s call     tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling
+0.00s setup    tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format
+======================== 23 passed, 5 skipped in 8.19s =========================
