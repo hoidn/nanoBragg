@@ -1,37 +1,40 @@
-Summary: Re-run Phase O chunk 03 with the compile guard and refresh the ledgers so the C2 gradcheck fixes are reflected in the baseline totals.
+Summary: Capture a clean guarded chunk-03 rerun so the Phase O baseline reflects C2=0 and only the remaining performance/tolerance issues.
 Mode: Parity
-Focus: docs/fix_plan.md#test-suite-triage-001 (Next Action 9 — ledger refresh + artifact cleanup)
+Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_cli_001.py, tests/test_at_flu_001.py, tests/test_at_io_004.py, tests/test_at_parallel_009.py, tests/test_at_parallel_020.py, tests/test_at_perf_001.py, tests/test_at_pre_002.py, tests/test_at_sta_001.py, tests/test_configuration_consistency.py, tests/test_gradients.py, tests/test_show_config.py
-Artifacts: reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/, reports/2026-01-test-suite-triage/phase_o/$STAMP/gradients/, reports/2026-01-test-suite-triage/phase_o/$STAMP/summary.md, reports/2026-01-test-suite-triage/remediation_tracker.md
-Do Now: [TEST-SUITE-TRIAGE-001] Next Action 9 — export STAMP=$(date -u +%Y%m%dT%H%M%SZ); env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py tests/test_gradients.py tests/test_show_config.py --maxfail=0 --junitxml reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/pytest.xml | tee reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/pytest.log
-If Blocked: Capture the partial log under reports/2026-01-test-suite-triage/phase_o/$STAMP/gradients/blockers.md with exit status + stack trace, then update docs/fix_plan.md Attempts History and halt.
+Mapped tests: timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py tests/test_gradients.py tests/test_show_config.py --maxfail=0 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest.xml
+Artifacts: reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest.log; reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest.xml; reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/summary.md; reports/2026-01-test-suite-triage/phase_o/${STAMP}/summary.md; reports/2026-01-test-suite-triage/remediation_tracker.md
+Do Now: Execute [TEST-SUITE-TRIAGE-001] Next Action 9 by rerunning chunk 03 with the compile guard using the mapped pytest command (fresh STAMP, mkdir first, pipe through tee).
+If Blocked: Capture the failure output, fall back to `pytest -vv tests/test_gradients.py -k "gradcheck or gradient_flow_simulation"` with the guard to isolate the blocker, and log results under the same STAMP before pausing.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:304-309 keeps Phase O on O5/O6 until the guarded chunk rerun finishes.
-- docs/fix_plan.md:38-59 records Next Actions 8–9; ledger refresh cannot proceed without a full chunk result.
-- reports/2026-01-test-suite-triage/phase_o/20251015T020729Z/gradients/summary.md documents the partial guard run, proving the need for a complete rerun.
+- docs/fix_plan.md:48-57 — Next Action 9 now requires a longer timeout and corrected tee path to finish chunk 03.
+- plans/active/test-suite-triage.md:292-305 — Phase O tasks O5/O6 gate the overall test-suite directive.
+- reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/gradients/summary.md — Confirms C2 ✅ but highlights the timeout gaps we must close.
+- docs/development/testing_strategy.md:1-80 — Canonical guardrails for grad-focused pytest runs (env vars, CPU execution).
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ) and mkdir -p reports/2026-01-test-suite-triage/phase_o/$STAMP/{chunks/chunk_03,gradients}.
-- Run the Do Now command to recompute chunk 03 with the guard; after it finishes, echo $? > reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/exit_code.txt.
-- Copy the final chunk stats into reports/2026-01-test-suite-triage/phase_o/$STAMP/summary.md (start from the 20251015T011629Z version and adjust pass/fail/skip counts so C2=0 failures, C18 only).
-- Update reports/2026-01-test-suite-triage/phase_o/$STAMP/gradients/summary.md with the new gradcheck + gradient_flow_simulation status; include timing and any remaining failure signatures.
-- Move reports/2026-01-test-suite-triage/phase_o/$(date -u +%Y%m%dT%H%M%SZ)/grad_guard/pytest.xml into the new $STAMP/gradients/ directory and delete the placeholder folder once empty.
-- Refresh reports/2026-01-test-suite-triage/remediation_tracker.md (mark C2 resolved, add the new STAMP attempt) and align docs/fix_plan.md Attempts History + plans/active/test-suite-triage.md row O5/O6 with the new evidence.
+1. export AUTHORITATIVE_CMDS_DOC=./docs/development/testing_strategy.md
+2. export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+3. mkdir -p reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03
+4. timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py tests/test_gradients.py tests/test_show_config.py --maxfail=0 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest.log
+5. Record exit code (`echo $? > reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/exit_code.txt`); if the guard still times out, note exact completion % in the summary.
+6. Draft reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/summary.md capturing gradcheck status, any surviving failures (esp. test_gradient_flow_simulation), runtime, and environment.
+7. Summarise chunk totals in reports/2026-01-test-suite-triage/phase_o/${STAMP}/summary.md (pass/fail/skip/xfail counts + duration) and update reports/2026-01-test-suite-triage/remediation_tracker.md to set C2=0, keep C18 active, and log C19 with the new evidence STAMP.
+8. Remove the stray `reports/2026-01-test-suite-triage/phase_o/$(date -u +%Y%m%dT%H%M%SZ)/grad_guard/pytest.xml` placeholder and retire only the obsolete timeout bundle after verifying the new run landed cleanly.
+9. Update docs/fix_plan.md Attempts History with the new STAMP, mark Next Action 9 complete when artifacts exist, and refresh plans/active/test-suite-triage.md Phase O snapshot if counts change.
 Pitfalls To Avoid:
-- Forgetting NANOBRAGG_DISABLE_COMPILE=1 (gradchecks will fail immediately).
-- Overwriting existing artifacts—always write under the new $STAMP tree.
-- Skipping the exit_code.txt capture; the tracker expects it.
-- Leaving the stray $(date ...) xml in place—must be moved or deleted.
-- Editing production code or tests; this loop is evidence-only.
-- Neglecting to record the remaining failure (likely test_gradient_flow_simulation) in the summaries.
-- Allowing pytest to reuse cached results—clear or ignore .pytest_cache if you rerun quickly.
-- Forgetting to cite updated counts in remediation_tracker.md and docs/fix_plan.md Attempts.
-- Omitting cpu-only guard (CUDA_VISIBLE_DEVICES=-1) causing accidental GPU runs.
-- Skipping --maxfail=0; without it pytest may short-circuit on the first failure, losing coverage.
+- Do not reuse the old 600 s timeout; chunk 03 needs ≥1200 s headroom.
+- Keep `NANOBRAGG_DISABLE_COMPILE=1` and `CUDA_VISIBLE_DEVICES=-1` set or gradchecks may regress.
+- Ensure the tee path uses `${STAMP}` (brace expansion) so pytest.log lands under the correct folder.
+- Create the chunk_03 directory before piping output; otherwise tee will fail silently.
+- Capture exit_code.txt even on success to document the guarded run’s status.
+- Do not delete the 20251015T023954Z attempt until the new STAMP is verified and logged.
+- Avoid modifying production code or relaxing assertions; this loop is evidence-only.
+- Keep the environment variable AUTHORITATIVE_CMDS_DOC exported for future traceability.
+- Make sure the summaries explicitly call out test_gradient_flow_simulation outcome.
+- After cleaning artifacts, double-check git status so no unintended deletions remain.
 Pointers:
-- plans/active/test-suite-triage.md:292-309 for Phase O tasks and selector list.
-- docs/fix_plan.md:38-59 detailing the outstanding ledger refresh requirements.
-- docs/development/testing_strategy.md:500-523 for the canonical gradcheck guard mandate.
-- docs/development/pytorch_runtime_checklist.md:1-33 for runtime and compile guard expectations.
-- reports/2026-01-test-suite-triage/phase_o/20251015T020729Z/gradients/summary.md for the prior guard validation context.
-Next Up: Stage the C18 performance tolerance rerun once the guarded baseline is recorded.
+- docs/fix_plan.md:38
+- plans/active/test-suite-triage.md:292
+- reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/chunks/chunk_03/summary.md
+- docs/development/testing_strategy.md:1
+Next Up: Begin the C18 performance tolerance review once the guarded chunk baseline is in place.
