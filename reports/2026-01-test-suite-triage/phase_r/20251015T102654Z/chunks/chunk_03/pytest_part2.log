@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 23 items
+
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling PASSED [  4%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c PASSED [  8%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling PASSED [ 13%]
+tests/test_at_pre_002.py::test_xbeam_ybeam_forces_beam_pivot PASSED      [ 17%]
+tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot PASSED  [ 21%]
+tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot PASSED      [ 26%]
+tests/test_at_pre_002.py::test_explicit_pivot_override PASSED            [ 30%]
+tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults PASSED [ 34%]
+tests/test_at_pre_002.py::test_convention_default_pivots PASSED          [ 39%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic PASSED   [ 43%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_roi PASSED [ 47%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_mask PASSED [ 52%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_empty_roi PASSED [ 56%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_last_max_location PASSED [ 60%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_defaults_equal_implicit XFAILUSTOM mode) [ 65%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_configuration_echo_present SKIPPEDoesn't exist in
+standard build)                                                          [ 69%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_mode_detection_accuracy SKIPPED [ 73%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_trigger_tracking SKIPPED [ 78%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_all_vector_parameters_trigger_custom SKIPPED [ 82%]
+tests/test_show_config.py::TestShowConfig::test_show_config_basic PASSED [ 86%]
+tests/test_show_config.py::TestShowConfig::test_show_config_with_divergence PASSED [ 91%]
+tests/test_show_config.py::TestShowConfig::test_show_config_with_rotations PASSED [ 95%]
+tests/test_show_config.py::TestShowConfig::test_echo_config_alias PASSED [100%]
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/chunks/chunk_03/pytest_part2.xml -
+============================= slowest 25 durations =============================
+2.57s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
+2.01s call     tests/test_at_pre_002.py::test_convention_default_pivots
+2.01s call     tests/test_at_pre_002.py::test_explicit_pivot_override
+2.00s call     tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults
+1.01s call     tests/test_show_config.py::TestShowConfig::test_echo_config_alias
+1.01s call     tests/test_show_config.py::TestShowConfig::test_show_config_basic
+1.01s call     tests/test_show_config.py::TestShowConfig::test_show_config_with_rotations
+1.00s call     tests/test_at_pre_002.py::test_xbeam_ybeam_forces_beam_pivot
+1.00s call     tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot
+1.00s call     tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot
+1.00s call     tests/test_show_config.py::TestShowConfig::test_show_config_with_divergence
+0.77s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
+0.13s call     tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
+0.07s call     tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_defaults_equal_implicit
+0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic
+0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_roi
+0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_empty_roi
+0.01s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_last_max_location
+0.00s call     tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_mask
+0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
+0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c
+0.00s teardown tests/test_show_config.py::TestShowConfig::test_echo_config_alias
+0.00s setup    tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling
+0.00s setup    tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults
+0.00s teardown tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling
+================== 18 passed, 4 skipped, 1 xfailed in 17.55s ===================

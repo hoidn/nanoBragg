@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 300.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 2 items
+
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality PASSED [ 50%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency PASSED [100%]
+
+- generated xml file: /home/ollie/Documents/tmp/nanoBragg/reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/chunks/chunk_03/pytest_part3a.xml -
+============================= slowest 25 durations =============================
+0.07s call     tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality
+0.04s call     tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency
+0.00s setup    tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality
+0.00s teardown tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality
+0.00s teardown tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency
+0.00s setup    tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency
+============================== 2 passed in 0.95s ===============================
