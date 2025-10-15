@@ -3091,3 +3091,14 @@
 - Focus remains on reproducing the Phase E timeout; awaiting new runtime metrics before deciding on remediation.
 - <Action State>: [gathering_evidence]
 
+
+### 2025-10-15T16:27:03Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase G full-suite rerun scheduling
+- Action type: Review/housekeeping
+- Mode: Parity
+### 2025-10-15T16:27:45Z (galph loop recap)
+- Confirmed Ralph's latest evidence commit 62cdacda and prior perf bundle maintained suite focus; no regressions detected.
+- Logged TEST-SUITE-TRIAGE-002 Next Action 14 in docs/fix_plan.md, calling for Phase G full-suite rerun under phase_g/$STAMP/.
+- Updated input.md with guarded full-suite command, artifact layout, and ledger update requirements for the rerun.
+- Focus ready for Ralph to execute the Phase G suite run and report results.
+- <Action State>: [ready_for_implementation]
