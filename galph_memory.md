@@ -3160,3 +3160,16 @@
 - Rewrote `input.md` directing Ralph to execute the full-suite rerun with fixtures active and capture deltas under `reports/2026-01-test-suite-refresh/phase_l/$STAMP/`.
 - No code edits; focus remains on evidence collection for the suite rerun.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T18:58:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Phase L guarded rerun evidence gap
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-15T19:01:34Z (galph loop recap)
+- Logged Attempt #85 as incomplete (env-only) and marked `[TEST-SUITE-TRIAGE-002]` Next Action 19 blocked in docs/fix_plan.md; Active Focus now calls out the missing Phase L run evidence.
+- Tweaked `plans/active/test-suite-triage-phase-h.md` Phase L L2 guidance to enforce running from repo root and capturing fixture output.
+- Rewrote `input.md` directing Ralph to execute the full guarded pytest rerun with complete artifact bundle and runtime capture.
+- Reviewed Ralph commit b9cb9c36 (env snapshot only, PWD=/home/ollie/Documents/tmp/nanoBragg); no test execution occurred, prompting above corrections.
+- Follow-up: Ralph must rerun Phase L (`pytest -vv tests/` with tee + junit/time) and populate `analysis/fixtures.md` + `analysis/summary.md`; expect new Attempt entry afterward.
+- <Action State>: [ready_for_implementation]
