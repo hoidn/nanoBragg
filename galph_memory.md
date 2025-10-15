@@ -1,5 +1,5 @@
 ### 2025-10-15T05:58:13Z (galph loop recap)
-- Marked gradient-flow plan Phase C/D tasks done with Attempt #3 references.
+- Marked gradient-flow plan Phase C/D tasks done with Attempt #3 references and synced fix_plan index status.
 - Updated `plans/active/test-suite-triage.md` Phase P table (P2 [D], refreshed P3 guidance) to pivot toward C18 tolerance packet.
 - Refreshed `docs/fix_plan.md` Active Focus/Last Updated to highlight C18 review and recorded gradient closure.
 - Rewrote `input.md` handing off C18 tolerance analysis (Perf mode, evidence-only).
