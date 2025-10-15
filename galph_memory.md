@@ -3051,3 +3051,8 @@
 - Rewrote input.md to delegate the timed /usr/bin/time -v timeout 900 perf run for CLUSTER-PERF-001 with full artifact checklist.
 - Next focus for Ralph: gather CLUSTER-PERF-001 metrics under the cluster STAMP, then feed data into PERF-PYTORCH-004.
 - <Action State>: [ready_for_implementation]
+### 2025-10-15T14:29:53Z (galph loop recap)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Next Action 9 — CLUSTER-VEC-001 diagnostics (Action: Evidence collection, Mode: Parity).
+- Rewrote `input.md` to direct the CPU repro + dtype snapshot workflow, including STAMPed artifact layout and optional GPU confirmation. Commands capture failing pytest runs and a dedicated dtype JSON dump for vectorized vs scalar paths.
+- No plan or ledger edits this turn; awaiting Ralph's evidence before updating `plans/active/vectorization.md` Phase D checklist.
+- <Action State>: [gathering_evidence]
