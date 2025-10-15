@@ -2,7 +2,7 @@
 
 **Last Updated:** 2025-10-15 (galph loop — Phase B callchain prep for gradient flow)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — With Phase O6 cleanup complete, drive `[GRADIENT-FLOW-001]` Phase B callchain tracing (analysis + hooks) and queue C18 tolerance review using the 845.68 s timing anchor.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — With Phase O6 cleanup complete, steer `[GRADIENT-FLOW-001]` Phase C design + fixture update and queue C18 tolerance review using the 845.68 s timing anchor.
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -714,9 +714,10 @@
 - Next Actions:
   1. ✅ COMPLETE — Phase A baseline evidence bundle stored under `reports/2026-01-gradient-flow/phase_a/20251015T052020Z/`.
   2. ✅ COMPLETE — Phase B zero-intensity probe confirmed root cause (missing structure factors, not gradient break).
-  3. 🆕 TODO (Phase C) — Draft minimal fix for `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`: add `default_F=100.0` to CrystalConfig instantiation (line ~410).
-  4. 🆕 TODO (Phase C) — Execute targeted test with fix applied; expect all gradient assertions to pass with non-zero loss.
-  5. 🆕 TODO (Phase C) — Update test documentation/comments to explain structure factor requirement for gradient flow validation.
+  3. 🆕 TODO (Phase C) — Author `reports/2026-01-gradient-flow/phase_c/$STAMP/design.md` comparing fixture options (default_F vs HKL) and recording verification metrics/commands before touching code.
+  4. 🆕 TODO (Phase C) — Draft minimal fix for `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`: add `default_F=100.0` (or recorded alternative) to the CrystalConfig instantiation and cite Phase B findings.
+  5. 🆕 TODO (Phase D) — Execute targeted test with fix applied; expect all gradient assertions to pass with non-zero loss and capture gradients.json under `reports/2026-01-gradient-flow/phase_d/$STAMP/`.
+  6. 🆕 TODO (Phase D) — Update test documentation/comments to explain the structure-factor requirement for gradient flow validation and sync ledger references.
 - Risks/Assumptions:
   - Ensure gradcheck uses float64 + double precision tolerances; may need CPU run first.
 - Exit Criteria:

@@ -36,30 +36,30 @@ Exit Criteria: Callchain bundle + hook-based tap notes pinpointing candidate bre
 
 > Phase B exit criteria satisfied on 2025-10-15 (Attempt #2). Root cause identified (missing structure factors), gradient integrity validated (control case), environment captured. Callchain/hooks unnecessary — zero-intensity probe provided decisive evidence.
 
-### Phase C — Hypothesis Testing & Fix Design
-Goal: Validate leading hypotheses (e.g., cached `.detach()`, `.item()` use, tensor cloning without grad) and outline minimal remediation.
-Prereqs: Phase B synopsis enumerating suspect sites.
-Exit Criteria: Ranked hypotheses with supporting evidence, proposed code touchpoints, and acceptance checks recorded.
+### Phase C — Test Fixture Remediation Design
+Goal: Convert the zero-intensity finding into a documented test fixture update while preserving differentiability coverage.
+Prereqs: Phase B zero-intensity bundle (`reports/2026-01-gradient-flow/phase_b/20251015T053254Z/`).
+Exit Criteria: Approved remediation approach recorded with acceptance metrics and documentation touchpoints.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Audit Crystal caches for `.detach()` / `.item()` usage | [ ] | Review `src/nanobrag_torch/models/crystal.py` (focus on `get_real_space_vectors`, `get_misset_rotation`) and log any detaching operations. Document findings with file:line anchors in `reports/2026-01-gradient-flow/phase_c/$STAMP/cache_audit.md`. |
-| C2 | Inspect simulator accumulation | [ ] | Examine `src/nanobrag_torch/simulator.py` sections that build the image tensor (vectorized loops, scaling). Confirm no intermediate uses `.detach()`/`.data` or converts tensors to numpy. Note any suspect operations (e.g., `.to(device)` on scalars). |
-| C3 | Draft remediation options | [ ] | Based on audits, propose minimal fix alternatives in `design.md` (e.g., ensure config tensors are reused directly, remove `.detach()`). Include success metrics: targeted test passes, chunk 03 rerun (part3b) clean, gradcheck unaffected. |
+| C1 | Compare fixture options (default_F vs HKL input) | [ ] | Summarise pros/cons in `reports/2026-01-gradient-flow/phase_c/$STAMP/design.md`, citing Phase B gradients; recommend default fix that keeps gradients non-zero while remaining minimal. |
+| C2 | Define verification metrics & commands | [ ] | Record targeted pytest selector, expected gradient magnitude floor (>1e-6), and chunk 03 rerun requirements inside `design.md`; align with `docs/development/testing_strategy.md` §4.1. |
+| C3 | Outline documentation touchpoints | [ ] | List required updates (test docstring comment, fix_plan attempts note, potential addition to `docs/development/testing_strategy.md` gradients section) so implementation loop can execute them. |
 
-### Phase D — Remediation & Verification
-Goal: Implement agreed fix, validate across targeted and suite-level tests, and sync documentation.
-Prereqs: Approved design from Phase C.
-Exit Criteria: Gradient flow test green, chunk 03 summary updated, docs/fix_plan + remediation_tracker synced, plan ready for archive/move to done.
+### Phase D — Implementation & Verification
+Goal: Apply the agreed test fixture change, validate the targeted gradient test, and sync ledgers.
+Prereqs: Approved design recorded in Phase C.
+Exit Criteria: Gradient flow test green with documented gradient magnitudes; ledger + remediation tracker updated.
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Land code fix with instrumentation cleanup | [ ] | Apply changes in src modules identified in Phase C; ensure compliance with arch.md §15 and vectorization guardrails. Add brief comments only where logic is non-obvious. |
-| D2 | Run targeted + shard tests | [ ] | Execute `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation --maxfail=1`; rerun chunk 03 Part 3b selector with same guard to capture updated runtime stats. Store artifacts under `reports/2026-01-gradient-flow/phase_d/$STAMP/`. |
-| D3 | Sync ledger & documentation | [ ] | Update `docs/fix_plan.md` `[GRADIENT-FLOW-001]` section, `reports/2026-01-test-suite-triage/remediation_tracker.md`, and append resolution notes to `plans/active/test-suite-triage.md` Phase O (or new Phase P). Stage plan for archive once tests remain green across one additional rerun. |
+| D1 | Apply test fixture update | [ ] | Edit `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation` to inject the chosen structure-factor source (e.g., `default_F=100.0`) and add a brief comment referencing Phase B findings. |
+| D2 | Run targeted verification | [ ] | Execute `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation --maxfail=1`; capture gradient magnitudes in `reports/2026-01-gradient-flow/phase_d/$STAMP/gradients.json` and append summary.md noting loss/gradient values. |
+| D3 | Sync ledger & documentation | [ ] | Update `docs/fix_plan.md` `[GRADIENT-FLOW-001]` entry, `reports/2026-01-test-suite-triage/remediation_tracker.md`, and append closing notes in this plan + `plans/active/test-suite-triage.md`. Keep artifacts under `reports/2026-01-gradient-flow/phase_d/$STAMP/`. |
 
 ## Exit Criteria Summary
-- Phase A baseline artifacts confirm failure state with reproducible commands.
-- Phase B callchain + hooks identify the exact gradient break location.
-- Phase C design packet captures minimal fix decision with documented hypotheses.
-- Phase D validates fix via targeted tests and updates ledgers, restoring C19 to passing state.
+- Phase A baseline artifacts confirm the zero-intensity failure state with reproducible commands.
+- Phase B zero-intensity analysis documents why gradients vanish and records control-case evidence.
+- Phase C design packet locks the remediation approach, verification metrics, and documentation touchpoints.
+- Phase D applies the fixture change, captures new gradient evidence, and updates ledgers, restoring C19 to passing state.
