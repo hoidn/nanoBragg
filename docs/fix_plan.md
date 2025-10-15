@@ -45,9 +45,9 @@
 - Reproduction: Guarded full suite per Phase B — `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/`
 - Artifacts Root: `reports/2026-01-test-suite-refresh/phase_<phase>/<STAMP>/`
 - Attempts History:
-  * _Pending — first execution to be logged after Phase A completion_
+  * [2025-10-15] Attempt #1 — Result: ✅ success (Phase A preflight complete). Captured environment snapshot (Python 3.13.5, PyTorch 2.7.1+cu126, CUDA 12.6, RTX 3090), collection baseline (700 tests, 0 errors, +8 vs expected 692 = +1.2% drift). Artifacts: `reports/2026-01-test-suite-refresh/phase_a/20251015T113531Z/{summary.md,commands.txt,env.txt,torch_env.txt,pytest-collect.log}`. Exit code 0. All Phase A tasks (A1-A4 per plan) complete. Ready for Phase B full-suite execution.
 - Next Actions:
-  1. Create Phase A STAMP folder, capture environment guard, and run `pytest --collect-only` smoke (store under `reports/2026-01-test-suite-refresh/phase_a/<STAMP>/`).
+  1. ✅ COMPLETE (Attempt #1) — Phase A preflight with STAMP 20251015T113531Z; 700 tests collected successfully; environment guard recorded.
   2. Execute guarded full suite (`pytest tests/`) with timeout cap, persisting `pytest.log`, junit XML, and timing stats under `phase_b/<STAMP>/`.
   3. Extract failure clusters, map to prior IDs, and draft `phase_c/<STAMP>/triage_summary.md`; update Attempts History with counts and artifact links.
   4. Produce remediation briefs per cluster (`phase_d/<STAMP>/cluster_<id>.md`) and refresh Next Actions across dependent plan entries for delegation.

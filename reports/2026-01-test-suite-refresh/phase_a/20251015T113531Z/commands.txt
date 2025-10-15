@@ -1,0 +1,13 @@
+# Phase A Preflight Commands
+# STAMP: 20251015T113531Z
+# Date: 2025-10-15
+
+# Environment capture
+printenv | sort > env.txt
+python -m torch.utils.collect_env > torch_env.txt
+
+# Collection-only smoke test
+KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest --collect-only -q tests > pytest-collect.log 2>&1
+
+# Exit code check
+echo $?
