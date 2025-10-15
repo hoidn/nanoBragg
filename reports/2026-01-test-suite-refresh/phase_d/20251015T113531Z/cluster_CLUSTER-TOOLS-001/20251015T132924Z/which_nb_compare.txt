@@ -1,0 +1,1 @@
+/home/ollie/miniconda3/bin/nb-compare
