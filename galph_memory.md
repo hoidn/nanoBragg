@@ -2863,3 +2863,14 @@
 - Reissued input.md directing Phase B prep/B1 workflow (zero-intensity probe + callchain deliverables + hook scrape) under reports/2026-01-gradient-flow/phase_b/$STAMP/.
 - Heads review: Ralph commit 7c5c79b2 cleanly captured Phase A artifacts; hypothesis about missing structure factors matches our zero-intensity probe plan.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T06:11:03Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase P3 C18 tolerance review approval
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-15T06:17:12Z (galph loop recap)
+- Approved the Phase P3 C18 tolerance packet (900 s threshold) after verifying chunk 03 evidence; corrected the packet summary wording to note a single slow test.
+- Updated `plans/active/test-suite-triage.md` Phase P3 to [D] and refreshed `docs/fix_plan.md` Active Focus/Next Actions with validation + implementation tasks (new TODOs #12–#13) plus Attempt #77 log.
+- Rewrote `input.md` (Perf mode) to direct the guarded rerun of `tests/test_gradients.py::TestAdvancedGradients::test_property_gradient_stability` and artifact capture under a fresh STAMP.
+- <Action State>: [ready_for_implementation]

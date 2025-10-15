@@ -8,7 +8,7 @@
 
 **Current Status:**
 - **Baseline Runtime:** 845.68s (~14.1 minutes) for `test_property_gradient_stability`
-- **Failure Count:** 2 tests in C18 cluster exceed implicit 900s threshold
+- **Failure Count:** Single C18 test currently approaches the implicit 900s threshold
 - **Spec Reference:** `docs/development/testing_strategy.md` §1.4 and §4.1 (gradient test timing expectations)
 - **Architecture Constraint:** `arch.md` §15 runtime guardrails require guard-aware timing for gradient tests
 

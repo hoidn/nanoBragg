@@ -1,37 +1,33 @@
-Summary: Draft the C18 tolerance analysis packet so we can renegotiate the slow-gradient threshold with evidence.
+Summary: Re-run the C18 slow gradient test to verify the 845.68 s baseline before raising the timeout.
 Mode: Perf
-Focus: [TEST-SUITE-TRIAGE-001] Phase P3 C18 tolerance packet
+Focus: TEST-SUITE-TRIAGE-001 / Next Action 12 — C18 validation rerun
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_p/$STAMP/{c18_timing.md,timing_table.csv,summary.md}
-Do Now: [TEST-SUITE-TRIAGE-001] Phase P3 — create the C18 timing packet (no pytest).
-If Blocked: Capture open questions plus any partial timing scrap in c18_timing.md, log the blocker in docs/fix_plan.md Attempts, and stop before altering thresholds/tests.
+Mapped tests: tests/test_gradients.py::TestAdvancedGradients::test_property_gradient_stability
+Artifacts: reports/2026-01-test-suite-triage/phase_p/$STAMP/chunk_03_rerun/
+Do Now: STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_p/$STAMP/chunk_03_rerun && timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_property_gradient_stability --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_p/$STAMP/chunk_03_rerun/pytest.xml | tee reports/2026-01-test-suite-triage/phase_p/$STAMP/chunk_03_rerun/pytest.log
+If Blocked: If the run hits timeout, stop immediately, capture the partial log + exit status in the same directory, and append a blockers.md summarising elapsed time and visible stack traces.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:346 — Phase P3 is the next gate after C19 resolution.
-- docs/fix_plan.md:1-8 — Active Focus now demands the C18 tolerance packet.
-- reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/chunks/chunk_03/summary.md — 845.68s runtime data to leverage.
-- docs/development/testing_strategy.md:68-120 — Performance/tolerance adjustments must cite authoritative process.
-- arch.md:150-214 — Runtime guardrails to respect when proposing tolerance shifts.
+- docs/fix_plan.md:3 — Active focus now requires executing the C18 validation rerun before altering tolerances.
+- plans/active/test-suite-triage.md:346 — Phase P table marks P3 done and calls for §4/§5 validation steps next.
+- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:15 — Validation plan specifies reusing the guard environment and 900 s target.
+- docs/development/testing_strategy.md:513 — Gradient tests must run with NANOBRAGG_DISABLE_COMPILE=1 and capture evidence under controlled envs.
 How-To Map:
-- `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` once; keep it for all new files.
-- `mkdir -p reports/2026-01-test-suite-triage/phase_p/$STAMP`.
-- Copy the key metrics (total runtime, per-test durations, environment) from `phase_o/20251015T043128Z/chunks/chunk_03/` into `c18_timing.md`; include a short rationale for any proposed tolerance (e.g., 900s guard with 845.68s baseline).
-- Build a compact CSV (`timing_table.csv`) enumerating the slowest tests (≥5s) with columns: test_node,runtime_s,status,source_selector.
-- Summarise conclusions + recommended next action in `summary.md` (include tolerance proposal, validation commands to rerun chunk 03 or targeted selector once tolerance updates land).
-- Update `docs/fix_plan.md` Attempts for [TEST-SUITE-TRIAGE-001] with STAMP + artifact pointers when done.
+- Export STAMP as above before running commands so artifacts live under a unique timestamp.
+- After pytest completes, run `python --version > reports/2026-01-test-suite-triage/phase_p/$STAMP/chunk_03_rerun/env_python.txt`, `pip list | grep torch > .../env_torch.txt`, and `lscpu | grep "Model name" > .../env_cpu.txt` to log the environment.
+- Extract the reported duration with `grep -i "test_property_gradient_stability" .../pytest.log | grep -oP '\\d+\\.\\d+s' | tee .../timing.txt`.
+- Record a brief narrative in `reports/2026-01-test-suite-triage/phase_p/$STAMP/chunk_03_rerun/summary.md` noting runtime, pass/fail, and comparison to 845.68 s baseline.
 Pitfalls To Avoid:
-- Do not rerun pytest; this loop is evidence-only.
-- Keep analysis CPU-focused; note CUDA availability but don’t assume GPU timing.
-- Preserve prior artifacts (no overwriting `phase_o/20251015T043128Z`).
-- Reference authoritative timing data; avoid ad-hoc estimates.
-- Align tolerance recommendation with testing_strategy guardrails (document rationale ≥2 sentences).
-- Note any assumptions about hardware specs and flag if additional runs are needed.
-- Leave code/tests untouched; this loop produces documentation only.
-- Record environment metadata (Python/PyTorch version) if proposing tolerance changes.
+- Do not skip the guard env vars; the compile guard is mandatory for gradient timing.
+- Stay within evidence scope: no tolerance edits or pytest.ini changes yet.
+- Keep the run CPU-only (CUDA_VISIBLE_DEVICES=-1) to match the baseline.
+- Avoid overwriting the Phase O artifacts; all new files must sit under the fresh STAMP path.
+- Refrain from broad pytest selectors; only the targeted test should run this loop.
+- Capture exit status even on timeout (write it to exit_code.txt) for traceability.
+- Confirm STAMP export succeeded before launching pytest to prevent writing into root.
+- Do not delete or move files referenced in docs/index.md (protected assets rule).
 Pointers:
-- plans/active/test-suite-triage.md:346-356
-- docs/fix_plan.md:1-8
-- reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/chunks/chunk_03/summary.md
-- docs/development/testing_strategy.md:68-120
-- arch.md:150-214
-Next Up: 1. Draft the follow-on chunk 03 rerun plan once the tolerance packet is ready.
+- docs/fix_plan.md:3
+- plans/active/test-suite-triage.md:346
+- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:15
+- docs/development/testing_strategy.md:513
+Next Up: If runtime stays ≤900 s, implement the pytest.ini slow gradient marker and rerun all four chunk 03 shards.
