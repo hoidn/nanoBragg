@@ -3079,3 +3079,15 @@
 - Reissued input.md directing guarded full-suite run (timeout 3600, PYTEST_ADDOPTS with 905s) and artifact capture workflow per Phase E brief.
 - Focus handoff ready for Ralph to execute rerun and log results.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T15:57:03Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] Next Action 13 — gradient timeout regression repro
+- Action type: Evidence collection
+- Mode: Perf
+
+### 2025-10-15T16:02:52Z (galph loop recap)
+- Refreshed docs/fix_plan.md Next Action 13 with explicit phase_f artifact path and baseline reference for the gradient timeout investigation.
+- Replaced input.md with Perf-mode guidance instructing Ralph to capture a 1200s profiled rerun of test_property_gradient_stability under reports/2026-01-test-suite-refresh/phase_f/$STAMP/.
+- Focus remains on reproducing the Phase E timeout; awaiting new runtime metrics before deciding on remediation.
+- <Action State>: [gathering_evidence]
+

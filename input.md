@@ -1,39 +1,38 @@
-Summary: Execute the guarded Phase E full-suite rerun and capture a complete failure/pass snapshot.
-Mode: Parity
-Focus: TEST-SUITE-TRIAGE-002 (Next Action 12 – Phase E rerun execution)
+Summary: Capture a fresh performance profile for the gradient stability test after the Phase E timeout.
+Mode: Perf
+Focus: TEST-SUITE-TRIAGE-002 (Next Action 13 — F5 gradient timeout regression)
 Branch: feature/spec-based-2
-Mapped tests: pytest -vv tests/
-Artifacts: reports/2026-01-test-suite-refresh/phase_e/$STAMP/{logs/pytest_full.log,artifacts/{pytest.junit.xml,time.txt,exit_code.txt},env/{env.txt,torch_env.txt},analysis/summary.md}
-Do Now: TEST-SUITE-TRIAGE-002#12 — (/usr/bin/time -v timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905 --durations=0" pytest -vv tests/ --junitxml=reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/pytest.junit.xml) 2>reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/time.txt | tee reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log
-If Blocked: Capture partial logs under reports/2026-01-test-suite-refresh/phase_e/$STAMP/, log the blocker in analysis/summary.md + docs/fix_plan.md Attempts History, and ping supervisor with exit code & failure mode.
+Mapped tests: pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+Artifacts: reports/2026-01-test-suite-refresh/phase_f/$STAMP/{env/{env.txt,torch_env.txt,disk_usage.txt},logs/pytest.log,artifacts/{pytest.junit.xml,time.txt,exit_code.txt},analysis/summary.md}
+Do Now: TEST-SUITE-TRIAGE-002#13 — (export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-refresh/phase_f/$STAMP/{env,logs,artifacts,analysis}; printenv > reports/2026-01-test-suite-refresh/phase_f/$STAMP/env/env.txt; python -m torch.utils.collect_env > reports/2026-01-test-suite-refresh/phase_f/$STAMP/env/torch_env.txt; df -h . > reports/2026-01-test-suite-refresh/phase_f/$STAMP/env/disk_usage.txt; /usr/bin/time -v -o reports/2026-01-test-suite-refresh/phase_f/$STAMP/artifacts/time.txt timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=0 --timeout=1200 --durations=0" pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability --junitxml=reports/2026-01-test-suite-refresh/phase_f/$STAMP/artifacts/pytest.junit.xml | tee reports/2026-01-test-suite-refresh/phase_f/$STAMP/logs/pytest.log; echo $? > reports/2026-01-test-suite-refresh/phase_f/$STAMP/artifacts/exit_code.txt)
+If Blocked: If the run still times out or aborts, keep all partial artifacts under the same STAMP, append the failure signature to analysis/summary.md, and log the blocker plus exit code in docs/fix_plan.md before stopping.
 Priorities & Rationale:
-- docs/fix_plan.md:70 records Next Action 12 as the mandated full-suite execution.
-- reports/2026-01-test-suite-refresh/phase_e/20251015T150723Z/phase_e_brief.md:18 defines the guarded command, env guards, and artifact expectations.
-- docs/development/testing_strategy.md:18 enforces timeout/compile-guard policy for suite runs.
-- plans/archive/test-suite-triage-rerun.md:24 outlines Phase B/E deliverables we must refresh.
-- reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-VEC-001/20251015T143055Z/summary.md:7 confirms Phase D clusters are ready for rerun.
+- docs/fix_plan.md:72 mandates isolating the F5 regression with profiling and storing evidence under phase_f.
+- reports/2026-01-test-suite-refresh/phase_e/20251015T152031Z/analysis/summary.md:60 documents the timeout breach we must reproduce and explain.
+- reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-GRAD-001/20251015T134434Z/summary.md:32 records the 844.94s / 1294% CPU baseline we must compare against.
+- docs/development/testing_strategy.md:526 reminds us the approved ceiling is 905s and frames the tolerance history we reference.
+- docs/development/pytorch_runtime_checklist.md:41 reinforces the compile guard and device/dtype neutrality expectations for gradient tests.
 How-To Map:
-- export STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-refresh/phase_e/$STAMP/{logs,artifacts,env,analysis}.
-- Record env guards: printenv > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/env.txt; python -m torch.utils.collect_env > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/torch_env.txt; df -h . > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/disk_usage.txt.
-- Verify editable install (`pip show nanobrag-torch | grep Location`); confirm CUDA disabled via python -c "import torch; print(torch.cuda.is_available())" >> env/torch_env.txt.
-- Run the Do Now command exactly once; after it finishes, echo $? > reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/exit_code.txt.
-- Parse failures with grep "FAILED tests/" reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log > reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/failures.txt and draft analysis/summary.md with counts, runtime, Phase K deltas, and noting whether thresholds (pass rate ≥74%, failures ≤35) are met.
-- Update docs/fix_plan.md TEST-SUITE-TRIAGE-002 Attempts History with STAMP, results, and next remediation steps before ending the loop.
+- Use bash -lc for the Do Now command so `timeout`, `time`, and tee work together.
+- After the run, extract key metrics with `rg "User time|System time|Elapsed|Percent of CPU|Maximum resident set size" reports/2026-01-test-suite-refresh/phase_f/$STAMP/artifacts/time.txt >> reports/2026-01-test-suite-refresh/phase_f/$STAMP/analysis/time_metrics.txt` to simplify summary writing.
+- Draft reports/2026-01-test-suite-refresh/phase_f/$STAMP/analysis/summary.md covering runtime, CPU %, RSS, comparison vs the Phase D baseline, and whether the 905s tolerance is satisfied.
+- Update docs/fix_plan.md (same section) with Attempt #14, citing the new STAMP, runtime delta vs 844.94s, and CPU utilization comparison.
+- If the test finishes well under 905s, note the margin; if it exceeds 905s despite 1200s timeout, capture the exact elapsed time from pytest output before the kill.
 Pitfalls To Avoid:
-- Do not omit required env guards (CUDA_VISIBLE_DEVICES, KMP_DUPLICATE_LIB_OK, NANOBRAGG_DISABLE_COMPILE, PYTEST_ADDOPTS).
-- Avoid re-running pytest; the guarded full-suite run may execute only once this loop.
-- Ensure time.txt captures /usr/bin/time output; verify the file is non-empty before exit.
-- Keep repository tidy: stage artifacts and docs updates, no stray tmp files.
-- Abort immediately if timeout triggers; do not relaunch without supervisor approval.
-- Maintain ASCII-only content in analysis summaries and filenames.
-- Do not modify production code while triaging; evidence collection only.
-- Respect protected assets called out in docs/index.md.
-- Confirm ≥10 GB free disk space before the run to avoid partial logs.
-- Ensure PYTEST_ADDOPTS is quoted exactly to preserve spaces.
+- Do not rerun the test multiple times this loop; one profiled attempt only.
+- Keep `timeout 1200` and the extended pytest timeout; otherwise we will relive the 905s kill.
+- Ensure `NANOBRAGG_DISABLE_COMPILE=1` is set; missing it invalidates gradient metrics.
+- Do not relocate or overwrite Phase E artifacts; this run belongs in `phase_f/`.
+- Avoid editing production code or test fixtures during this diagnostic pass.
+- Verify the `time.txt` file is non-empty before exiting; rerun command only if it failed to emit data.
+- Maintain ASCII-only content in summary.md and doc edits.
+- Respect the single-loop policy: update docs/fix_plan.md in the same run you gather evidence.
+- Do not change PYTEST_ADDOPTS elsewhere in the environment; use the inline override only.
+- Preserve the existing conda/python environment; do not upgrade packages mid-run.
 Pointers:
-- docs/fix_plan.md:70
-- reports/2026-01-test-suite-refresh/phase_e/20251015T150723Z/phase_e_brief.md:18
-- docs/development/testing_strategy.md:18
-- plans/archive/test-suite-triage-rerun.md:24
-- reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-VEC-001/20251015T143055Z/summary.md:7
-Next Up: 1) If the run finishes early with manageable failures, begin drafting analysis/triage_summary.md per the brief to map failures → clusters.
+- docs/fix_plan.md:68-75
+- reports/2026-01-test-suite-refresh/phase_e/20251015T152031Z/analysis/summary.md:9-118
+- reports/2026-01-test-suite-refresh/phase_d/20251015T113531Z/cluster_CLUSTER-GRAD-001/20251015T134434Z/summary.md:10-58
+- docs/development/testing_strategy.md:520-540
+- docs/development/pytorch_runtime_checklist.md:35-55
+Next Up: If the gradient test runtime is back under tolerance, proceed by refreshing CLUSTER-PERF-001 metrics to reconfirm bandwidth baselines.
