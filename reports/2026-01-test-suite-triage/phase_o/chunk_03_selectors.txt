@@ -1,0 +1,10 @@
+tests/test_at_cli_001.py
+tests/test_at_flu_001.py
+tests/test_at_io_004.py
+tests/test_at_parallel_020.py
+tests/test_at_perf_001.py
+tests/test_at_pre_002.py
+tests/test_at_sta_001.py
+tests/test_configuration_consistency.py
+tests/test_gradients.py
+tests/test_show_config.py

@@ -2754,3 +2754,15 @@
 - Updated plans/active/test-suite-triage.md Phase O (rows O5/O6) to codify the 1200 s rerun, mkdir+tee guard, and C19 tracking.
 - Issued new input.md directing the guarded chunk 03 rerun, artifact capture, and ledger cleanup; fallback path captured.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T03:20:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O chunk 03 rerun completion
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-15T03:40:00Z (galph loop recap)
+- Updated docs/fix_plan.md Next Action 9 to require the guard-friendly remainder run and added explicit selectors file guidance; logged STAMP expectations for ledger refresh.
+- Rewrote plans/active/test-suite-triage.md Phase O (rows O5/O6) to mandate the two-step workflow (reuse grad guard bundle + run non-gradcheck remainder).
+- Created reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors.txt for Ralph; input.md now directs the chunk remainder command with env guards.
+- <Action State>: [ready_for_implementation] (await chunk 03 remainder + ledger sync)
+
