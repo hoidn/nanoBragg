@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: timeout-2.4.0, anyio-4.9.0
+timeout: 1200.0s
+timeout method: signal
+timeout func_only: True
+collecting ... collected 1 item
+
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability PASSED [100%]
+
+============================== slowest durations ===============================
+843.56s call     tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+0.00s setup    tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+0.00s teardown tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+======================== 1 passed in 844.38s (0:14:04) =========================

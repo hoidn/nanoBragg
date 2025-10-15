@@ -1,0 +1,1 @@
+/usr/bin/time -v timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=1 --timeout=1200 --durations=0" pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
