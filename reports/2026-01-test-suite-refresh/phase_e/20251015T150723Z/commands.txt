@@ -1,0 +1,50 @@
+# Phase E Full-Suite Rerun Commands
+# STAMP: 20251015T150723Z
+# Purpose: Document exact commands for Phase E rerun execution
+
+# 1. Create STAMP and artifact directories
+export STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p reports/2026-01-test-suite-refresh/phase_e/$STAMP/{logs,artifacts,env,analysis}
+
+# 2. Capture pre-execution environment
+python --version > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/python_version.txt
+python -c "import torch; print(torch.__version__)" > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/torch_version.txt
+python -m torch.utils.collect_env > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/torch_env.txt
+printenv > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/env.txt
+df -h . > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/disk_usage_pre.txt
+pytest --collect-only -q tests/ 2>&1 | tee reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/collection_baseline.txt
+
+# 3. Execute guarded full-suite rerun
+/usr/bin/time -v timeout 3600 \
+  env CUDA_VISIBLE_DEVICES=-1 \
+      KMP_DUPLICATE_LIB_OK=TRUE \
+      NANOBRAGG_DISABLE_COMPILE=1 \
+      PYTEST_ADDOPTS="--maxfail=200 --timeout=905 --durations=0" \
+  pytest -vv tests/ \
+    --junitxml=reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/pytest.junit.xml \
+  2>&1 | tee reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log
+
+# 4. Capture exit code and post-execution state
+echo $? > reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/exit_code.txt
+df -h . > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/disk_usage_post.txt
+
+# 5. Extract summary metrics (run after pytest completes)
+# Pass/fail/skip counts
+grep -E "^(PASSED|FAILED|SKIPPED|ERROR)" reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log | \
+  awk '{print $1}' | sort | uniq -c > reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/test_counts.txt
+
+# Slowest tests (from --durations=0 output)
+grep -A 50 "slowest durations" reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log > \
+  reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/slowest_tests.txt
+
+# Failure nodeids (if any)
+grep "FAILED tests/" reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log > \
+  reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/failures.txt || touch reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/failures.txt
+
+# 6. Archive commands log
+cp reports/2026-01-test-suite-refresh/phase_e/20251015T150723Z/commands.txt \
+   reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/commands.txt
+
+# NOTE: Replace $STAMP in paths above with actual execution STAMP when running
+# Current brief STAMP (creation): 20251015T150723Z
+# Execution STAMP: Will be generated at runtime via $(date -u +%Y%m%dT%H%M%SZ)
