@@ -2920,3 +2920,14 @@
 - Rewrote input.md to target Next Action 15 (C18 ledger/tracker closure) with artifacts and guardrails.
 - Next focus for Ralph: update remediation_tracker.md C18 row, log Attempt #80 in fix_plan, and drop a ledger_update.md summary under phase_q/20251015T071423Z.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T08:17:16Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase Q wrap-up & Phase R planning
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T08:28:01Z (galph loop recap)
+- Updated plans/active/test-suite-triage.md Phase Q row Q6→[D] and added Phase R (R1–R3) with guarded ladder + aggregation guidance.
+- Refreshed docs/fix_plan.md header to note Phase Q completion and logged Next Action 16 for the Phase R guard-run.
+- Rewrote input.md directing Ralph to execute the Phase R chunk ladder with compile guard, including commands, aggregation, and ledger follow-up.
+- <Action State>: [ready_for_implementation]
