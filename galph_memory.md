@@ -1,3 +1,15 @@
+### 2025-10-15T05:58:13Z (galph loop recap)
+- Marked gradient-flow plan Phase C/D tasks done with Attempt #3 references.
+- Updated `plans/active/test-suite-triage.md` Phase P table (P2 [D], refreshed P3 guidance) to pivot toward C18 tolerance packet.
+- Refreshed `docs/fix_plan.md` Active Focus/Last Updated to highlight C18 review and recorded gradient closure.
+- Rewrote `input.md` handing off C18 tolerance analysis (Perf mode, evidence-only).
+- <Action State>: [ready_for_implementation]
+
+### 2025-10-15T05:54:50Z (galph loop - focus selection note)
+- Focus issue: [GRADIENT-FLOW-001] Phase C/D ledger sync
+- Action type: Review/housekeeping
+- Mode: Docs
+
 ### 2025-10-15T05:44:30Z (galph loop recap)
 - Reviewed Ralph's recent commits (7c5c79b2, da49a47f); zero-intensity probe solid but skipping callchain left plan/input stale. Provided feedback via new instructions.
 - Updated `plans/active/gradient-flow-regression.md` Phase C/D to pivot from callchain audit to test fixture remediation with documented design + verification steps.

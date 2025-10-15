@@ -43,9 +43,9 @@ Exit Criteria: Approved remediation approach recorded with acceptance metrics an
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Compare fixture options (default_F vs HKL input) | [ ] | Summarise pros/cons in `reports/2026-01-gradient-flow/phase_c/$STAMP/design.md`, citing Phase B gradients; recommend default fix that keeps gradients non-zero while remaining minimal. |
-| C2 | Define verification metrics & commands | [ ] | Record targeted pytest selector, expected gradient magnitude floor (>1e-6), and chunk 03 rerun requirements inside `design.md`; align with `docs/development/testing_strategy.md` §4.1. |
-| C3 | Outline documentation touchpoints | [ ] | List required updates (test docstring comment, fix_plan attempts note, potential addition to `docs/development/testing_strategy.md` gradients section) so implementation loop can execute them. |
+| C1 | Compare fixture options (default_F vs HKL input) | [D] | Attempt #3 (20251015T054646Z) — design.md evaluates default_F vs HKL and selects default_F=100.0 referencing Phase B gradients. |
+| C2 | Define verification metrics & commands | [D] | Same attempt captured acceptance metrics (gradient floor ≥1e-6) and the targeted pytest command inside design.md. |
+| C3 | Outline documentation touchpoints | [D] | design.md enumerates doc updates (test docstring note, fix_plan entry, tracker sync) with Phase B evidence references. |
 
 ### Phase D — Implementation & Verification
 Goal: Apply the agreed test fixture change, validate the targeted gradient test, and sync ledgers.
@@ -54,10 +54,12 @@ Exit Criteria: Gradient flow test green with documented gradient magnitudes; led
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| D1 | Apply test fixture update | [ ] | Edit `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation` to inject the chosen structure-factor source (e.g., `default_F=100.0`) and add a brief comment referencing Phase B findings. |
-| D2 | Run targeted verification | [ ] | Execute `env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation --maxfail=1`; capture gradient magnitudes in `reports/2026-01-gradient-flow/phase_d/$STAMP/gradients.json` and append summary.md noting loss/gradient values. |
-| D3 | Sync ledger & documentation | [ ] | Update `docs/fix_plan.md` `[GRADIENT-FLOW-001]` entry, `reports/2026-01-test-suite-triage/remediation_tracker.md`, and append closing notes in this plan + `plans/active/test-suite-triage.md`. Keep artifacts under `reports/2026-01-gradient-flow/phase_d/$STAMP/`. |
+| D1 | Apply test fixture update | [D] | Attempt #3 patched `tests/test_gradients.py` (default_F=100.0) with an inline comment citing Phase B findings. |
+| D2 | Run targeted verification | [D] | Attempt #3 executed the targeted pytest command (exit 0) and stored gradients.json + summary under `reports/2026-01-gradient-flow/phase_d/20251015T054646Z/`. |
+| D3 | Sync ledger & documentation | [D] | Attempt #3 refreshed docs/fix_plan.md, remediation_tracker.md, and plan notes with closure references. |
 
+
+> Phase C and Phase D exit criteria satisfied on 2025-10-15 (Attempt #3). Gradient-flow fixture fix landed; C19 cluster resolved and evidence archived under `reports/2026-01-gradient-flow/phase_c/20251015T054646Z/` and `reports/2026-01-gradient-flow/phase_d/20251015T054646Z/`.
 ## Exit Criteria Summary
 - Phase A baseline artifacts confirm the zero-intensity failure state with reproducible commands.
 - Phase B zero-intensity analysis documents why gradients vanish and records control-case evidence.

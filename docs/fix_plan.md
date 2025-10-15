@@ -1,8 +1,8 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2025-10-15 (galph loop — Phase B callchain prep for gradient flow)
+**Last Updated:** 2025-10-15 (galph loop — Phase P3 C18 tolerance prep)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — With Phase O6 cleanup complete, steer `[GRADIENT-FLOW-001]` Phase C design + fixture update and queue C18 tolerance review using the 845.68 s timing anchor.
+- CRITICAL: `[TEST-SUITE-TRIAGE-001]` — C19 gradient failure resolved (default_F patch 20251015T054646Z). Stage Phase P3 C18 tolerance review: draft timing packet with the 845.68 s anchor before rerunning chunk 03.
 - IN PROGRESS: `[VECTOR-PARITY-001]` — Tap 5.3 instrumentation remains paused pending tracker-driven prioritisation.
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 

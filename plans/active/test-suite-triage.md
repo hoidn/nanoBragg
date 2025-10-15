@@ -351,5 +351,5 @@ Exit Criteria: Gradient-flow Phase A evidence captured, C18 tolerance review s
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
 | P1 | Publish gradient-flow remediation plan | [D] | Completed 2025-10-15 (galph loop). `plans/active/gradient-flow-regression.md` + fix_plan Next Action 10 now reference the plan and reporting root. |
-| P2 | Execute gradient-flow plan Phase A | [ ] | Delegate to Ralph: follow plan A1–A3, capture pytest log, gradient magnitudes, and summary under `reports/2026-01-gradient-flow/phase_a/$STAMP/`. Update fix_plan Next Action 11 once artifacts land. |
-| P3 | Stage C18 tolerance review packet | [ ] | After Phase A, compile timing analysis (using 845.68 s baseline from chunk_03 summary) into `reports/2026-01-test-suite-triage/phase_p/$STAMP/c18_timing.md` before negotiating threshold adjustments. |
+| P2 | Execute gradient-flow plan Phase A | [D] | Attempt #1 (20251015T052020Z) captured Phase A bundle under `reports/2026-01-gradient-flow/phase_a/20251015T052020Z/`; failure reproduction and gradient snapshot logged. |
+| P3 | Stage C18 tolerance review packet | [ ] | Compile timing analysis (reuse 845.68 s baseline from `phase_o/20251015T043128Z/chunks/chunk_03/summary.md`) into `reports/2026-01-test-suite-triage/phase_p/$STAMP/c18_timing.md`, outlining tolerance proposal + verification commands before any code change. |
