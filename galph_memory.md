@@ -3039,3 +3039,15 @@
 - Updated `docs/fix_plan.md` Next Actions to queue gradient diagnostics first, followed by perf bandwidth and tricubic vectorization evidence.
 - Reissued `input.md` directing Ralph to capture CLUSTER-GRAD-001 runtime/profiler artifacts under the established reports/<STAMP> flow.
 - <Action State>: [ready_for_implementation]
+### 2025-10-15T14:05:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-002] CLUSTER-PERF-001 diagnostics handoff
+- Action type: Review/housekeeping
+- Mode: Perf
+
+### 2025-10-15T14:12:00Z (galph loop recap)
+- Reviewed findings PERF-001 for context; no doc drift detected.
+- Marked CLUSTER-GRAD-001 resolved in plans/active/test-suite-triage-rerun.md and promoted the perf run command for CLUSTER-PERF-001.
+- Logged Attempt #8 outcome plus refreshed Next Action 8 in docs/fix_plan.md; instructions now point at the timed perf rerun.
+- Rewrote input.md to delegate the timed /usr/bin/time -v timeout 900 perf run for CLUSTER-PERF-001 with full artifact checklist.
+- Next focus for Ralph: gather CLUSTER-PERF-001 metrics under the cluster STAMP, then feed data into PERF-PYTORCH-004.
+- <Action State>: [ready_for_implementation]
