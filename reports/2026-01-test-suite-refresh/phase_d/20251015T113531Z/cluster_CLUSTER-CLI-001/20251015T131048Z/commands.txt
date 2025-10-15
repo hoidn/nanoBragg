@@ -1,0 +1,10 @@
+# CLUSTER-CLI-001 — CLI Golden Assets Verification
+# Date: 2025-10-15
+# Objective: Verify golden assets exist and tests pass
+
+# 1. Check asset existence
+ls -la reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json
+ls -la scaled.hkl
+
+# 2. Rerun targeted tests
+KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_cli_flags.py -k "pix0_vector_mm_beam_pivot or scaled_hkl_roundtrip"
