@@ -34,10 +34,10 @@ Exit Criteria: Full suite run captured with `pytest.log`, junit XML (if availabl
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| B1 | Prepare phase folder | [ ] | `mkdir -p reports/2026-01-test-suite-refresh/phase_b/$STAMP` (reuse STAMP from Phase A for continuity or create new if run delayed). Copy Phase A `env.txt` for reference. |
-| B2 | Execute guarded full suite | [ ] | `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ | tee pytest.log`; store exit code in `run_exit_code.txt`. Capture wall-clock via `/usr/bin/time -v` if available (`/usr/bin/time -v pytest ...`). |
-| B3 | Persist junit/timing artifacts | [ ] | If pytest `--junitxml` is feasible, append `--junitxml=pytest.junit.xml`. Save `pytest.junit.xml`, `time.txt`, and `commands.txt` in phase folder. |
-| B4 | Draft execution summary | [ ] | `summary.md` capturing pass/fail/skip counts, runtime, notable slow tests. Note any infra failures (timeouts, flakiness). |
+| B1 | Prepare phase folder | [D] | `mkdir -p reports/2026-01-test-suite-refresh/phase_b/$STAMP` (reuse STAMP from Phase A for continuity or create new if run delayed). Copy Phase A `env.txt` for reference. |
+| B2 | Execute guarded full suite | [D] | `timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS="--maxfail=200 --timeout=905" pytest -vv tests/ | tee pytest.log`; store exit code in `run_exit_code.txt`. Capture wall-clock via `/usr/bin/time -v` if available (`/usr/bin/time -v pytest ...`). |
+| B3 | Persist junit/timing artifacts | [D] | If pytest `--junitxml` is feasible, append `--junitxml=pytest.junit.xml`. Save `pytest.junit.xml`, `time.txt`, and `commands.txt` in phase folder. |
+| B4 | Draft execution summary | [D] | `summary.md` capturing pass/fail/skip counts, runtime, notable slow tests. Note any infra failures (timeouts, flakiness). |
 
 ### Phase C — Failure Clustering & Ledger Update
 Goal: Classify failing tests into clusters, cross-reference prior IDs, and log attempts in fix_plan.
@@ -46,10 +46,10 @@ Exit Criteria: Updated failure cluster doc under phase folder; docs/fix_plan.md 
 
 | ID | Task Description | State | How/Why & Guidance |
 | --- | --- | --- | --- |
-| C1 | Extract failure list | [ ] | Use `python scripts/validation/pytest_failure_parser.py pytest.log > failures.json` (author script if missing) or manual grep. Record nodeids, error summaries. |
-| C2 | Map to clusters | [ ] | Compare with archived `remediation_tracker.md`; reuse existing cluster IDs when behavior matches. Record new clusters with `CLUSTER-NEW-XX` placeholder until triaged. |
-| C3 | Produce triage summary | [ ] | `summary.md` detailing clusters, counts, suspected root cause categories (implementation bug vs deprecated test). Include table `Cluster | Tests | Classification | Notes`. |
-| C4 | Update fix_plan + attempts | [ ] | Append Attempt entry to `[TEST-SUITE-TRIAGE-002]` with counts, artifact path, env info. Ensure Active Focus/Next Actions reflect remediation queue. |
+| C1 | Extract failure list | [D] | Use `python scripts/validation/pytest_failure_parser.py pytest.log > failures.json` (author script if missing) or manual grep. Record nodeids, error summaries. |
+| C2 | Map to clusters | [D] | Compare with archived `remediation_tracker.md`; reuse existing cluster IDs when behavior matches. Record new clusters with `CLUSTER-NEW-XX` placeholder until triaged. |
+| C3 | Produce triage summary | [D] | `summary.md` detailing clusters, counts, suspected root cause categories (implementation bug vs deprecated test). Include table `Cluster | Tests | Classification | Notes`. |
+| C4 | Update fix_plan + attempts | [D] | Append Attempt entry to `[TEST-SUITE-TRIAGE-002]` with counts, artifact path, env info. Ensure Active Focus/Next Actions reflect remediation queue. |
 
 ### Phase D — Remediation Scheduling & Delegation Prep
 Goal: Translate cluster insights into actionable next steps for implementation loops (Ralph) with explicit test selectors and target components.
