@@ -1,0 +1,24 @@
+Command exited with non-zero status 1
+	Command being timed: "timeout 3600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 PYTEST_ADDOPTS=--maxfail=200 --timeout=905 --durations=0 pytest -vv tests/ --junitxml=reports/2026-01-test-suite-refresh/phase_e/20251015T152031Z/artifacts/pytest.junit.xml"
+	User time (seconds): 2845.71
+	System time (seconds): 2906.22
+	Percent of CPU this job got: 347%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 27:35.90
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 58173344
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1590181436
+	Voluntary context switches: 64404
+	Involuntary context switches: 38174
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 7968
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

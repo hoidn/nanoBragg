@@ -1,0 +1,105 @@
+# Phase E Full-Suite Rerun Commands
+# STAMP: 20251015T152031Z
+# Date: 2025-10-15
+
+## Pre-flight Setup
+
+# Create directory structure
+export STAMP=20251015T152031Z
+mkdir -p reports/2026-01-test-suite-refresh/phase_e/$STAMP/{logs,artifacts,env,analysis}
+
+# Capture environment snapshot
+printenv > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/env.txt
+python -m torch.utils.collect_env > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/torch_env.txt 2>&1
+df -h . > reports/2026-01-test-suite-refresh/phase_e/$STAMP/env/disk_usage.txt
+
+# Verify prerequisites
+pip show nanobrag-torch | grep Location  # Expected: /home/ollie/miniconda3/lib/python3.13/site-packages
+python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"  # Expected: True (but disabled via CUDA_VISIBLE_DEVICES)
+df -h . | tail -1 | awk '{print "Free space: " $4}'  # Expected: >=10 GB
+
+## Full-Suite Execution (Guarded)
+
+# Run via script wrapper (recommended)
+chmod +x run_phase_e.sh
+./run_phase_e.sh
+
+# Manual command (if script unavailable)
+/usr/bin/time -v timeout 3600 env \
+  CUDA_VISIBLE_DEVICES=-1 \
+  KMP_DUPLICATE_LIB_OK=TRUE \
+  NANOBRAGG_DISABLE_COMPILE=1 \
+  PYTEST_ADDOPTS="--maxfail=200 --timeout=905 --durations=0" \
+  pytest -vv tests/ \
+  --junitxml=reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/pytest.junit.xml \
+  2>reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/time.txt \
+  | tee reports/2026-01-test-suite-refresh/phase_e/$STAMP/logs/pytest_full.log
+
+# Capture exit code manually (if script wrapper didn't set it)
+echo $? > reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/exit_code.txt
+
+## Post-Execution Analysis
+
+# Parse junit XML and extract metrics
+python3 << 'EOF'
+import xml.etree.ElementTree as ET
+import json
+
+tree = ET.parse('reports/2026-01-test-suite-refresh/phase_e/20251015T152031Z/artifacts/pytest.junit.xml')
+root = tree.getroot()
+testsuite = root.find('.//testsuite')
+
+tests = int(testsuite.get('tests', 0))
+failures = int(testsuite.get('failures', 0))
+skipped = int(testsuite.get('skipped', 0))
+errors = int(testsuite.get('errors', 0))
+time_seconds = float(testsuite.get('time', 0))
+passed = tests - failures - skipped - errors
+
+failure_cases = []
+for testcase in root.findall('.//testcase'):
+    if testcase.find('failure') is not None:
+        nodeid = f"{testcase.get('classname')}::{testcase.get('name')}"
+        failure_msg = testcase.find('failure').get('message', '')
+        failure_cases.append({"nodeid": nodeid, "message": failure_msg[:200]})
+
+results = {
+    "timestamp": "20251015T152031Z",
+    "tests": tests,
+    "passed": passed,
+    "failed": failures,
+    "skipped": skipped,
+    "errors": errors,
+    "runtime_seconds": time_seconds,
+    "pass_rate": passed / tests if tests > 0 else 0,
+    "failures": failure_cases
+}
+
+with open('reports/2026-01-test-suite-refresh/phase_e/20251015T152031Z/analysis/failures.json', 'w') as f:
+    json.dump(results, f, indent=2)
+
+print(f"Collected: {tests}, Passed: {passed}, Failed: {failures}, Skipped: {skipped}, Errors: {errors}")
+print(f"Runtime: {time_seconds:.2f}s ({time_seconds/60:.2f}m)")
+print(f"Pass rate: {results['pass_rate']*100:.1f}%")
+EOF
+
+# Extract timing metrics
+cat reports/2026-01-test-suite-refresh/phase_e/$STAMP/artifacts/time.txt | grep -E "Elapsed.*wall clock|Maximum resident set size"
+
+# Generate summary (manual or automated)
+# See: reports/2026-01-test-suite-refresh/phase_e/$STAMP/analysis/summary.md
+
+## Results Summary
+
+# Collected: 693 tests
+# Passed: 540 (77.9%)
+# Failed: 8 (1.2%)
+# Skipped: 145 (20.9%)
+# Runtime: 1654.86s (27:35)
+# Exit Code: 1 (failures present)
+
+## References
+
+# Plan: plans/archive/test-suite-triage-rerun.md (Phase E checklist)
+# Brief: reports/2026-01-test-suite-refresh/phase_e/20251015T150723Z/phase_e_brief.md
+# Testing Strategy: docs/development/testing_strategy.md
