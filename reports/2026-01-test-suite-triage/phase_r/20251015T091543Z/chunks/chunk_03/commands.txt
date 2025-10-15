@@ -1,0 +1,56 @@
+# Phase R Chunk 03 Rerun Commands
+
+## Environment Setup
+
+```bash
+export STAMP=20251015T091543Z
+mkdir -p reports/2026-01-test-suite-triage/phase_r/${STAMP}/chunks/chunk_03
+mkdir -p reports/2026-01-test-suite-triage/phase_r/${STAMP}/env
+```
+
+## Chunk 03 Execution
+
+### Guard Environment Variables
+- `CUDA_VISIBLE_DEVICES=-1` — Force CPU-only execution
+- `KMP_DUPLICATE_LIB_OK=TRUE` — Avoid MKL library conflicts
+- `NANOBRAGG_DISABLE_COMPILE=1` — Disable torch.compile for gradcheck compatibility
+
+### Command
+```bash
+timeout 2400 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv tests/test_at_cli_001.py tests/test_at_flu_001.py tests/test_at_io_004.py \
+  tests/test_at_parallel_009.py tests/test_at_parallel_020.py tests/test_at_perf_001.py \
+  tests/test_at_pre_002.py tests/test_at_sta_001.py tests/test_configuration_consistency.py \
+  tests/test_gradients.py tests/test_show_config.py \
+  --maxfail=0 --durations=25 \
+  --junitxml reports/2026-01-test-suite-triage/phase_r/${STAMP}/chunks/chunk_03/pytest.xml \
+  2>&1 | tee reports/2026-01-test-suite-triage/phase_r/${STAMP}/chunks/chunk_03/pytest.log
+```
+
+### Exit Code Capture
+```bash
+echo $? > reports/2026-01-test-suite-triage/phase_r/${STAMP}/chunks/chunk_03/exit_code.txt
+```
+
+## Results
+- **Runtime:** 1471.53s (24m 31s)
+- **Exit Code:** 0
+- **Status:** 51 passed, 1 failed (timeout), 10 skipped, 1 xfailed
+
+## Environment Snapshot
+```json
+{
+  "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 16:09:02) [GCC 11.2.0]",
+  "platform": "Linux-6.14.0-29-generic-x86_64-with-glibc2.39",
+  "torch": {
+    "torch_version": "2.7.1+cu126",
+    "cuda_available": true,
+    "cuda_version": "12.6"
+  }
+}
+```
+
+## Failure Detail
+- **Test:** `tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability`
+- **Error:** `Failed: Timeout (>900.0s) from pytest-timeout`
+- **Actual Runtime:** 900.02s (exceeded by 0.02s)

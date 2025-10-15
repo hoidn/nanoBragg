@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="11" tests="63" time="1471.530" timestamp="2025-10-15T02:15:55.635009-07:00" hostname="ollie-System-Product-Name"><testcase classname="" name="tests.test_at_parallel_009" time="0.000"><skipped message="collection skipped">('/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_009.py', 24, 'Skipped: Skipping parallel validation tests. Set NB_RUN_PARALLEL=1 to run.')</skipped></testcase><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_short_flag" time="0.990" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_long_flag" time="0.990" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_invocable" time="0.002" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_examples" time="0.983" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_wavelength_synonyms" time="0.985" /><testcase classname="tests.test_at_cli_001.TestAT_CLI_001" name="test_cli_help_includes_output_synonyms" time="0.991" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_fluence_calculation_from_flux_exposure_beamsize" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_fluence_calculation_when_flux_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_fluence_calculation_when_exposure_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_fluence_calculation_with_beamsize_zero" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_flux_recomputation_from_fluence_and_exposure" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_sample_clipping_warning" time="0.002" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_clipping_when_beamsize_larger" time="0.000" /><testcase classname="tests.test_at_flu_001.TestAT_FLU_001" name="test_no_clipping_when_beamsize_zero" time="0.000" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_minimal_hkl_format" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_five_column_with_phase" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_six_column_with_sigma_and_phase" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_negative_indices_handling" time="0.001" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_all_formats_produce_same_pattern" time="0.011" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_fdump_caching_for_all_formats" time="0.003" /><testcase classname="tests.test_at_io_004.TestAT_IO_004" name="test_comment_and_blank_line_handling" time="0.001" /><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_integration" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:280: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_without_absorption" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:332: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_phi_rotation_only" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:364: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_parallel_020.TestATParallel020" name="test_comprehensive_minimal_features" time="0.000"><skipped type="pytest.skip" message="NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_parallel_020.py:399: NB_RUN_PARALLEL=1 not set (C-PyTorch validation tests disabled)</skipped></testcase><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_vectorization_scaling" time="2.568" /><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_performance_parity_with_c" time="0.023"><skipped type="pytest.skip" message="C binary not found at ./nanoBragg">/home/ollie/Documents/tmp/nanoBragg/tests/test_at_perf_001.py:99: C binary not found at ./nanoBragg</skipped></testcase><testcase classname="tests.test_at_perf_001.TestATPERF001VectorizationPerformance" name="test_memory_scaling" time="0.123" /><testcase classname="tests.test_at_pre_002" name="test_xbeam_ybeam_forces_beam_pivot" time="0.998" /><testcase classname="tests.test_at_pre_002" name="test_xclose_yclose_forces_sample_pivot" time="1.002" /><testcase classname="tests.test_at_pre_002" name="test_orgx_orgy_forces_sample_pivot" time="1.003" /><testcase classname="tests.test_at_pre_002" name="test_explicit_pivot_override" time="1.993" /><testcase classname="tests.test_at_pre_002" name="test_distance_vs_close_distance_pivot_defaults" time="1.989" /><testcase classname="tests.test_at_pre_002" name="test_convention_default_pivots" time="2.013" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_basic" time="0.014" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_with_roi" time="0.013" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_with_mask" time="0.001" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_empty_roi" time="0.012" /><testcase classname="tests.test_at_sta_001.TestAT_STA_001" name="test_statistics_last_max_location" time="0.012" /><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_explicit_defaults_equal_implicit" time="0.001"><skipped type="pytest.xfail" message="C nanoBragg has known bug: passing default twotheta_axis switches to CUSTOM mode" /></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_configuration_echo_present" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output that doesn't exist in standard build">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:113: Requires special nanoBragg_config binary with diagnostic output that doesn't exist in standard build</skipped></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_mode_detection_accuracy" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:147: Requires special nanoBragg_config binary with diagnostic output</skipped></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_trigger_tracking" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:162: Requires special nanoBragg_config binary with diagnostic output</skipped></testcase><testcase classname="tests.test_configuration_consistency.TestConfigurationConsistency" name="test_all_vector_parameters_trigger_custom" time="0.000"><skipped type="pytest.skip" message="Requires special nanoBragg_config binary with diagnostic output">/home/ollie/Documents/tmp/nanoBragg/tests/test_configuration_consistency.py:177: Requires special nanoBragg_config binary with diagnostic output</skipped></testcase><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_a" time="43.882" /><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_b" time="119.008" /><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_c" time="65.996" /><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_alpha" time="53.626" /><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_beta" time="42.134" /><testcase classname="tests.test_gradients.TestCellParameterGradients" name="test_gradcheck_cell_gamma" time="41.304" /><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_joint_gradcheck" time="132.466" /><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_gradgradcheck_cell_params" time="48.758" /><testcase classname="tests.test_gradients.TestAdvancedGradients" name="test_gradient_flow_simulation" time="1.769" /><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_metric_duality" time="0.070" /><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_volume_consistency" time="0.045" /><testcase classname="tests.test_gradients.TestPropertyBasedGradients" name="test_property_gradient_stability" time="900.017"><failure message="Failed: Timeout (&gt;900.0s) from pytest-timeout.">self = &lt;tests.test_gradients.TestPropertyBasedGradients object at 0x7f7233ada9e0&gt;
+
+    @pytest.mark.slow_gradient
+    @pytest.mark.timeout(900)
+    def test_property_gradient_stability(self):
+        """Ensure gradients remain stable across parameter space."""
+        torch.manual_seed(44)  # For reproducibility
+    
+        for i in range(25):  # Fewer tests as gradcheck is expensive
+            # Generate random cell
+            cell_params = self.generate_random_cell()
+    
+            # Create tensor parameters
+            cell_params_tensor = torch.tensor(
+                [
+                    cell_params["cell_a"],
+                    cell_params["cell_b"],
+                    cell_params["cell_c"],
+                    cell_params["cell_alpha"],
+                    cell_params["cell_beta"],
+                    cell_params["cell_gamma"],
+                ],
+                dtype=torch.float64,
+                requires_grad=True,
+            )
+    
+            def loss_fn(params):
+                device = torch.device("cpu")
+                dtype = torch.float64
+    
+                # Unpack parameters
+                cell_a, cell_b, cell_c, cell_alpha, cell_beta, cell_gamma = params
+    
+                # Create config
+                config = CrystalConfig(
+                    cell_a=cell_a,
+                    cell_b=cell_b,
+                    cell_c=cell_c,
+                    cell_alpha=cell_alpha,
+                    cell_beta=cell_beta,
+                    cell_gamma=cell_gamma,
+                    mosaic_spread_deg=0.0,
+                    mosaic_domains=1,
+                    N_cells=(5, 5, 5),
+                )
+    
+                # Create objects
+                crystal = Crystal(config=config, device=device, dtype=dtype)
+                detector = Detector(device=device, dtype=dtype)
+    
+                # Run simulation
+                simulator = Simulator(
+                    crystal, detector, crystal_config=config, device=device, dtype=dtype
+                )
+                image = simulator.run()
+    
+                return image.sum()
+    
+            # Verify gradcheck passes for this random geometry
+            try:
+&gt;               assert gradcheck(
+                    loss_fn,
+                    (cell_params_tensor,),
+                    eps=1e-6,
+                    atol=1e-5,  # Slightly relaxed for stability
+                    rtol=0.05,
+                    raise_exception=True,
+                )
+
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:632: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2056: in gradcheck
+    return _gradcheck_helper(**args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:2085: in _gradcheck_helper
+    _gradcheck_real_imag(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1495: in _gradcheck_real_imag
+    gradcheck_fn(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:1602: in _slow_gradcheck
+    _get_numerical_jacobian(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:300: in _get_numerical_jacobian
+    get_numerical_jacobian_wrt_specific_input(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:489: in get_numerical_jacobian_wrt_specific_input
+    jacobian_cols[d_idx] = _compute_numerical_jvps_wrt_specific_input(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:397: in _compute_numerical_jvps_wrt_specific_input
+    ds_dx_tup = jvp_fn(delta[0] if isinstance(delta, tuple) else delta)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:636: in jvp_fn
+    return _compute_numerical_gradient(
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:377: in _compute_numerical_gradient
+    outb = fn()
+           ^^^^
+/home/ollie/miniconda3/lib/python3.13/site-packages/torch/autograd/gradcheck.py:628: in wrapped_fn
+    return tuple(a.clone() for a in _as_tuple(fn(*inp)))
+                                              ^^^^^^^^
+/home/ollie/Documents/tmp/nanoBragg/tests/test_gradients.py:626: in loss_fn
+    image = simulator.run()
+            ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;nanobrag_torch.simulator.Simulator object at 0x7f720b6c6570&gt;
+pixel_batch_size = None, override_a_star = None, oversample = 2
+oversample_omega = False, oversample_polar = False, oversample_thick = False
+
+    def run(
+        self,
+        pixel_batch_size: Optional[int] = None,
+        override_a_star: Optional[torch.Tensor] = None,
+        oversample: Optional[int] = None,
+        oversample_omega: Optional[bool] = None,
+        oversample_polar: Optional[bool] = None,
+        oversample_thick: Optional[bool] = None,
+    ) -&gt; torch.Tensor:
+        """
+        Run the diffraction simulation with crystal rotation and mosaicity.
+    
+        This method vectorizes the simulation over all detector pixels, phi angles,
+        and mosaic domains. It integrates contributions from all crystal orientations
+        to produce the final diffraction pattern.
+    
+        Important: This implementation uses the full Miller indices (h, k, l) for the
+        lattice shape factor calculation, not the fractional part (h-h0). This correctly
+        models the crystal shape transform and is consistent with the physics of
+        diffraction from a finite crystal.
+    
+        C-Code Implementation Reference (from nanoBragg.c, lines 2993-3151):
+        The vectorized implementation replaces these nested loops. The outer `source`
+        loop is future work for handling beam divergence and dispersion.
+    
+        ```c
+                        /* loop over sources now */
+                        for(source=0;source&lt;sources;++source){
+    
+                            /* retrieve stuff from cache */
+                            incident[1] = -source_X[source];
+                            incident[2] = -source_Y[source];
+                            incident[3] = -source_Z[source];
+                            lambda = source_lambda[source];
+    
+                            /* ... scattering vector calculation ... */
+    
+                            /* sweep over phi angles */
+                            for(phi_tic = 0; phi_tic &lt; phisteps; ++phi_tic)
+                            {
+                                /* ... crystal rotation ... */
+    
+                                /* enumerate mosaic domains */
+                                for(mos_tic=0;mos_tic&lt;mosaic_domains;++mos_tic)
+                                {
+                                    /* ... mosaic rotation ... */
+                                    /* ... h,k,l calculation ... */
+                                    /* ... F_cell and F_latt calculation ... */
+    
+                                    /* convert amplitudes into intensity (photons per steradian) */
+                                    I += F_cell*F_cell*F_latt*F_latt;
+                                }
+                            }
+                        }
+        ```
+    
+        Args:
+            pixel_batch_size: Optional batching for memory management.
+            override_a_star: Optional override for the a_star vector for testing.
+            oversample: Number of subpixel samples per axis. Defaults to detector config.
+            oversample_omega: Apply solid angle per subpixel. Defaults to detector config.
+            oversample_polar: Apply polarization per subpixel. Defaults to detector config.
+            oversample_thick: Apply absorption per subpixel. Defaults to detector config.
+    
+        Returns:
+            torch.Tensor: Final diffraction image with shape (spixels, fpixels).
+        """
+        # Unified vectorization path (spec-compliant fresh rotations)
+        # Get oversampling parameters from detector config if not provided
+        if oversample is None:
+            oversample = self.detector.config.oversample
+        if oversample_omega is None:
+            oversample_omega = self.detector.config.oversample_omega
+        if oversample_polar is None:
+            oversample_polar = self.detector.config.oversample_polar
+        if oversample_thick is None:
+            oversample_thick = self.detector.config.oversample_thick
+    
+        # Auto-select oversample if set to -1 (matches C behavior)
+        if oversample == -1:
+            # Calculate maximum crystal dimension in meters
+            xtalsize_max = max(
+                abs(self.crystal.config.cell_a * 1e-10 * self.crystal.config.N_cells[0]),  # a*Na in meters
+                abs(self.crystal.config.cell_b * 1e-10 * self.crystal.config.N_cells[1]),  # b*Nb in meters
+                abs(self.crystal.config.cell_c * 1e-10 * self.crystal.config.N_cells[2])   # c*Nc in meters
+            )
+    
+            # Calculate reciprocal pixel size in meters
+            # reciprocal_pixel_size = λ * distance / pixel_size (all in meters)
+            wavelength_m = self.wavelength * 1e-10  # Convert from Angstroms to meters
+            distance_m = self.detector.config.distance_mm / 1000.0  # Convert from mm to meters
+            pixel_size_m = self.detector.config.pixel_size_mm / 1000.0  # Convert from mm to meters
+            reciprocal_pixel_size = wavelength_m * distance_m / pixel_size_m
+    
+            # Calculate recommended oversample using C formula
+            import math
+            recommended_oversample = math.ceil(3.0 * xtalsize_max / reciprocal_pixel_size)
+    
+            # Ensure at least 1
+            if recommended_oversample &lt;= 0:
+                recommended_oversample = 1
+    
+            oversample = recommended_oversample
+            print(f"auto-selected {oversample}-fold oversampling")
+    
+        # For now, we'll implement the base case without oversampling for this test
+        # The full subpixel implementation will come later
+        # This matches the current implementation which doesn't yet have subpixel sampling
+    
+        # PERF-PYTORCH-004 P3.4: Use cached ROI mask instead of rebuilding every run
+        roi_mask = self._cached_roi_mask
+    
+        # PERF-PYTORCH-004 P3.4: Use cached pixel coordinates instead of fetching/converting every run
+        pixel_coords_meters = self._cached_pixel_coords_meters
+    
+        # Get rotated lattice vectors for all phi steps and mosaic domains
+        # Shape: (N_phi, N_mos, 3)
+        # PERF-PYTORCH-006: Convert crystal vectors to correct device/dtype
+        if override_a_star is None:
+            (rot_a, rot_b, rot_c), (rot_a_star, rot_b_star, rot_c_star) = (
+                self.crystal.get_rotated_real_vectors(self.crystal.config)
+            )
+            # Convert to correct dtype/device
+            rot_a = rot_a.to(device=self.device, dtype=self.dtype)
+            rot_b = rot_b.to(device=self.device, dtype=self.dtype)
+            rot_c = rot_c.to(device=self.device, dtype=self.dtype)
+            rot_a_star = rot_a_star.to(device=self.device, dtype=self.dtype)
+            rot_b_star = rot_b_star.to(device=self.device, dtype=self.dtype)
+            rot_c_star = rot_c_star.to(device=self.device, dtype=self.dtype)
+    
+            # VECTOR-PARITY-001 Phase D5: Convert lattice vectors from Angstroms to meters
+            # The scattering vector q is in m⁻¹ (Phase D1 fix), and real-space lattice vectors
+            # must be in meters for dimensionally correct h=a·q computation (meters × m⁻¹ = dimensionless).
+            # Crystal.get_rotated_real_vectors() returns vectors in Angstroms, so multiply by 1e-10.
+            # Reference: specs/spec-a-core.md line 135 ("scaled by 1e-10 to meters for all subsequent dot products with q")
+            # and line 446 ("q: scattering vector in m⁻¹").
+            # Evidence: reports/2026-01-vectorization-parity/phase_d/20251010T073708Z/simulator_f_latt.md
+            # and C-code trace showing a = [1e-08, ...] |a| = 1e-08 meters (100 Å × 1e-10).
+            rot_a = rot_a * 1e-10  # Å → meters
+            rot_b = rot_b * 1e-10  # Å → meters
+            rot_c = rot_c * 1e-10  # Å → meters
+    
+            # Cache rotated reciprocal vectors for GAUSS/TOPHAT shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
+        else:
+            # For gradient testing with override, use single orientation
+            rot_a = override_a_star.view(1, 1, 3)
+            rot_b = self.crystal.b.view(1, 1, 3)
+            rot_c = self.crystal.c.view(1, 1, 3)
+            rot_a_star = override_a_star.view(1, 1, 3)
+            rot_b_star = self.crystal.b_star.view(1, 1, 3)
+            rot_c_star = self.crystal.c_star.view(1, 1, 3)
+    
+            # VECTOR-PARITY-001 Phase D5: Convert lattice vectors from Angstroms to meters (same as non-override path)
+            rot_a = rot_a * 1e-10  # Å → meters
+            rot_b = rot_b * 1e-10  # Å → meters
+            rot_c = rot_c * 1e-10  # Å → meters
+    
+            # Cache for shape models
+            self._rot_a_star = rot_a_star
+            self._rot_b_star = rot_b_star
+            self._rot_c_star = rot_c_star
+    
+        # PERF-PYTORCH-004 P1.2: Use pre-normalized source tensors from __init__
+        # Tensors were already moved to correct device/dtype during initialization
+        if self._source_directions is not None:
+            n_sources = len(self._source_directions)
+            source_directions = self._source_directions
+            source_wavelengths_A = self._source_wavelengths_A
+            source_weights = self._source_weights
+        else:
+            # No explicit sources, use single beam configuration
+            n_sources = 1
+            source_directions = None
+            source_wavelengths_A = None
+            source_weights = None
+    
+        # Calculate normalization factor (steps)
+        # Per spec AT-SAM-001: "Final per-pixel scale SHALL divide by steps"
+        # SOURCE-WEIGHT-001 Phase C1: C-parity requires ignoring source weights
+        # Per spec-a-core.md line 151: "The weight column is read but ignored (equal weighting results)"
+        # C code (nanoBragg.c:3358) divides by steps = sources*mosaic_domains*phisteps*oversample^2
+        # where sources is the COUNT of sources, not the sum of weights
+        phi_steps = self.crystal.config.phi_steps
+        mosaic_domains = self.crystal.config.mosaic_domains
+    
+        # Always use n_sources (count) to match C behavior
+        # The spec explicitly states source weights are "read but ignored"
+        source_norm = n_sources
+    
+        steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
+    
+        # Apply physical scaling factors (from nanoBragg.c ~line 3050)
+        # Solid angle correction, converting all units to meters for calculation
+    
+        # Check if we're doing subpixel sampling
+        if oversample &gt; 1:
+            # VECTORIZED IMPLEMENTATION: Process all subpixels in parallel
+            # Generate subpixel offsets (centered on pixel center)
+            # Per spec: "Compute detector-plane coordinates (meters): Fdet and Sdet at subpixel centers."
+            # Create offsets in fractional pixel units
+            subpixel_step = 1.0 / oversample
+            offset_start = -0.5 + subpixel_step / 2.0
+    
+            # Use manual arithmetic to preserve gradients (avoid torch.linspace)
+            subpixel_offsets = offset_start + torch.arange(
+                oversample, device=self.device, dtype=self.dtype
+            ) * subpixel_step
+    
+            # Create grid of subpixel offsets
+            sub_s, sub_f = torch.meshgrid(subpixel_offsets, subpixel_offsets, indexing='ij')
+            # Flatten the grid for vectorized processing
+            # Shape: (oversample*oversample,)
+            sub_s_flat = sub_s.flatten()
+            sub_f_flat = sub_f.flatten()
+    
+            # Get detector basis vectors for proper coordinate transformation
+            f_axis = self.detector.fdet_vec  # Shape: [3]
+            s_axis = self.detector.sdet_vec  # Shape: [3]
+            S, F = pixel_coords_meters.shape[:2]
+    
+            # VECTORIZED: Create all subpixel positions at once
+            # Shape: (oversample*oversample, 3)
+            # Convert detector properties to tensors with correct device/dtype (AT-PERF-DEVICE-001)
+            # Use as_tensor to avoid warnings when value might already be a tensor
+            pixel_size_m_tensor = torch.as_tensor(self.detector.pixel_size, device=pixel_coords_meters.device, dtype=pixel_coords_meters.dtype)
+            delta_s_all = sub_s_flat * pixel_size_m_tensor
+            delta_f_all = sub_f_flat * pixel_size_m_tensor
+    
+            # Shape: (oversample*oversample, 3)
+            offset_vectors = delta_s_all.unsqueeze(-1) * s_axis + delta_f_all.unsqueeze(-1) * f_axis
+    
+            # Expand pixel_coords for all subpixels
+            # Shape: (S, F, oversample*oversample, 3)
+            pixel_coords_expanded = pixel_coords_meters.unsqueeze(2).expand(S, F, oversample*oversample, 3)
+            offset_vectors_expanded = offset_vectors.unsqueeze(0).unsqueeze(0).expand(S, F, oversample*oversample, 3)
+    
+            # All subpixel coordinates at once
+            # Shape: (S, F, oversample*oversample, 3)
+            subpixel_coords_all = pixel_coords_expanded + offset_vectors_expanded
+    
+            # Convert to Angstroms for physics
+            subpixel_coords_ang_all = subpixel_coords_all * 1e10
+    
+            # VECTORIZED PHYSICS: Process all subpixels at once
+            # Reshape to (S*F*oversample^2, 3) for physics calculation
+            # Use .contiguous() to avoid CUDA graphs tensor reuse errors
+            batch_shape = subpixel_coords_ang_all.shape[:-1]
+            coords_reshaped = subpixel_coords_ang_all.reshape(-1, 3).contiguous()
+    
+            # Compute physics for all subpixels and sources (VECTORIZED)
+            if n_sources &gt; 1:
+                # VECTORIZED Multi-source case: batch all sources together
+                # Note: source_directions point FROM sample TO source
+                # Incident beam direction should be FROM source TO sample (negated)
+                incident_dirs_batched = -source_directions  # Shape: (n_sources, 3)
+                wavelengths_batched = source_wavelengths_A  # Shape: (n_sources,)
+    
+                # Single batched call for all sources
+                # This replaces the Python loop and enables torch.compile optimization
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+                    coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star,
+                    incident_beam_direction=incident_dirs_batched,
+                    wavelength=wavelengths_batched,
+                    source_weights=source_weights
+                )
+    
+                # Reshape back to (S, F, oversample*oversample)
+                # The weighted sum over sources is done inside _compute_physics_for_position
+                subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+                # C17 polarization guard: physics_intensity_pre_polar_flat is None when nopolar=True
+                if physics_intensity_pre_polar_flat is not None:
+                    subpixel_physics_intensity_pre_polar_all = physics_intensity_pre_polar_flat.reshape(batch_shape)
+                else:
+                    subpixel_physics_intensity_pre_polar_all = None
+            else:
+                # Single source case: use default beam parameters
+                # CLI-FLAGS-003 Phase M1: Unpack both post-polar and pre-polar intensities
+                physics_intensity_flat, physics_intensity_pre_polar_flat = self._compute_physics_for_position(
+                    coords_reshaped, rot_a, rot_b, rot_c, rot_a_star, rot_b_star, rot_c_star
+                )
+    
+                # Reshape back to (S, F, oversample*oversample)
+                subpixel_physics_intensity_all = physics_intensity_flat.reshape(batch_shape)
+                # C17 polarization guard: physics_intensity_pre_polar_flat is None when nopolar=True
+                if physics_intensity_pre_polar_flat is not None:
+                    subpixel_physics_intensity_pre_polar_all = physics_intensity_pre_polar_flat.reshape(batch_shape)
+                else:
+                    subpixel_physics_intensity_pre_polar_all = None
+    
+            # PERF-PYTORCH-004 P3.0b: Polarization is now applied per-source inside compute_physics_for_position
+            # Only omega needs to be applied here for subpixel oversampling
+            # NOTE: Do NOT divide by steps here - normalization happens once at final scaling (line ~1130)
+    
+            # VECTORIZED AIRPATH AND OMEGA: Calculate for all subpixels
+&gt;           sub_squared_all = torch.sum(subpixel_coords_ang_all * subpixel_coords_ang_all, dim=-1)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: Timeout (&gt;900.0s) from pytest-timeout.
+
+/home/ollie/Documents/tmp/nanoBragg/src/nanobrag_torch/simulator.py:998: Failed</failure></testcase><testcase classname="tests.test_gradients.TestOptimizationRecovery" name="test_optimization_recovers_cell" time="0.058" /><testcase classname="tests.test_gradients.TestOptimizationRecovery" name="test_multiple_optimization_scenarios" time="0.274" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_show_config_basic" time="1.004" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_show_config_with_divergence" time="1.002" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_show_config_with_rotations" time="1.021" /><testcase classname="tests.test_show_config.TestShowConfig" name="test_echo_config_alias" time="1.009" /></testsuite></testsuites>
