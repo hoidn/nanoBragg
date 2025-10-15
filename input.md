@@ -1,70 +1,74 @@
-Summary: Split chunk 03 remainder into two guard-friendly runs and aggregate results so the Phase O baseline reflects only C18 + C19.
+Summary: Capture a clean Phase O chunk 03 guard rerun by splitting into three parts, then refresh the baseline artifacts/ledgers.
 Mode: Parity
-Focus: TEST-SUITE-TRIAGE-001 / Next Action 9 (Phase O5 split remainder)
+Focus: [TEST-SUITE-TRIAGE-001] Full pytest run and triage
 Branch: feature/spec-based-2
-Mapped tests: chunk_03_selectors_part1.txt (tests/test_at_cli_001.py … tests/test_at_parallel_020.py); chunk_03_selectors_part2.txt (tests/test_at_perf_001.py … tests/test_show_config.py)
-Artifacts: reports/2026-01-test-suite-triage/phase_o/${STAMP}/{commands.txt,gradients/*}; reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/{pytest_part1.log,pytest_part1.xml,pytest_part2.log,pytest_part2.xml,summary.md}; reports/2026-01-test-suite-triage/phase_o/${STAMP}/summary.md; reports/2026-01-test-suite-triage/remediation_tracker.md
-Do Now: TEST-SUITE-TRIAGE-001 Next Action 9 — export STAMP=$(date -u +%Y%m%dT%H%M%SZ) && mkdir -p reports/2026-01-test-suite-triage/phase_o/${STAMP}/{gradients,chunks/chunk_03} && cp reports/2026-01-test-suite-triage/phase_o/20251015T014403Z/grad_guard/{summary.md,exit_code.txt,pytest.xml} reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/ && timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part1.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part1.log
-If Blocked: If either part run still times out, capture stdout + exit status, escalate in docs/fix_plan.md Attempts, and either split into thirds or request harness timeout raise before retrying.
+Mapped tests: 
+  - timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/pytest_part1.xml
+  - timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part2.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/pytest_part2.xml
+  - timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/$STAMP/chunks/chunk_03/pytest_part3.xml
+Artifacts: reports/2026-01-test-suite-triage/phase_o/$STAMP/{gradients/*,chunks/chunk_03/pytest_part{1,2,3}.{log,xml},chunks/chunk_03/summary.md,summary.md}, reports/2026-01-test-suite-triage/remediation_tracker.md, plans/active/test-suite-triage.md, docs/fix_plan.md
+Do Now: [TEST-SUITE-TRIAGE-001] Next Action 9 — run chunk 03 (parts 1/2/3) with guard and update summaries using the commands above (export STAMP in this shell first).
+If Blocked: If any part still times out or fails unexpectedly, stop immediately, capture the log + exit code in the new STAMP directory, and log the attempt in docs/fix_plan.md without retrying; ping me with the failure context.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:300-337 — Phase O5a–O5e require the split workflow before we touch C18 tolerances.
-- docs/fix_plan.md:56-71 — Next Action 9/10 remain partial; completing the split run unblocks the ledger + tracker refresh.
-- reports/2026-01-test-suite-triage/phase_o/blocked_attempt_73.md — documents why the unsplit command fails (600 s ceiling, STAMP scope loss).
-- reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/chunks/chunk_03/summary.md — prior template for summary.md; reuse structure with new counts.
+- docs/fix_plan.md:60-75 spells out the revised three-part workflow we must satisfy before touching C18 tolerances.
+- plans/active/test-suite-triage.md:304-310 enumerates Phase O tasks (O5a–O6) gating this effort.
+- reports/2026-01-test-suite-triage/phase_o/20251015T034633Z/chunks/chunk_03/summary.md:1 documents the prior timeout and why gradients must be isolated.
+- reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt ensures the first shard includes test_at_parallel_009.py which we dropped during the last attempt.
+- reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3.txt constrains the gradients payload so the guard run can finish within the 600 s harness cap.
 How-To Map:
-1. Create selector shards (keep original list intact):
+1. In a fresh shell, chain the setup so STAMP persists:
+   `export STAMP=$(date -u +%Y%m%dT%H%M%SZ) && mkdir -p reports/2026-01-test-suite-triage/phase_o/${STAMP}/{gradients,chunks/chunk_03}`
+2. Copy the validated guard evidence into the new STAMP bundle:
+   `cp reports/2026-01-test-suite-triage/phase_o/20251015T014403Z/grad_guard/* reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/`
+3. Log the shard rationale before running commands:
+   `printf 'part1=cli_001,flu_001,io_004,parallel_009,parallel_020\npart2=perf_001,pre_002,sta_001,configuration_consistency,show_config\npart3=gradients_only\n' >> reports/2026-01-test-suite-triage/phase_o/${STAMP}/commands.txt`
+4. Execute the three mapped pytest commands in order (parts 1→3) in the same shell so `$STAMP` stays defined; each command should `tee` into the chunk directory paths shown above.
+5. After each run, append elapsed wall time (`/usr/bin/time -f 'elapsed=%E'` optional) and exit code to `commands.txt` for provenance.
+6. Aggregate totals once all three XML files exist:
    ```bash
-   head -n 5 reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors.txt > reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt
-   tail -n 5 reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors.txt > reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part2.txt
+   python - <<'PY' > reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/totals.txt
+import os
+import xml.etree.ElementTree as ET
+from collections import Counter
+stamp = os.environ['STAMP']
+paths = [
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part1.xml',
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part2.xml',
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part3.xml',
+]
+totals = Counter()
+for path in paths:
+    suite = ET.parse(path).getroot().find('testsuite')
+    totals['tests'] += int(suite.attrib.get('tests', 0))
+    totals['failures'] += int(suite.attrib.get('failures', 0))
+    totals['errors'] += int(suite.attrib.get('errors', 0))
+    totals['skipped'] += int(suite.attrib.get('skipped', 0))
+passed = totals['tests'] - totals['failures'] - totals['errors'] - totals['skipped']
+print(f"passes={passed} failures={totals['failures']} errors={totals['errors']} skipped={totals['skipped']}")
+PY
    ```
-   Add a leading `# Derived <date>` comment to each file noting provenance.
-2. Run the Do Now command inside a single `bash -lc` invocation so `$STAMP` persists (log wall-clock time in phase_o/${STAMP}/commands.txt).
-3. Without leaving the shell, execute part 2 with the same guards:
-   ```bash
-   timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part2.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part2.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part2.log
-   ```
-4. Aggregate XML totals and record the helper command in commands.txt:
-   ```bash
-   python - <<'PY'
-   import os, xml.etree.ElementTree as ET
-   from collections import Counter
-   stamp = os.environ['STAMP']
-   paths = [
-       f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part1.xml',
-       f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part2.xml',
-   ]
-   totals = Counter()
-   for path in paths:
-       suite = ET.parse(path).getroot().find('testsuite')
-       totals['tests'] += int(suite.attrib.get('tests', 0))
-       totals['failures'] += int(suite.attrib.get('failures', 0))
-       totals['errors'] += int(suite.attrib.get('errors', 0))
-       totals['skipped'] += int(suite.attrib.get('skipped', 0))
-   passed = totals['tests'] - totals['failures'] - totals['errors'] - totals['skipped']
-   print(f"passes={passed} failures={totals['failures']} errors={totals['errors']} skipped={totals['skipped']}")
-   PY
-   ```
-5. Copy the prior summary template and update counts + slowest tests:
-   ```bash
-   cp reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/chunks/chunk_03/summary.md reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/summary.md
-   ```
-   Edit to reflect part1/part2 runtimes and note the lone expected failures (C18 x2, C19 x1) with links to their logs.
-6. Refresh `phase_o/${STAMP}/summary.md`, `reports/2026-01-test-suite-triage/remediation_tracker.md`, `docs/fix_plan.md` (mark Next Action 9 done, log Attempt with STAMP + runtimes), and `plans/active/test-suite-triage.md` (mark O5a–O5e [D], O6 pending until tracker sync complete). Move the old stray grad_guard pytest.xml into the new `${STAMP}/gradients/` folder before pruning timeout dirs.
-7. Record an Attempts History entry (include both command timings and aggregation snippet) immediately after edits.
+   Append the printed totals to `chunks/chunk_03/summary.md`, and manually note xfail counts + slowest tests from the logs right below the totals.
+7. Update `reports/2026-01-test-suite-triage/phase_o/${STAMP}/summary.md` with the new global pass/fail/skip counts and cite which clusters remain.
+8. Move the stray `reports/2026-01-test-suite-triage/phase_o/$(date -u +%Y%m%dT%H%M%SZ)/grad_guard/pytest.xml` into the new `${STAMP}/gradients/` folder, then prune the older timeout STAMP directories only after confirming all data is copied.
+9. Refresh documentation:
+   - Update `reports/2026-01-test-suite-triage/remediation_tracker.md` (C2 counts should drop to 0) and sync Phase O status in plans/active/test-suite-triage.md (mark O5a–O5f as [D]).
+   - Amend docs/fix_plan.md Attempts History with the new STAMP and mark Next Actions 9–10 as complete once artifacts + ledgers match.
+10. Commit the evidence updates but leave production code untouched; record the exact pytest selectors and STAMP in the commit message.
 Pitfalls To Avoid:
-- Do not overwrite chunk_03_selectors.txt; create new part files alongside it.
-- Keep `$STAMP` exported in the same shell for both runs and the aggregation step.
-- Ensure `NANOBRAGG_DISABLE_COMPILE=1` appears in both pytest invocations; missing it invalidates the gradcheck guard assumption.
-- Record `pytest_part*.xml` even if a run times out; missing XML blocks the aggregation snippet.
-- Skip editing simulator code — this loop is evidence + ledger only.
-- Note xfail counts manually from logs; pytest’s XML may not capture custom xfail fields.
-- When updating docs/fix_plan.md, retain historic attempts and append the new entry; do not collapse prior partial runs.
-- After copying the summary template, update STAMP references and totals; stale numbers invalidate the tracker refresh.
-- Capture exit codes (`printf '%s\n' "$?" > .../exit_code.txt`) if pytest succeeds; the tracker expects the file.
-- Use `tee` paths without double slashes; verify directories exist before launching pytest.
+- Do not spawn a new shell between exporting STAMP and running the pytest commands; `$STAMP` must stay in scope.
+- Keep `NANOBRAGG_DISABLE_COMPILE=1` on every command; missing it will resurrect the gradcheck failures.
+- Do not edit the selectors files again—only use the existing manifests we just staged.
+- Avoid deleting any directory referenced in docs/index.md; move the stray pytest.xml instead.
+- If part 3 nears the 600 s limit, stop rather than guessing at new filters, and escalate.
+- Ensure `commands.txt` captures timings + exit codes; we need this for remediation tracker math.
+- When updating docs/fix_plan.md, preserve existing Attempt order—no reflowing unrelated sections.
+- Do not rerun the full pytest ladder; stay scoped to chunk 03 + documentation updates.
+- Remember to set `KMP_DUPLICATE_LIB_OK=TRUE` and keep CUDA disabled (`CUDA_VISIBLE_DEVICES=-1`).
+- Double-check that gradient logs only live under the new STAMP before pruning old folders.
 Pointers:
-- plans/active/test-suite-triage.md:300-337 — Phase O5 split-run checklist + aggregation snippet.
-- docs/fix_plan.md:56-71 — Updated Next Actions 9–10 requirements and command template.
-- reports/2026-01-test-suite-triage/phase_o/blocked_attempt_73.md — Timeout diagnosis to cite in Attempts.
-- docs/development/testing_strategy.md:55-92 — Chunked execution + env guardrails reference.
-Next Up: If time remains, draft the C18 tolerance analysis brief using phase_m3/20251015T002610Z evidence.
+- docs/fix_plan.md:60-75 — Revised three-part instructions and guard requirements.
+- plans/active/test-suite-triage.md:304-310 — Phase O task table defining O5a–O6 deliverables.
+- reports/2026-01-test-suite-triage/phase_o/20251015T034633Z/chunks/chunk_03/summary.md:1 — Prior timeout evidence for context.
+- reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt:1 — Current part 1 manifest (includes test_at_parallel_009.py).
+- reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3.txt:1 — Gradient-only manifest to run in isolation.
+Next Up: If time remains after clean baseline & ledger sync, start scoping the remaining C18 tolerance failures (see reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/summary.md) for Sprint 1.5 planning.

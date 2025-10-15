@@ -2777,3 +2777,16 @@
 - Updated `docs/fix_plan.md` Next Actions 9–10 to require the part1/part2 workflow and documented Attempt #73 blockage context.
 - Rewrote `input.md` directing Ralph to export one STAMP, create selector shards, run part1/part2, aggregate XML totals, and sync trackers before moving to C18.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T04:15:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O chunk 03 rerun restructure
+- Action type: Planning
+- Mode: Parity
+
+### 2025-10-15T04:32:00Z (galph loop recap)
+- Reworked `[TEST-SUITE-TRIAGE-001]` Phase O guidance so chunk 03 runs in three shards; plan O5b–O5f now call out the CLI/parallel, perf/pre/config, and gradients-only selectors (plans/active/test-suite-triage.md:304-309).
+- Updated docs/fix_plan.md Next Actions 9–10 with the new shard manifests and explicit three-command workflow; emphasised keeping all artifacts under one STAMP.
+- Regenerated selector files so part1 reinstates `tests/test_at_parallel_009.py`, part2 covers perf/pre/config/show, and part3 isolates `tests/test_gradients.py`; added the new `chunk_03_selectors_part3.txt` helper.
+- Issued fresh input.md directing Ralph to run the three guarded pytest commands, aggregate totals via the helper script, and sync trackers/ledgers.
+- <Action State>: [ready_for_implementation]
+
