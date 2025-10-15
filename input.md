@@ -1,38 +1,31 @@
-Summary: Document the approved 900 s slow-gradient tolerance across the core guidance docs before closing C18.
+Summary: Close out C18 ledger by logging the 900s tolerance evidence in the tracker and fix_plan records.
 Mode: Docs
-Focus: TEST-SUITE-TRIAGE-001 / Next Action 14 — Phase Q documentation refresh
+Focus: TEST-SUITE-TRIAGE-001 / Next Action 15 – Phase Q ledger and tracker closure
 Branch: feature/spec-based-2
 Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-triage/phase_q/$STAMP/docs/
-Do Now: [TEST-SUITE-TRIAGE-001] Next Action 14 — update docs/development/testing_strategy.md §4.1 with the 900 s tolerance (docs-only; no pytest run).
-If Blocked: Capture the conflict in reports/2026-01-test-suite-triage/phase_q/$STAMP/docs/blocked.md (include offending section + rationale) and pause for supervisor review.
+Artifacts: reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/ledger_update.md (summary of tracker edits)
+Do Now: Update reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md with the C18 839.14 s result and tolerance approval; append Attempt entry #80 in docs/fix_plan.md referencing the tracker update (no pytest).
+If Blocked: Capture current tracker snapshot to reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/ledger_update_blocked.md and note blocker in docs/fix_plan.md Attempts.
 Priorities & Rationale:
-- docs/fix_plan.md:5 — Active Focus now expects Phase Q Q4/Q6 wrap-up after the 839.14 s validation.
-- docs/fix_plan.md:791 — Next Action 14 defines the required doc set and artifact expectations.
-- plans/active/test-suite-triage.md:357 — Phase Q table lists Q4 (docs) and Q6 (ledger) as remaining open items.
-- reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/summary.md:95 — Validation summary specifies the narrative to fold into the docs.
-- reports/2026-01-test-suite-triage/phase_p/20251015T060354Z/c18_timing.md:194 — Documentation touch points already scoped; follow them precisely.
+- reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/summary.md — validation evidence for 839.14 s runtime and 900 s ceiling.
+- docs/development/testing_strategy.md:525 — codifies the 900 s tolerance that must be mirrored in tracker.
+- arch.md:375 — architecture note referencing the same tolerance; tracker must match this source.
+- docs/development/pytorch_runtime_checklist.md:38 — checklist reminder about slow-gradient expectations, ensure tracker cross-links here.
+- plans/active/test-suite-triage.md (Phase Q table) — now shows Q4 [D]; Q6 remains open until tracker is updated.
 How-To Map:
-- STAMP=$(date -u +%Y%m%dT%H%M%SZ); mkdir -p reports/2026-01-test-suite-triage/phase_q/$STAMP/docs && note the STAMP in every summary you write.
-- docs/development/testing_strategy.md: add a §4.1 call-out describing the 900 s ceiling, cite both Phase P timing packet and Phase Q validation, and mention the slow_gradient marker + compile guard linkage.
-- arch.md §15: append a short note that gradient suites may legitimately run up to 900 s on CPU with float64 + compile guard, referencing the same artifacts.
-- docs/development/pytorch_runtime_checklist.md section 5: insert a bullet under Documentation & Tests reminding engineers that slow gradient tests expect ≤900 s runtime (Phase Q evidence).
-- Summarise the edits in reports/2026-01-test-suite-triage/phase_q/$STAMP/docs/summary.md (include file paths, key sentences added, and artifact citations).
-- After saving, run git diff to sanity-check the doc wording; stage nothing yet—await review instructions.
+- Edit reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md: move C18 status to RESOLVED, log runtime 839.14 s and tolerance 900 s, cite phase_q/20251015T071423Z summary.
+- Document the change in docs/fix_plan.md Attempts as Attempt #80 (Phase Q Q6) pointing at the tracker path and new ledger snapshot.
+- Write reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/ledger_update.md summarizing the edits (include before/after counts and links to tracker + fix_plan rows).
+- Skip pytest; after edits run git status and capture diffs for tracker + fix_plan + new summary.
 Pitfalls To Avoid:
-- Do not change acceptance criteria or tolerance numbers beyond 900 s.
-- Keep wording ASCII; avoid smart quotes or symbols.
-- Preserve existing cross-references; add new ones only where mandated.
-- Don’t modify pytest markers or manifests in this loop—they are already landed.
-- Avoid editing remediation trackers until the documentation diff is accepted.
-- Ensure new text explicitly cites both Phase P packet and Phase Q validation bundle.
-- Don’t delete prior subsections; append or extend them.
-- Skip running pytest unless supervisor requests; this is a docs-only loop.
+- Do not alter non-C18 rows in remediation_tracker.md.
+- Keep ASCII formatting; avoid breaking table alignment in tracker.
+- Preserve existing artifact paths; reference the exact STAMP directories already in use.
+- Do not update tolerance docs again—just reference them.
+- No full-suite pytest reruns this loop; evidence-only per mode.
 Pointers:
-- docs/fix_plan.md:791
-- plans/active/test-suite-triage.md:367
-- docs/development/testing_strategy.md:500
-- arch.md:322
-- docs/development/pytorch_runtime_checklist.md:6
-- reports/2026-01-test-suite-triage/phase_q/20251015T071423Z/summary.md:95
-Next Up: TEST-SUITE-TRIAGE-001 / Next Action 15 — update remediation_tracker.md and ledger once the documentation lands.
+- docs/development/testing_strategy.md:525
+- arch.md:375
+- docs/development/pytorch_runtime_checklist.md:38
+- plans/active/test-suite-triage.md (Phase Q section)
+Next Up: If time remains, start staging remediation_tracker.md updates for C2 gradient guard closure audit (still pending cross-check).

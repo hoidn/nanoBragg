@@ -2908,3 +2908,15 @@
 - Rewrote input.md (Docs mode) directing Phase Q Q4 documentation edits with STAMPed artifact expectations.
 - <Action State>: [ready_for_implementation]
 
+
+### 2025-10-15T07:55:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase Q Q4 documentation refresh
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-15T07:58:00Z (galph loop recap)
+- Verified slow-gradient tolerance already documented (`docs/development/testing_strategy.md:525`, `arch.md:375`, `docs/development/pytorch_runtime_checklist.md:38`).
+- Marked plans/active/test-suite-triage.md Phase Q Q4 as [D] and cleaned duplicate TODO in docs/fix_plan.md; C18 docs officially closed.
+- Rewrote input.md to target Next Action 15 (C18 ledger/tracker closure) with artifacts and guardrails.
+- Next focus for Ralph: update remediation_tracker.md C18 row, log Attempt #80 in fix_plan, and drop a ledger_update.md summary under phase_q/20251015T071423Z.
+- <Action State>: [ready_for_implementation]
