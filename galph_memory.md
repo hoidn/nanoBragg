@@ -2730,3 +2730,16 @@
 - Updated plans/active/test-suite-triage.md Phase O table (O4–O6), status snapshot, and Next focus to call for the guarded chunk rerun before C18 review.
 - Issued new input.md directing Ralph to run chunk 03 with NANOBRAGG_DISABLE_COMPILE=1, capture artifacts, move the orphan pytest.xml, and refresh summary/tracker counts.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T02:33:45Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O chunk 03 guard rerun
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-15T02:38:35Z (galph loop recap)
+- Noted chunk 03 guard rerun remains partial; updated plans/active/test-suite-triage.md:304-309 to flag O5 as [P] and keep O6 pending until a new STAMP run completes with gradients + ledger refresh.
+- Adjusted docs/fix_plan.md:38-59 (Next Actions 8-9) to mark Attempt #70 as partial and spell out the rerun + tracker updates required.
+- Reissued input.md with Parity-mode instructions to rerun chunk 03 under NANOBRAGG_DISABLE_COMPILE=1, capture artifacts under a fresh STAMP, move the stray pytest.xml, and sync remediation_tracker.md.
+- Heads review: last Ralph commit 487feb67 validated gradcheck guard without code changes; no regressions spotted aside from the missing ledger refresh.
+- Expect Ralph to capture the guarded chunk 03 rerun, update summaries/tracker, and document the surviving test_gradient_flow_simulation failure before tackling C18.
+- Action State: [ready_for_implementation]
