@@ -2801,3 +2801,16 @@
 - Updated `docs/fix_plan.md` Next Actions 8-9 to summarise Attempts #70-#74 and point Ralph at the new O5a–O5h workflow.
 - Reissued `input.md` (Parity mode) instructing Ralph to prep the STAMP scaffold, author new selector files, run parts 1/2/3a/3b, record timings, and refresh summaries/artifacts.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T05:15:00Z (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase O ledger refresh
+- Action type: Review/housekeeping
+- Mode: Docs
+
+### 2025-10-15T05:35:00Z (galph loop recap)
+- Updated reports/2026-01-test-suite-triage/remediation_tracker.md with the 552/3/137 baseline, marked C19 active, and logged Attempt #75 in the history.
+- Marked Phase O5a–O5h complete and left O6 [P] in plans/active/test-suite-triage.md with guidance to archive the timeout bundles.
+- Refreshed docs/fix_plan.md Active Focus + Next Actions (items 8/9) to pivot from guard enforcement to Phase O6 ledger cleanup and upcoming C18/C19 work.
+- Reissued input.md directing the artifact cleanup + archive tasks (no pytest).
+- <Action State>: [ready_for_implementation]
+

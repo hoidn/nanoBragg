@@ -1,36 +1,53 @@
-Summary: Capture a guard-friendly chunk 03 baseline by rerunning the shard ladder with the slow gradient tests isolated and timed.
-Mode: Parity
-Focus: [TEST-SUITE-TRIAGE-001] Phase O chunk 03 guard rerun (O5)
+Summary: Finish Phase O6 housekeeping so the 552/3/137 baseline is recorded and old guard artifacts are archived.
+Mode: Docs
+Focus: [TEST-SUITE-TRIAGE-001] Phase O6 ledger + artifact cleanup
 Branch: feature/spec-based-2
-Mapped tests: tests/test_at_cli_001.py; tests/test_at_flu_001.py; tests/test_at_io_004.py; tests/test_at_parallel_009.py; tests/test_at_parallel_020.py; tests/test_at_perf_001.py; tests/test_at_pre_002.py; tests/test_at_sta_001.py; tests/test_configuration_consistency.py; tests/test_show_config.py; tests/test_gradients.py::TestProperties::test_property_metric_duality; tests/test_gradients.py::TestProperties::test_property_volume_consistency; tests/test_gradients.py::TestProperties::test_property_hkl_consistency; tests/test_gradients.py::TestProperties::test_property_gradient_stability; tests/test_gradients.py::TestLongRunning::test_gradient_flow_simulation
-Artifacts: reports/2026-01-test-suite-triage/phase_o/${STAMP}/{commands.txt,summary.md,gradients/,chunks/chunk_03/{pytest_part1.*,pytest_part2.*,pytest_part3a.*,pytest_part3b.*,summary.md}}
-Do Now: [TEST-SUITE-TRIAGE-001] Next Action 9 — implement Phase O5a–O5h; after creating the selector shards run `timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part1.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part1.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part1.log`
-If Blocked: Stop immediately, note elapsed time and last test in `${STAMP}/commands.txt`, keep partial logs, and ping supervisor before rerunning or adjusting timeouts.
+Mapped tests: none — evidence-only
+Artifacts: reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/commands.txt; reports/2026-01-test-suite-triage/phase_o/archive/; docs/fix_plan.md; reports/2026-01-test-suite-triage/remediation_tracker.md
+Do Now: [TEST-SUITE-TRIAGE-001] Phase O6 ledger cleanup — export STAMP=20251015T043128Z, relocate the guard pytest.xml into ${STAMP}/gradients/, archive the timeout bundles, and log every command in reports/2026-01-test-suite-triage/phase_o/${STAMP}/commands.txt (no pytest run required).
+If Blocked: If any directory still contains unique evidence you are unsure about, stop, note the path + reason in commands.txt, and ping supervisor before moving or pruning it.
 Priorities & Rationale:
-- plans/active/test-suite-triage.md:304-312 drives the four-way shard workflow and timing goals.
-- docs/fix_plan.md:38-109 records Attempt #74 fallout and mandates executing O5a–O5h next.
-- reports/2026-01-test-suite-triage/phase_o/20251015T041005Z/chunks/chunk_03/summary.md captures the current timeout analysis and expectations for the gradient timings.
-- docs/development/testing_strategy.md:70-115 reiterates device/dtype guardrails and targeted pytest practices that apply here.
+- plans/active/test-suite-triage.md:300-316 keeps O6 in [P] until the ledger + artifact cleanup land.
+- docs/fix_plan.md:1-60 now points Next Actions at the Phase O6 refresh; we need artifacts aligned before advancing to C18/C19.
+- reports/2026-01-test-suite-triage/remediation_tracker.md:1-120 assumes the 552/3/137 baseline; the filesystem must match so future evidence stays consistent.
+- reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/summary.md needs to stay authoritative; commands.txt should chronicle every follow-up edit.
 How-To Map:
-1. `export STAMP=$(date -u +%Y%m%dT%H%M%SZ) && mkdir -p reports/2026-01-test-suite-triage/phase_o/${STAMP}/{gradients,chunks/chunk_03}`
-2. `cp reports/2026-01-test-suite-triage/phase_o/20251015T014403Z/grad_guard/{summary.md,exit_code.txt,pytest.xml} reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/`
-3. Create selectors (one per shard) under `reports/2026-01-test-suite-triage/phase_o/` using the exact module/test lists in the plan: part1, part2, part3a (three property tests), part3b (stability + flow simulation). Document rationale in `${STAMP}/commands.txt`.
-4. Run the shard ladder in the same shell (commands listed in Do Now plus):
-   - Part2: `timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part2.txt -k "not gradcheck" --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part2.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part2.log`
-   - Part3a: `timeout 600 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3a.txt --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part3a.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part3a.log`
-   - Part3b: `timeout 1200 env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 pytest -vv @reports/2026-01-test-suite-triage/phase_o/chunk_03_selectors_part3b.txt --maxfail=0 --durations=25 --junitxml reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part3b.xml 2>&1 | tee reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/pytest_part3b.log`
-5. Aggregate counts: run the Python helper from the plan (copy the `python - <<'PY' ... PY` snippet into `${STAMP}/commands.txt`, execute it with `$STAMP` exported, and paste the output into the summary).
-6. Update `reports/2026-01-test-suite-triage/phase_o/${STAMP}/chunks/chunk_03/summary.md` with pass/fail/skip/xfail counts, slowest tests, and a "Gradient Timing" section including wall times for the two slow tests. Refresh `phase_o/${STAMP}/summary.md` accordingly.
-7. Once results are complete, relocate the stray grad_guard pytest.xml into the new `${STAMP}/gradients/` directory, then update remediation_tracker/status snapshot per plan O6.
+- `export STAMP=20251015T043128Z`
+- `printf "\n$(date -u +%FT%TZ) Phase O6 cleanup start\n" >> reports/2026-01-test-suite-triage/phase_o/${STAMP}/commands.txt`
+- `mv reports/2026-01-test-suite-triage/phase_o/\$\(date\ -u\ +%Y%m%dT%H%M%SZ\)/grad_guard/pytest.xml reports/2026-01-test-suite-triage/phase_o/${STAMP}/gradients/` (verify destination exists first)
+- `mkdir -p reports/2026-01-test-suite-triage/phase_o/archive` then `mv reports/2026-01-test-suite-triage/phase_o/20251015T020729Z reports/2026-01-test-suite-triage/phase_o/archive/` and repeat for `20251015T023954Z`, `20251015T030233Z`, `20251015T034633Z`, `20251015T041005Z` after ensuring summaries are copied.
+- Run the aggregation verifier (keep output in commands.txt):
+  `python - <<'PY'
+import os, xml.etree.ElementTree as ET
+stamp = os.environ['STAMP']
+paths = [
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part1.xml',
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part2.xml',
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part3a.xml',
+    f'reports/2026-01-test-suite-triage/phase_o/{stamp}/chunks/chunk_03/pytest_part3b.xml',
+]
+passed = failures = errors = skipped = 0
+for path in paths:
+    suite = ET.parse(path).getroot().find('testsuite')
+    passed += int(suite.attrib.get('tests', 0)) - int(suite.attrib.get('failures', 0)) - int(suite.attrib.get('errors', 0)) - int(suite.attrib.get('skipped', 0))
+    failures += int(suite.attrib.get('failures', 0))
+    errors += int(suite.attrib.get('errors', 0))
+    skipped += int(suite.attrib.get('skipped', 0))
+print(f"chunk03 passes={passed} failures={failures} errors={errors} skipped={skipped}")
+PY`
+- `printf "$(date -u +%FT%TZ) Phase O6 cleanup complete\n" >> reports/2026-01-test-suite-triage/phase_o/${STAMP}/commands.txt`
 Pitfalls To Avoid:
-- Losing `$STAMP` by opening a new shell; keep all commands chained after the initial export.
-- Forgetting to set `NANOBRAGG_DISABLE_COMPILE=1`, which will reintroduce gradcheck failures.
-- Omitting the new selectors (part3a/part3b) or mis-listing tests; validate each file before running pytest.
-- Allowing tee to write outside the `${STAMP}` tree; double-check the paths before executing.
-- Skipping per-test timing notes; record the duration for both slow property tests even if they finish quickly.
-- Failing to capture junit XML before aggregation; verify files exist before running the helper.
+- Do not delete `phase_o/20251015T043128Z/`; only archive the timeout bundles once their summaries exist elsewhere.
+- Keep the stray `commands.txt` updated; every move/rename must be recorded.
+- Verify the destination directories before moving files so `mv` does not create unintended names.
+- Skip `rm -rf` to avoid losing context; prefer `mv` into `archive/`.
+- Preserve timestamps and filenames when moving logs—use plain mv without renaming unless necessary.
+- Leave selector manifests untouched; future reruns reuse them.
+- No pytest or other commands that mutate the baseline during this loop.
 Pointers:
-- plans/active/test-suite-triage.md:304-312 for the exact shard definitions and commands.
-- docs/fix_plan.md:38-109 for current Next Actions + Attempt #70–#74 context.
-- reports/2026-01-test-suite-triage/phase_o/20251015T041005Z/chunks/chunk_03/summary.md for the prior timeout analysis to compare against.
-Next Up: Refresh `reports/2026-01-test-suite-triage/remediation_tracker.md` and docs/fix_plan.md (O6) once the shard run produces clean artifacts.
+- plans/active/test-suite-triage.md:300-316
+- docs/fix_plan.md:1-80
+- reports/2026-01-test-suite-triage/remediation_tracker.md:1-160
+- reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/summary.md:1
+- reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/chunks/chunk_03/summary.md:1
+Next Up: 1. Draft `[GRADIENT-FLOW-001]` callchain/plan for `test_gradient_flow_simulation`. 2. Review C18 tolerance thresholds using the 845.68s timing data.

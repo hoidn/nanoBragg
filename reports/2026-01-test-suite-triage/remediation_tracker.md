@@ -1,35 +1,35 @@
 # Test Suite Remediation Tracker
 
-**Last Updated:** 2025-10-15 (Phase O chunk 03 guard rerun - STAMP 20251015T030233Z)
+**Last Updated:** 2025-10-15 (Phase O chunk 03 quad-shard rerun - STAMP 20251015T043128Z)
 **Initiative:** [TEST-SUITE-TRIAGE-001]
-**Active Baseline:** Phase O (12 → 2 failures after C2 resolution)
+**Active Baseline:** Phase O (692 collected → 552 passed / 3 failed / 137 skipped)
 
 ## Executive Summary
 
 **Current Status:**
-- **Total Failures:** 2 (down from 12 in Phase O baseline 20251015T011629Z)
-- **Active Clusters:** 1 (C18 performance tolerances)
-- **Pass Rate:** ~98.7% (estimated from partial chunk stats)
-- **Latest Validation:** Phase O STAMP 20251015T030233Z (partial, timeout after 10 minutes)
+- **Total Failures:** 3 (down from 12 in Phase O baseline 20251015T011629Z)
+- **Active Clusters:** 2 (C18 performance tolerances, C19 gradient flow)
+- **Pass Rate:** 99.5% (552 passed / 555 executed)
+- **Latest Validation:** Phase O STAMP 20251015T043128Z (quad-shard chunk 03 rerun)
 
 **Major Milestone:** ✅ **C2 Gradient Donated Buffer Cluster RESOLVED**
-- All 8 gradcheck tests passed with `NANOBRAGG_DISABLE_COMPILE=1` guard
-- Reduction: -10 failures (12 → 2)
-- Evidence: `phase_o/20251015T030233Z/gradients/summary.md`
+- All 8 gradcheck tests passed with `NANOBRAGG_DISABLE_COMPILE=1` guard (Attempt #75)
+- Reduction: -9 failures within chunk 03 (gradchecks + stability now green)
+- Evidence: `phase_o/20251015T043128Z/gradients/summary.md`
 
 ## Cluster Status Table
 
 | Cluster | Title | Tests | Priority | Status | Owner | Phase O Evidence |
 |---------|-------|-------|----------|--------|-------|------------------|
-| C2 | Gradient Donated Buffer | 0 (was 10) | Critical | ✅ RESOLVED | galph | 20251015T030233Z |
+| C2 | Gradient Donated Buffer | 0 (was 10) | Critical | ✅ RESOLVED | galph | 20251015T043128Z |
 | C18 | Performance Tolerances | 2 | Medium | ❌ ACTIVE | TBD | 20251015T011629Z |
-| C19 | Gradient Flow Assertion | 1 | Medium | ℹ️ NEW | TBD | 20251015T030233Z |
+| C19 | Gradient Flow Assertion | 1 | Medium | ❌ ACTIVE | TBD | 20251015T043128Z |
 
 ## Detailed Cluster Summaries
 
 ### C2: Gradient Donated Buffer (✅ RESOLVED)
 
-**Status:** ✅ RESOLVED (Phase O STAMP 20251015T030233Z)
+**Status:** ✅ RESOLVED (Phase O STAMP 20251015T043128Z)
 **Tests Affected:** 0 (was 10 gradcheck tests)
 **Priority:** Critical
 **Resolution:** `NANOBRAGG_DISABLE_COMPILE=1` environment guard
@@ -47,6 +47,7 @@ torch.compile creates donated buffers that break gradient computation during num
 - Phase O Attempt #70 (20251015T020729Z): Chunk 03 partial (8/8 gradcheck passed, early exit)
 - Phase O Attempt #71 (20251015T023954Z): Chunk 03 guard rerun (8/8 gradcheck passed, timeout at 88%)
 - Phase O Attempt #72 (20251015T030233Z): Chunk 03 rerun with corrected paths (8/8 gradcheck passed, timeout at 88%)
+- Phase O Attempt #75 (20251015T043128Z): Quad-shard rerun (8/8 gradcheck passed, gradients copied into guard bundle)
 
 **Gradcheck Tests (All Passing):**
 1. test_gradcheck_cell_a ✅
@@ -71,6 +72,7 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=
 
 **Artifacts:**
 - `reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/gradients/summary.md`
+- `reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/gradients/summary.md`
 - `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/gradients/summary.md`
 - `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/gradient_guard/`
 
@@ -107,13 +109,14 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_pe
 3. Adjust tolerances or investigate performance regression
 
 **Artifacts:**
-- `reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/` (baseline)
+- `reports/2026-01-test-suite-triage/phase_o/20251015T011629Z/` (baseline tolerances)
+- `reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/chunks/chunk_03/summary.md` (845.68s timing anchor, validates slow-test classification)
 
 ---
 
-### C19: Gradient Flow Assertion (ℹ️ NEW - Not C2)
+### C19: Gradient Flow Assertion (❌ ACTIVE)
 
-**Status:** ℹ️ NEW (identified in Phase O STAMP 20251015T023954Z)
+**Status:** ❌ ACTIVE (confirmed in Phase O STAMP 20251015T043128Z)
 **Tests Affected:** 1 failure
 **Priority:** Medium
 **Owner:** TBD
@@ -121,11 +124,11 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_pe
 **Test:** `tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation`
 
 **Root Cause:** UNKNOWN (not a donated buffer issue)
-- Uses assertion-based validation, not torch.autograd.gradcheck
-- Likely assertion tolerance or physics regression
+- Assertion-based validation, not torch.autograd.gradcheck
+- All cell-parameter gradients return ≈0.0; investigation required
 
 **Failure Signature:**
-AssertionError (NOT "donated buffer" RuntimeError)
+`AssertionError: At least one gradient should be non-zero`
 
 **Reproduction Command:**
 ```bash
@@ -134,15 +137,15 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=
 ```
 
 **Next Actions:**
-1. Isolate test in minimal reproducer
-2. Compare assertion expected vs. actual values
-3. Check tolerance appropriateness
-4. Validate physics correctness
-5. Determine if separate fix-plan item needed
+1. Isolate test in minimal reproducer (capture scalar gradients)
+2. Compare expected vs. actual gradient magnitudes (see `phase_o/20251015T043128Z/chunks/chunk_03/pytest_part3b.log`)
+3. Audit differentiability pipeline (Crystal misset rotation + simulator accumulation) for silent `.detach()`/`.item()` usage
+4. Determine remediation plan and update `[GRADIENT-FLOW-001]` in docs/fix_plan.md
 
 **Artifacts:**
-- `reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/chunks/chunk_03/summary.md` (88% completion observation)
-- `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/chunks/chunk_03/summary.md` (prior attempt)
+- `reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/chunks/chunk_03/summary.md`
+- `reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/chunks/chunk_03/pytest_part3b.log`
+- `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/chunks/chunk_03/summary.md` (prior timeout context)
 
 ---
 
@@ -201,23 +204,29 @@ env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=
 **Key Finding:** C2 cluster definitively resolved across multiple attempts
 **Artifacts:** `reports/2026-01-test-suite-triage/phase_o/20251015T030233Z/{chunks/chunk_03/,gradients/}`
 
+### Quad-Shard Completion (STAMP 20251015T043128Z)
+
+**Date:** 2025-10-15 (ralph Attempt #75 per docs/fix_plan.md)
+**Command:** Phase O5 four-way shard workflow with guard; extended 1200s timeout for slow gradients
+**Result:** ✅ Completed — 53 tests (42 passed / 1 failed / 10 skipped), gradients copied, timing data captured (test_property_gradient_stability = 845.68s)
+**Key Findings:** C2 remains resolved; C19 failure reproducible without torch.compile; establishes performance baseline for C18 tolerances
+**Artifacts:** `reports/2026-01-test-suite-triage/phase_o/20251015T043128Z/{summary.md,chunks/chunk_03/,gradients/}`
+
 ## Next Actions
 
-1. ✅ **C2 Resolution Confirmed:** Mark cluster C2 as RESOLVED in fix_plan.md
-2. ⚠️ **C19 Investigation:** Create fix-plan item for test_gradient_flow_simulation (not a C2 issue)
-3. **C18 Review:** Assess performance tolerance thresholds
-4. **Phase O Summary:** Update phase_o/<STAMP>/summary.md with new baseline counts (2 active failures: C18=2, C19=1 pending classification)
-5. **Ledger Sync:** Update fix_plan.md Attempts History with this rerun
+1. **Ledger Sync (Phase O6):** Update docs/fix_plan.md Attempts + Next Actions with Attempt #75, and refresh `plans/active/test-suite-triage.md` status snapshot (O5 ✓, O6 → ledger cleanup + cluster handoff).
+2. **C19 Investigation:** Stand up `[GRADIENT-FLOW-001]` plan/fix-plan entry capturing reproducer, hypotheses, and required traces for `test_gradient_flow_simulation`.
+3. **C18 Review:** Use the 845.68s timing anchor to decide whether to relax tolerances or plan an optimisation spike; record decision path in fix_plan.md.
+4. **Artifact Hygiene:** Consolidate guard evidence under `phase_o/20251015T043128Z/gradients/`, migrate any stray STAMP directories, and prune the timeout bundles once summaries are copied.
 
 ## Known Issues
 
-### Path Bug (Recurring)
+### STAMP Expansion Hygiene
 
-**Issue:** STAMP variable not resolved in tee command, causing double-slash
-**Expected:** `reports/2026-01-test-suite-triage/phase_o/20251015T023954Z/chunks/chunk_03/pytest.log`
-**Actual:** `reports/2026-01-test-suite-triage/phase_o//chunks/chunk_03/pytest.log`
-**Impact:** pytest.log file not captured (tee failed)
-**Workaround:** Pre-export STAMP before command string, or use explicit path
+**Issue:** Earlier attempts created `phase_o/$(date -u +%Y%m%dT%H%M%SZ)/` and double-slash tee paths when the STAMP env var was not exported.
+**Impact:** Stray directories persist alongside the authoritative STAMP bundle; some logs (e.g., Attempt #71) missed tee output.
+**Latest Status:** Attempt #75 exported `STAMP` up front, so new artifacts land under `phase_o/20251015T043128Z/` correctly. The stray literal directory still needs to be pruned after migrating any useful files.
+**Workaround:** Always run `export STAMP=$(date -u +%Y%m%dT%H%M%SZ)` once per shell before executing the shard ladder; reference `$STAMP` (not inline subshell expansion) in subsequent commands.
 
 ### Timeout Constraint
 
