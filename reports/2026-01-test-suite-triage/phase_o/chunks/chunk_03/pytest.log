@@ -1,0 +1,57 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.5.0 -- /home/ollie/miniconda3/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/tmp/nanoBragg
+configfile: pyproject.toml
+plugins: anyio-4.9.0
+collecting ... collected 62 items / 8 deselected / 54 selected
+
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_short_flag PASSED [  1%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_long_flag PASSED [  3%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_invocable PASSED      [  5%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_examples PASSED [  7%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_wavelength_synonyms PASSED [  9%]
+tests/test_at_cli_001.py::TestAT_CLI_001::test_cli_help_includes_output_synonyms PASSED [ 11%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_from_flux_exposure_beamsize PASSED [ 12%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_fluence_calculation_when_flux_zero PASSED [ 14%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_fluence_calculation_when_exposure_zero PASSED [ 16%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_fluence_calculation_with_beamsize_zero PASSED [ 18%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_flux_recomputation_from_fluence_and_exposure PASSED [ 20%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_sample_clipping_warning PASSED [ 22%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_larger PASSED [ 24%]
+tests/test_at_flu_001.py::TestAT_FLU_001::test_no_clipping_when_beamsize_zero PASSED [ 25%]
+tests/test_at_io_004.py::TestAT_IO_004::test_minimal_hkl_format PASSED   [ 27%]
+tests/test_at_io_004.py::TestAT_IO_004::test_five_column_with_phase PASSED [ 29%]
+tests/test_at_io_004.py::TestAT_IO_004::test_six_column_with_sigma_and_phase PASSED [ 31%]
+tests/test_at_io_004.py::TestAT_IO_004::test_negative_indices_handling PASSED [ 33%]
+tests/test_at_io_004.py::TestAT_IO_004::test_all_formats_produce_same_pattern PASSED [ 35%]
+tests/test_at_io_004.py::TestAT_IO_004::test_fdump_caching_for_all_formats PASSED [ 37%]
+tests/test_at_io_004.py::TestAT_IO_004::test_comment_and_blank_line_handling PASSED [ 38%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_integration SKIPPED [ 40%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_without_absorption SKIPPED [ 42%]
+tests/test_at_parallel_020.py::TestATParallel020::test_phi_rotation_only SKIPPED [ 44%]
+tests/test_at_parallel_020.py::TestATParallel020::test_comprehensive_minimal_features SKIPPED [ 46%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_vectorization_scaling PASSED [ 48%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_performance_parity_with_c SKIPPED [ 50%]
+tests/test_at_perf_001.py::TestATPERF001VectorizationPerformance::test_memory_scaling PASSED [ 51%]
+tests/test_at_pre_002.py::test_xbeam_ybeam_forces_beam_pivot PASSED      [ 53%]
+tests/test_at_pre_002.py::test_xclose_yclose_forces_sample_pivot PASSED  [ 55%]
+tests/test_at_pre_002.py::test_orgx_orgy_forces_sample_pivot PASSED      [ 57%]
+tests/test_at_pre_002.py::test_explicit_pivot_override PASSED            [ 59%]
+tests/test_at_pre_002.py::test_distance_vs_close_distance_pivot_defaults PASSED [ 61%]
+tests/test_at_pre_002.py::test_convention_default_pivots PASSED          [ 62%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_basic PASSED   [ 64%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_roi PASSED [ 66%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_with_mask PASSED [ 68%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_empty_roi PASSED [ 70%]
+tests/test_at_sta_001.py::TestAT_STA_001::test_statistics_last_max_location PASSED [ 72%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_explicit_defaults_equal_implicit XFAILUSTOM mode) [ 74%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_configuration_echo_present SKIPPEDoesn't exist in
+standard build)                                                          [ 75%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_mode_detection_accuracy SKIPPED [ 77%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_trigger_tracking SKIPPED [ 79%]
+tests/test_configuration_consistency.py::TestConfigurationConsistency::test_all_vector_parameters_trigger_custom SKIPPED [ 81%]
+tests/test_gradients.py::TestAdvancedGradients::test_gradient_flow_simulation FAILED [ 83%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_metric_duality PASSED [ 85%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_volume_consistency PASSED [ 87%]
+tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability 
