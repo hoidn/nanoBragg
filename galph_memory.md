@@ -2931,3 +2931,14 @@
 - Refreshed docs/fix_plan.md header to note Phase Q completion and logged Next Action 16 for the Phase R guard-run.
 - Rewrote input.md directing Ralph to execute the Phase R chunk ladder with compile guard, including commands, aggregation, and ledger follow-up.
 - <Action State>: [ready_for_implementation]
+
+### 2025-10-15T09:05:37+00:00 (galph loop - focus selection note)
+- Focus issue: [TEST-SUITE-TRIAGE-001] Phase R chunk-03 timeout remediation
+- Action type: Review/housekeeping
+- Mode: Parity
+
+### 2025-10-15T09:13:07+00:00 (galph loop recap)
+- Logged Attempt #81 outcome (Phase R chunk 03 timeout) in docs/fix_plan.md and added Next Action 16 with extended 2400 s rerun instructions.
+- Updated plans/active/test-suite-triage.md Phase R table: R1/R2 → [P] with guidance to capture commands.txt and rerun chunk 03; R3 left pending.
+- Reissued input.md directing Ralph to rerun chunk 03 under guard env, capture junit/logs, and refresh ledger artifacts.
+- <Action State>: [ready_for_implementation]
