@@ -16,7 +16,7 @@ def read_hkl_file(
     filepath: str,
     default_F: float = 0.0,
     device=None,
-    dtype=torch.float64
+    dtype=torch.float32
 ) -> Tuple[torch.Tensor, dict]:
     """
     Read HKL text file with two-pass algorithm matching C implementation.
@@ -83,19 +83,24 @@ def read_hkl_file(
     if not reflections:
         raise ValueError(f"No valid reflections found in {filepath}")
 
-    # Calculate ranges
-    h_range = h_max - h_min
-    k_range = k_max - k_min
-    l_range = l_max - l_min
+    # Calculate ranges (C-style: count of values)
+    # C-code reference (nanoBragg.c:2405):
+    #   h_range = h_max - h_min + 1;
+    # This gives the NUMBER of distinct h values, not the span
+    h_range = h_max - h_min + 1
+    k_range = k_max - k_min + 1
+    l_range = l_max - l_min + 1
 
     # Check for invalid ranges (as per C code)
-    if h_range < 0 or k_range < 0 or l_range < 0:
+    if h_range <= 0 or k_range <= 0 or l_range <= 0:
         raise ValueError(f"Invalid HKL ranges: h_range={h_range}, k_range={k_range}, l_range={l_range}")
 
     # Second pass: allocate grid and populate
-    # Grid size is (h_range+1) × (k_range+1) × (l_range+1)
+    # Grid size is h_range × k_range × l_range (the usable data size)
+    # C allocates (h_range+1) × (k_range+1) × (l_range+1) with padding
+    # but we only need the data portion for in-memory representation
     F_grid = torch.full(
-        (h_range + 1, k_range + 1, l_range + 1),
+        (h_range, k_range, l_range),
         default_F,
         device=device,
         dtype=dtype
@@ -129,14 +134,24 @@ def write_fdump(
     filepath: str
 ):
     """
-    Write binary Fdump.bin cache file matching C format.
+    Write binary Fdump.bin cache file matching C format with padding.
 
-    C-Code Implementation Reference (from nanoBragg.c):
-    Header: six integers (h_min h_max k_min k_max l_min l_max) + newline + form feed
-    Data: For each h in 0..h_range, for each k in 0..k_range, array of (l_range+1) doubles
+    C-Code Implementation Reference (from nanoBragg.c:2484-2490):
+    ```c
+    fprintf(outfile,"%d %d %d %d %d %d\n\f",h_min,h_max,k_min,k_max,l_min,l_max);
+    for (h0=0; h0<=h_range;h0++) {
+        for (k0=0; k0<=k_range;k0++) {
+            fwrite(*(*(Fhkl +h0)+k0),sizeof(double),l_range+1,outfile);
+        }
+    }
+    ```
+
+    The C code writes (h_range+1) × (k_range+1) × (l_range+1) doubles, where
+    h_range = h_max - h_min + 1. The last row/column/plane in each dimension
+    contains padding zeros.
 
     Args:
-        F_grid: 3D tensor of structure factors
+        F_grid: 3D tensor of structure factors (h_range × k_range × l_range)
         metadata: Dict with h_min, h_max, k_min, k_max, l_min, l_max
         filepath: Output path for Fdump.bin
     """
@@ -145,20 +160,45 @@ def write_fdump(
         header = f"{metadata['h_min']} {metadata['h_max']} {metadata['k_min']} {metadata['k_max']} {metadata['l_min']} {metadata['l_max']}\n\f"
         f.write(header.encode('ascii'))
 
-        # Convert to numpy for efficient binary writing
-        F_numpy = F_grid.cpu().numpy().astype(np.float64)
+        # Calculate C-style ranges
+        h_range = metadata['h_max'] - metadata['h_min'] + 1
+        k_range = metadata['k_max'] - metadata['k_min'] + 1
+        l_range = metadata['l_max'] - metadata['l_min'] + 1
 
-        # Write data in native endianness (matching C code behavior)
+        # Allocate padded array matching C layout: (range+1)³
+        # C writes one extra element per dimension as padding
+        F_padded = torch.zeros(
+            (h_range + 1, k_range + 1, l_range + 1),
+            dtype=torch.float64,
+            device=F_grid.device
+        )
+
+        # Copy data into the non-padded portion
+        # F_grid should be h_range × k_range × l_range
+        F_padded[:h_range, :k_range, :l_range] = F_grid.to(dtype=torch.float64)
+
+        # Write padded data in native endianness (matching C code behavior)
         # Order is [h][k][l] with l varying fastest
+        F_numpy = F_padded.cpu().numpy()
         F_numpy.tofile(f)
 
 
-def read_fdump(filepath: str, device=None, dtype=torch.float64) -> Tuple[torch.Tensor, dict]:
+def read_fdump(filepath: str, device=None, dtype=torch.float32) -> Tuple[torch.Tensor, dict]:
     """
-    Read binary Fdump.bin cache file.
+    Read binary Fdump.bin cache file with C padding.
+
+    C-Code Implementation Reference (from nanoBragg.c:2427-2437, 2484-2490):
+    The C code allocates (h_range+1) × (k_range+1) × (l_range+1) and writes
+    all elements to the file, where h_range = h_max - h_min + 1.
+    The last index in each dimension is padding.
+
+    Note: Fdump.bin always stores data as float64 (C doubles) per spec, but the returned
+    tensor dtype can be specified to match the caller's precision requirements.
+    Default is float32 per DTYPE-DEFAULT-001 project policy.
 
     Returns:
         tuple: (F_grid, metadata_dict) same as read_hkl_file
+            F_grid will be (h_range × k_range × l_range) with padding trimmed
     """
     device = device if device is not None else torch.device("cpu")
 
@@ -176,19 +216,25 @@ def read_fdump(filepath: str, device=None, dtype=torch.float64) -> Tuple[torch.T
         parts = header_str.split()
         h_min, h_max, k_min, k_max, l_min, l_max = map(int, parts)
 
-        # Calculate dimensions
-        h_range = h_max - h_min
-        k_range = k_max - k_min
-        l_range = l_max - l_min
+        # Calculate dimensions (C-style: count of values)
+        # C code: h_range = h_max - h_min + 1
+        h_range = h_max - h_min + 1
+        k_range = k_max - k_min + 1
+        l_range = l_max - l_min + 1
 
-        # Read binary data
+        # Read binary data (always float64 in Fdump.bin format)
+        # C writes (h_range+1) × (k_range+1) × (l_range+1) doubles
         num_elements = (h_range + 1) * (k_range + 1) * (l_range + 1)
         F_data = np.fromfile(f, dtype=np.float64, count=num_elements)
 
-        # Reshape to 3D grid
-        F_grid = F_data.reshape((h_range + 1, k_range + 1, l_range + 1))
+        # Reshape to 3D grid (padded)
+        F_padded = F_data.reshape((h_range + 1, k_range + 1, l_range + 1))
 
-        # Convert to torch tensor
+        # Trim padding: keep only the valid data portion
+        # Valid indices are 0..(h_range-1), the last index is padding
+        F_grid = F_padded[:h_range, :k_range, :l_range]
+
+        # Convert to torch tensor with requested dtype
         F_tensor = torch.from_numpy(F_grid).to(device=device, dtype=dtype)
 
         metadata = {
@@ -212,7 +258,7 @@ def try_load_hkl_or_fdump(
     default_F: float = 0.0,
     write_cache: bool = True,
     device=None,
-    dtype=torch.float64
+    dtype=torch.float32
 ) -> Tuple[Optional[torch.Tensor], Optional[dict]]:
     """
     Attempt to load HKL data with caching behavior matching C code.

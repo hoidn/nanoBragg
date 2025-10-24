@@ -187,7 +187,7 @@ class TestAT_STR_003_LatticeShapeModels:
 
             # We would run the simulator here and extract F_latt
             # For now, just verify the shape is set correctly
-            assert simulator.crystal_config.shape == shape
+            assert simulator.crystal.config.shape == shape
             results[shape] = shape.value
 
         # Verify all four models were tested

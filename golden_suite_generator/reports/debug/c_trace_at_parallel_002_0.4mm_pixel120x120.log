@@ -1,0 +1,47 @@
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0 roty:0 rotz:0 twotheta:0
+TRACE_C:beam_center_m=X:2.56e-05 Y:2.56e-05 pixel_mm:0.4
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 1 -0; 0 0 1]
+TRACE_C:Ry=[1 0 0; 0 1 0; -0 0 1]
+TRACE_C:Rz=[1 -0 0; 0 1 0; 0 0 1]
+TRACE_C:R_total=[1 0 0; 0 1 0; 0 0 1]
+TRACE_C:fdet_after_rotz=0 0 1
+TRACE_C:sdet_after_rotz=0 -1 0
+TRACE_C:odet_after_rotz=1 0 0
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0 0 1
+TRACE_C:sdet_after_twotheta=0 -1 0
+TRACE_C:odet_after_twotheta=1 0 0
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.0258
+TRACE_C:Sbeam_m=0.0258
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0 -0 -0.0258
+TRACE_C:term_slow=-0 0.0258 -0
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.1 0.0258 -0.0258
+TRACE_C: pixel_pos_meters 0.1 -0.0224 0.0224
+TRACE_C: R_distance_meters 0.104897664416325
+TRACE_C: omega_pixel_sr 1.38618925119891e-05
+TRACE_C: close_distance_meters 0.1
+TRACE_C: obliquity_factor 0.953310071834516
+TRACE_C: diffracted_vec 0.953310071834516 -0.213541456090931 0.213541456090931
+TRACE_C: incident_vec 1 0 -0
+TRACE_C: lambda_meters 6.2e-10
+TRACE_C: scattering_vec_A_inv -75306335.7507812 -344421703.37247 344421703.37247
+TRACE_C: hkl_frac -0.753063357507812 -3.4442170337247 3.4442170337247
+TRACE_C: hkl_rounded -1 -3 3
+TRACE_C: F_latt_a -0.960025387054958
+TRACE_C: F_latt_b 0.650002888698729
+TRACE_C: F_latt_c 0.650002888698729
+TRACE_C: F_latt -0.405614331230081
+TRACE_C: F_cell 100
+TRACE_C: I_before_scaling 1645.22985699226
+TRACE_C: r_e_sqr 7.94079248018965e-30
+TRACE_C: fluence 1.25932015286227e+29
+TRACE_C: steps 1
+TRACE_C: I_pixel_final 0.0217660469220755
+TRACE_C: floatimage_accumulated 0.0217660460621119

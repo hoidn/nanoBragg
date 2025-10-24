@@ -4,6 +4,31 @@ DETECTOR_FAST_AXIS 0.0311947630447082 -0.096650175316428 0.994829447880333
 DETECTOR_SLOW_AXIS -0.228539518954453 -0.969636205471835 -0.0870362988312832
 DETECTOR_NORMAL_AXIS 0.973034724475264 -0.224642766741965 -0.0523359562429438
 pivoting detector around direct beam spot
+TRACE_C:detector_convention=MOSFLM
+TRACE_C:angles_rad=rotx:0.0872664625997165 roty:0.0523598775598299 rotz:0.0349065850398866 twotheta:0.261799387799149
+TRACE_C:beam_center_m=X:6.12e-05 Y:6.12e-05 pixel_mm:0.1
+TRACE_C:initial_fdet=0 0 1
+TRACE_C:initial_sdet=0 -1 0
+TRACE_C:initial_odet=1 0 0
+TRACE_C:Rx=[1 0 0; 0 0.996194698091746 -0.0871557427476582; 0 0.0871557427476582 0.996194698091746]
+TRACE_C:Ry=[0.998629534754574 0 0.0523359562429438; 0 1 0; -0.0523359562429438 0 0.998629534754574]
+TRACE_C:Rz=[0.999390827019096 -0.034899496702501 0; 0.034899496702501 0.999390827019096 0; 0 0 1]
+TRACE_C:R_total=[0.998021196624068 -0.0302080931112661 0.0551467333542405; 0.0348516681551873 0.99574703303416 -0.0852831016700733; -0.0523359562429438 0.0870362988312832 0.994829447880333]
+TRACE_C:fdet_after_rotz=0.0311947630447082 -0.096650175316428 0.994829447880333
+TRACE_C:sdet_after_rotz=-0.228539518954453 -0.969636205471835 -0.0870362988312832
+TRACE_C:odet_after_rotz=0.973034724475264 -0.224642766741965 -0.0523359562429438
+TRACE_C:twotheta_axis=0 0 -1
+TRACE_C:fdet_after_twotheta=0.0311947630447082 -0.096650175316428 0.994829447880333
+TRACE_C:sdet_after_twotheta=-0.228539518954453 -0.969636205471835 -0.0870362988312832
+TRACE_C:odet_after_twotheta=0.973034724475264 -0.224642766741965 -0.0523359562429438
+TRACE_C:convention_mapping=Fbeam←Ybeam_mm(+0.5px),Sbeam←Xbeam_mm(+0.5px),beam_vec=[1 0 0]
+TRACE_C:Fbeam_m=0.06125
+TRACE_C:Sbeam_m=0.06125
+TRACE_C:distance_m=0.1
+TRACE_C:term_fast=-0.00191067923648838 0.00591982323813122 -0.0609333036826704
+TRACE_C:term_slow=0.0139980455359602 0.0593902175851499 0.0053309733034161
+TRACE_C:term_beam=0.1 0 0
+TRACE_C:pix0_vector=0.112087366299472 0.0653100408232811 -0.0556023303792543
 DETECTOR_PIX0_VECTOR 0.112087366299472 0.0653100408232811 -0.0556023303792543
 XDS incident beam: 0.0311948 -0.22854 0.973035
 auto-selected no interpolation
@@ -103,47 +128,136 @@ lambda0 = 6.2e-10
   1x1 pixel oversample steps
 
   noise image paramters:
-  seed: -1754471969
+  seed: -1758730688
   water droplet size: 0 m
 0% done
 0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+0% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
+1% done
 1% done
 2% done
-3% done
-4% done
-4% done
-5% done
-6% done
-7% done
-8% done
-9% done
-9% done
-14% done
-19% done
-24% done
-29% done
-34% done
-39% done
-44% done
-49% done
-54% done
-59% done
-64% done
-69% done
-74% done
-79% done
-84% done
-89% done
-90% done
-91% done
-92% done
-93% done
-94% done
-94% done
-95% done
-96% done
-97% done
-98% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
+2% done
 
 solid angle subtended by detector = 0.787747 steradian ( 6.26869% sphere)
 writing image.bin as 1048576 4-byte floats
@@ -153,5 +267,5 @@ intfile_scale = 361.755
 writing intimage.img as 2-byte integers
 pgm_scale = 9.40042
 writing image.pgm as 1-byte integers
-849687 photons on noise image (0 overloads)
+849910 photons on noise image (0 overloads)
 writing noiseimage.img as 2-byte integers

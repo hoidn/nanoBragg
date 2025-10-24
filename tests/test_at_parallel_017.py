@@ -74,8 +74,8 @@ class TestATParallel017GrazingIncidence:
         )
 
         # Create simulator
-        detector = Detector(detector_config)
-        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config, dtype=torch.float64)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
 
         # Run simulation
@@ -135,8 +135,8 @@ class TestATParallel017GrazingIncidence:
         )
 
         # Create simulator
-        detector = Detector(detector_config)
-        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config, dtype=torch.float64)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
 
         # Run simulation
@@ -187,8 +187,8 @@ class TestATParallel017GrazingIncidence:
         )
 
         # Create simulator
-        detector = Detector(detector_config)
-        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config, dtype=torch.float64)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
 
         # Run simulation
@@ -238,8 +238,8 @@ class TestATParallel017GrazingIncidence:
         )
 
         # Create simulator
-        detector = Detector(detector_config)
-        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config, dtype=torch.float64)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
 
         # Run simulation - should handle extreme geometry gracefully
@@ -276,8 +276,8 @@ class TestATParallel017GrazingIncidence:
             detector_convention=DetectorConvention.MOSFLM
         )
 
-        detector_flat = Detector(detector_config_flat)
-        detector_tilted = Detector(detector_config_tilted)
+        detector_flat = Detector(detector_config_flat, dtype=torch.float64)
+        detector_tilted = Detector(detector_config_tilted, dtype=torch.float64)
 
         # Get solid angles
         sa_flat = detector_flat.get_solid_angle()
@@ -321,7 +321,7 @@ class TestATParallel017GrazingIncidence:
                 detector_convention=DetectorConvention.MOSFLM
             )
 
-            detector = Detector(detector_config)
+            detector = Detector(detector_config, dtype=torch.float64)
 
             # Check that detector vectors remain orthonormal
             fdet = detector.fdet_vec
