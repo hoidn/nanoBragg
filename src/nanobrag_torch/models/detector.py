@@ -105,11 +105,21 @@ class Detector:
         beam_center_s_pixels = config.beam_center_s / config.pixel_size_mm
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
-        # Apply MOSFLM +0.5 pixel offset AFTER mm→pixel conversion
-        # This implements the MOSFLM beam-center mapping formula
-        if config.detector_convention == DetectorConvention.MOSFLM:
+        # DETECTOR-CONFIG-001 Phase C3: Conditional MOSFLM +0.5 pixel offset
+        # Per specs/spec-a-core.md §72 and arch.md §ADR-03, the MOSFLM +0.5 pixel offset
+        # applies ONLY to auto-calculated beam centers, NOT explicit user inputs.
+        #
+        # The offset is part of the beam-center mapping formula for MOSFLM convention:
+        #   Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel
+        #
+        # However, this formula applies when beam centers are derived from detector size
+        # defaults. Explicit user-provided values should not receive this adjustment.
+        if (config.detector_convention == DetectorConvention.MOSFLM and
+            config.beam_center_source == "auto"):
+            # Auto-calculated beam center: apply MOSFLM +0.5 pixel offset
             beam_center_s_pixels = beam_center_s_pixels + 0.5
             beam_center_f_pixels = beam_center_f_pixels + 0.5
+        # Explicit beam centers: no offset applied (use values as-is)
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
