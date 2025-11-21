@@ -32,6 +32,7 @@ These are the core, living documents that guide the project.
 * **[Detector Component](./architecture/detector.md)** - Detailed detector component specification with hybrid unit system.
 * **[Parameter Trace Analysis](./architecture/parameter_trace_analysis.md)** - End-to-end parameter flow for gradient interpretation.
 * **[PyTorch Design](./architecture/pytorch_design.md)** - Core PyTorch implementation architecture.
+* **[Parameterized Experiment Model](./architecture/parameterized_experiment.md)** - Stage-A learnable geometry/beam parameterization and `ExperimentModel` API.
 * **[Undocumented Conventions](./architecture/undocumented_conventions.md)** - Living document of implicit C-code behaviors.
 
 ### Development Process (`docs/development/`)

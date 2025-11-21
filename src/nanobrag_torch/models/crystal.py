@@ -747,16 +747,19 @@ class Crystal:
                 )
 
         # CRITICAL ORDER: Apply misset to INITIAL reciprocal vectors BEFORE real-space calculation
-        # This matches C-code sequence (nanoBragg.c lines 2025-2034: misset applied to initial vectors)
-        if hasattr(self.config, "misset_deg") and any(
-            angle != 0.0 for angle in self.config.misset_deg
-        ):
+        # This matches C-code sequence (nanoBragg.c lines 2025-2034: misset applied to initial vectors).
+        #
+        # NOTE: We intentionally avoid Python-level checks on tensor values here to preserve
+        # gradient flow (no `.item()` on differentiable tensors).  When all misset angles are
+        # zero, the rotation matrix reduces to identity, so applying it is a no-op.
+        if hasattr(self.config, "misset_deg"):
             # Apply misset rotation to initial reciprocal vectors only
             # C-code reference (nanoBragg.c lines 2025-2034):
             # rotate(a_star,a_star,misset[1],misset[2],misset[3]);
             # rotate(b_star,b_star,misset[1],misset[2],misset[3]);
             # rotate(c_star,c_star,misset[1],misset[2],misset[3]);
             from ..utils.geometry import angles_to_rotation_matrix, rotate_umat
+
             # Preserve gradient flow: convert to tensor only if not already a tensor
             misset_rad = []
             for angle in self.config.misset_deg:
@@ -765,9 +768,14 @@ class Crystal:
                     angle_tensor = angle.to(dtype=self.dtype, device=self.device)
                 else:
                     # Scalar - create new tensor
-                    angle_tensor = torch.tensor(angle, dtype=self.dtype, device=self.device)
+                    angle_tensor = torch.tensor(
+                        angle, dtype=self.dtype, device=self.device
+                    )
                 misset_rad.append(torch.deg2rad(angle_tensor))
-            R_misset = angles_to_rotation_matrix(misset_rad[0], misset_rad[1], misset_rad[2])
+
+            R_misset = angles_to_rotation_matrix(
+                misset_rad[0], misset_rad[1], misset_rad[2]
+            )
             a_star = rotate_umat(a_star, R_misset)
             b_star = rotate_umat(b_star, R_misset)
             c_star = rotate_umat(c_star, R_misset)

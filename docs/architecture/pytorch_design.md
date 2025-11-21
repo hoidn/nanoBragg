@@ -137,3 +137,95 @@ Principle: Differentiability is required; over-hardening is not. Prefer the mini
   - Show a before/after gradcheck result (float64 required, float32 if relevant).
   - Include a microbenchmark (≥1e6 evaluations) comparing old/new helper.
   - Confirm vectorization preserved (no data-dependent Python control flow).
+
+## 1.3 Stage-A Parameterized Experiment Model (High-Level API)
+
+Stage-A optimization introduces learnable geometry and beam parameterization on
+top of the existing config-driven models.  The core physics and vectorization
+remain in `Crystal`, `Detector`, and `Simulator`; Stage-A wraps them in a thin
+composition layer:
+
+- **Implementation:** `src/nanobrag_torch/models/experiment.py`
+- **Spec:** `docs/architecture/parameterized_experiment.md`
+
+### 1.3.1 Components
+
+- `CrystalStageAParams`
+  - Owns raw crystal Stage-A DOFs (log-length deltas, bounded angle/misset
+    deltas).
+  - Builds a derived `CrystalConfig` with tensor-valued `cell_*` and
+    `misset_deg`, consumed by `Crystal` via the existing `compute_cell_tensors`
+    pipeline (including misset and reciprocal/real duality rules).
+
+- `DetectorStageAParams`
+  - Owns raw detector Stage-A DOFs (log-distance delta, small-angle tilts,
+    beam-center shifts in pixel units).
+  - Builds a derived `DetectorConfig` that feeds the existing detector geometry
+    and pivot logic.
+
+- `BeamStageAParams`
+  - Owns a log-fluence delta around the base `BeamConfig.fluence`.
+  - Builds a derived `BeamConfig` with tensor-valued `fluence`, used by
+    `Simulator` in the final scaling.
+
+- `ExperimentModel`
+  - High-level `nn.Module` that composes the above parameter blocks with
+    `Crystal`, `Detector`, and `Simulator`.
+  - Constructor:
+
+    ```python
+    ExperimentModel(
+        crystal_config: CrystalConfig,
+        detector_config: DetectorConfig,
+        beam_config: BeamConfig,
+        device=None,
+        dtype=torch.float32,
+        param_init: str = "frozen"  # or "stage_a"
+    )
+    ```
+
+  - `forward()`:
+    - Builds derived configs via the parameter blocks.
+    - Instantiates `Crystal`, `Detector`, and `Simulator` on the requested
+      device/dtype.
+    - Returns the float image from `Simulator.run()`.
+
+### 1.3.2 Param Initialization Modes
+
+- `param_init="frozen"`
+  - All raw fields registered as buffers (no `nn.Parameter` objects).
+  - `experiment.parameters()` is empty.
+  - Output is numerically equivalent to the legacy config-driven path (within
+    acceptance tolerances) for given configs.
+
+- `param_init="stage_a"`
+  - Stage-A DOFs registered as `nn.Parameter` objects.
+  - `experiment.parameters()` exposes exactly the Stage-A parameter tensors,
+    suitable for optimizers (Adam/LBFGS).
+
+### 1.3.3 Optimizer Usage (Summary)
+
+For Stage-A refinement, the standard pattern is:
+
+```python
+experiment = ExperimentModel(
+    crystal_config=crystal_cfg,
+    detector_config=detector_cfg,
+    beam_config=beam_cfg,
+    param_init="stage_a",
+    device="cuda",
+    dtype=torch.float32,
+)
+
+optimizer = torch.optim.Adam(experiment.parameters(), lr=1e-2)
+for _ in range(num_steps):
+    optimizer.zero_grad()
+    pred = experiment()
+    loss = ((pred - target_image) ** 2).mean()
+    loss.backward()
+    optimizer.step()
+```
+
+All vectorization, device/dtype neutrality, and differentiability guarantees
+from earlier sections apply unchanged; the ExperimentModel is a thin wrapper
+that only materializes new configs from the raw parameters.
