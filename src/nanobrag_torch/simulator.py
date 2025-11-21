@@ -193,6 +193,13 @@ def compute_physics_for_position(
         rot_b_broadcast = rot_b.unsqueeze(0).unsqueeze(0)
         rot_c_broadcast = rot_c.unsqueeze(0).unsqueeze(0)
 
+    # NANOBRAG-GOLDEN-001 (A3): Miller index projection using rotated real-space vectors
+    # Per nanoBragg.c lines 3108-3110 and docs/spec-db-core.md:35-54:
+    # h = dot_product(a, scattering)  where a,b,c are in meters and scattering is in m^-1
+    # The real-space vectors rot_a/rot_b/rot_c are already in meters (converted at line 873-875)
+    # and scattering_vector is already in m^-1 (line 158), so no unit conversion needed.
+    # This replaces the incorrect Å^-1 conversion + reciprocal vector projection.
+
     h = dot_product(scattering_broadcast, rot_a_broadcast)
     k = dot_product(scattering_broadcast, rot_b_broadcast)
     l = dot_product(scattering_broadcast, rot_c_broadcast)  # noqa: E741
@@ -209,6 +216,48 @@ def compute_physics_for_position(
     # The crystal.get_structure_factor may return CPU tensors even when h0/k0/l0 are on CUDA
     if F_cell.device != h.device:
         F_cell = F_cell.to(device=h.device)
+
+    # NANOBRAG-GOLDEN-001 (A3): Bounded HKL diagnostics per panel (input.md:15, input.md:36)
+    # Emit HKL min/max + hit-rate to explain first divergence when torch output is zero.
+    # Only log once per panel to avoid log bloat (<100 lines per input.md:34).
+    # Per docs/development/testing_strategy.md:112, trace requirements capture Miller index stats.
+    #
+    # DYNAMO-SAFETY NOTE:
+    # The debug print below is intended for eager/debug runs only. Under torch.compile/Dynamo,
+    # string formatting can interact badly with graph tracing, so we explicitly skip this block
+    # when a Dynamo trace is in progress.
+    log_hkl_stats = apply_polarization
+    if log_hkl_stats:
+        is_compiling = False
+        try:
+            import torch._dynamo as _dynamo  # type: ignore[attr-defined]
+
+            is_compiling = _dynamo.is_compiling()
+        except Exception:
+            # If Dynamo is unavailable or any error occurs, assume we are not compiling
+            # and proceed with eager-mode logging.
+            is_compiling = False
+
+        if not is_compiling:
+            # Compute HKL bounds (keep tensors on device per input.md:37)
+            h0_min = h0.min().item()
+            h0_max = h0.max().item()
+            k0_min = k0.min().item()
+            k0_max = k0.max().item()
+            l0_min = l0.min().item()
+            l0_max = l0.max().item()
+
+            nonzero_F = (F_cell != 0).sum().item()
+            total_pixels = F_cell.numel()
+            hit_rate = (nonzero_F / total_pixels * 100) if total_pixels > 0 else 0.0
+
+            # Single-line structured log per panel (bounded)
+            print(
+                f"[HKL stats] h=[{h0_min:.0f},{h0_max:.0f}] "
+                f"k=[{k0_min:.0f},{k0_max:.0f}] "
+                f"l=[{l0_min:.0f},{l0_max:.0f}] "
+                f"hit_rate={nonzero_F}/{total_pixels} ({hit_rate:.2f}%)"
+            )
 
     # Calculate lattice structure factor
     #
@@ -505,16 +554,18 @@ class Simulator:
         # Set incident beam direction from detector.beam_vector
         # This is critical for convention consistency (AT-PARALLEL-004) and CLI override support (CLI-FLAGS-003 Phase H2)
         # The detector.beam_vector property handles both convention defaults and CUSTOM overrides (e.g., -beam_vector)
+        # HKL-ORIENT-001: Must NEGATE to convert sample→source to source→sample for q = (k_f - k_i) calculation
         if self.detector is not None:
             # Use detector's beam_vector property which handles:
             # - CUSTOM convention with user-supplied custom_beam_vector
             # - Convention defaults (MOSFLM: [1,0,0], XDS/DIALS: [0,0,1])
             # The detector normalizes and returns the vector with correct device/dtype
-            self.incident_beam_direction = self.detector.beam_vector.clone()
+            # CRITICAL: Negate to flip sample→source to source→sample direction
+            self.incident_beam_direction = -self.detector.beam_vector.clone()
         else:
-            # If no detector provided, default to MOSFLM beam direction
+            # If no detector provided, default to MOSFLM beam direction (source→sample)
             self.incident_beam_direction = torch.tensor(
-                [1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
+                [-1.0, 0.0, 0.0], device=self.device, dtype=self.dtype
             )
         # PERF-PYTORCH-006: Store wavelength as tensor with correct dtype
         self.wavelength = torch.tensor(self.beam_config.wavelength_A, device=self.device, dtype=self.dtype)
@@ -611,10 +662,16 @@ class Simulator:
         # because it needs to clone incident_beam_direction before passing to the
         # compiled pure function (required for CUDA graphs compatibility)
         #
-        # Allow disabling compilation via environment variable for gradient testing
-        # (torch.inductor has C++ codegen bugs in backward passes that break gradcheck)
+        # Allow disabling compilation via environment variable for debugging/gradcheck and
+        # external tooling (e.g., DBEX) that explicitly requests eager execution.
+        # Both spellings are accepted for backward compatibility:
+        #   - NANOBRAGG_DISABLE_COMPILE (legacy nanoBragg spelling)
+        #   - NANOBRAG_DISABLE_COMPILE  (DBEX/runtime-checklist spelling)
         import os
-        disable_compile = os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0") == "1"
+        disable_compile = (
+            os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0") == "1"
+            or os.environ.get("NANOBRAG_DISABLE_COMPILE", "0") == "1"
+        )
 
         if disable_compile:
             self._compiled_compute_physics = compute_physics_for_position

@@ -36,6 +36,8 @@
 | [GRADIENT-FLOW-001](#gradient-flow-001-gradient-flow-regression) | Gradient flow regression | High | done |
 | [TRICLINIC-PARITY-001](#triclinic-parity-001-triclinic-parity-alignment) | Triclinic parity alignment | High | in_planning |
 | [STAGEA-PARAM-001](#stagea-param-001-generalized-learnable-geometry--beam-parameterization) | Generalized learnable geometry & beam parameterization | Medium | in_planning |
+| [COMPILE-GUARD-001](#compile-guard-001-dynamo-safe-simulator-compile-guard) | Dynamo-safe Simulator compile guard | Medium | in_planning |
+| [STAGEA-PARAM-001](#stagea-param-001-generalized-learnable-geometry--beam-parameterization) | Generalized learnable geometry & beam parameterization | Medium | in_planning |
 
 ## [TEST-SUITE-TRIAGE-002] Full pytest rerun and triage refresh
 - Spec/AT: `docs/development/testing_strategy.md` §§1–2, `arch.md` §2/§15, `docs/development/pytorch_runtime_checklist.md`, `specs/spec-a-core.md` (Acceptance Tests).
@@ -944,6 +946,34 @@ Phase R chunk 03 rerun (Attempt #84, STAMP 20251015T102654Z) passed with 43 pass
 - Commands: `reports/2026-01-test-suite-triage/phase_r/20251015T102654Z/commands.txt`
 - Tracker: `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md`
 - Plan: `plans/active/test-suite-triage.md` Phase R (all tasks [D])
+
+---
+
+## [STAGEA-PARAM-001] Generalized learnable geometry & beam parameterization
+- Spec/AT: `specs/spec-a-core.md` (crystal, detector, and beam geometry), `docs/architecture/pytorch_design.md` (PyTorch architecture and vectorization), `docs/architecture/detector.md` (detector geometry conventions), `docs/development/testing_strategy.md` (Tier-1 parity and gradient tests).
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: <TBD>/2025-11-21
+- Plan Reference: `plans/active/stagea-param-001.md`
+- Reproduction: N/A (initiative currently design-only; execution will define targeted pytest selectors and nb-compare commands).
+- Source: DBEX → nanobrag_torch Stage-A integration requirements (external request to treat geometry as learnable parameters instead of immutable configs); aligns with differentiable programming goals and PyTorch runtime guardrails.
+- Attempts History:
+  * [2025-11-21] Attempt #0 — Result: ✅ Planning artifact created. Authored implementation plan under `plans/active/stagea-param-001.md` describing Phase A (design/spec), Phase B (Crystal parameterization and tests), and Phase C (Detector/Beam parameterization and experiment composition). No production code or tests changed; this loop establishes initiative scope, compliance matrix, and initial exit criteria. Next: execute Phase A checklist, including drafting `docs/architecture/parameterized_experiment.md` and selecting the ownership model (module promotion vs. separate parameter modules).
+
+---
+
+## [COMPILE-GUARD-001] Dynamo-safe Simulator compile guard
+- Spec/AT: `docs/development/pytorch_runtime_checklist.md` (compile/gradcheck guardrails), `docs/architecture/pytorch_design.md` (torch.compile usage), `docs/development/testing_strategy.md` (runtime env behavior).
+- Priority: Medium
+- Status: in_planning
+- Owner/Date: <TBD>/2025-11-21
+- Plan Reference: `plans/active/compile-guard-001.md`
+- Reproduction:
+  - DBEX: `python plans/active/TOOLING-VIS-001/bin/stage_a_mapping_adam_debug.py --phases 4,5` (with `CUDA_VISIBLE_DEVICES=''`, `KMP_DUPLICATE_LIB_OK=TRUE`, `NANOBRAG_DISABLE_COMPILE=1`).
+  - nanoBragg (minimal): small ROI run exercising `Simulator.run()` with compile enabled and disabled.
+- Source: DBEX Stage-A mapping debug tooling (TOOLING-VIS-001) encountering `torch._dynamo.exc.InternalTorchDynamoError` in `compute_physics_for_position` HKL stats print despite `NANOBRAG_DISABLE_COMPILE=1` being set; revealed env spelling mismatch and Dynamo-unsafe logging.
+- Attempts History:
+  * [2025-11-21] Attempt #0 — Result: ✅ Planning artifact created. Authored implementation plan under `plans/active/compile-guard-001.md` covering Phase A (analysis/design), Phase B (Simulator compile guard + Dynamo-safe HKL logging), and Phase C (DBEX repro validation and doc updates). No production code or tests changed; this pass scopes the work and records the external DBEX dependency. Next: implement dual env-var guard (`NANOBRAGG_DISABLE_COMPILE` and `NANOBRAG_DISABLE_COMPILE`) and add Dynamo guards around HKL stats logging in `compute_physics_for_position`.
 
 ---
 
