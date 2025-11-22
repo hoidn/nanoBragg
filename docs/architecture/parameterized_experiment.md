@@ -262,6 +262,58 @@ The `forward()` method returns the float image tensor with shape
 `(spixels, fpixels)` and preserves the canonical broadcast shapes and sampling
 rules from `pytorch_design.md`.
 
+### 3.4 External Structure Factors (Dense HKL Grids)
+
+Downstream projects that already construct a dense HKL grid (for example via
+cctbx/MTZ) can provide it directly to `ExperimentModel` instead of letting the
+internal `Crystal` instance load HKL files:
+
+- Constructor hook:
+
+  ```python
+  experiment = ExperimentModel(
+      crystal_config=crystal_cfg,
+      detector_config=detector_cfg,
+      beam_config=beam_cfg,
+      device=device,
+      dtype=torch.float32,
+      param_init="stage_a",
+      hkl_data=F_grid,        # torch.Tensor
+      hkl_metadata=metadata,  # dict: h_min/h_max/k_min/k_max/l_min/l_max
+  )
+  ```
+
+- Or setter hook before the first forward:
+
+  ```python
+  experiment = ExperimentModel(
+      crystal_config=crystal_cfg,
+      detector_config=detector_cfg,
+      beam_config=beam_cfg,
+      device=device,
+      dtype=torch.float32,
+      param_init="stage_a",
+  )
+
+  experiment.set_structure_factors(F_grid, metadata)
+  image = experiment()
+  ```
+
+Behavior:
+
+- The HKL tensor is moved to the experiment’s `device`/`dtype` before being
+  attached to the internal `Crystal` instance.
+- The `hkl_metadata` dictionary is passed through to `Crystal.hkl_metadata`
+  unchanged; callers are responsible for providing compatible bounds
+  (`h_min`, `h_max`, etc.).
+- Interpolation behavior (`Crystal.interpolate`) and default_F handling are
+  unchanged; the external grid is treated identically to data loaded via
+  `Crystal.load_hkl()`.
+
+This public hook avoids reaching into `Crystal.hkl_data`/`hkl_metadata`
+directly and provides a stable surface for projects like dbex that already have
+their own structure‑factor loading pipeline.
+
 ### 3.3 Optimizer Usage
 
 A minimal Stage‑A optimization loop:
@@ -290,4 +342,3 @@ This composition keeps all detector geometry, misset rotation, and sampling
 rules in the existing `Crystal`, `Detector`, and `Simulator` implementations,
 avoiding duplicate physics while exposing the key Stage‑A degrees of freedom as
 standard PyTorch parameters.
-

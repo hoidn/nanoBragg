@@ -9,3 +9,6 @@ scipy
 black
 ruff
 isort
+
+[test]
+pytest-timeout

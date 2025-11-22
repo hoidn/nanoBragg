@@ -21,6 +21,7 @@ src/nanobrag_torch/io/source.py
 src/nanobrag_torch/models/__init__.py
 src/nanobrag_torch/models/crystal.py
 src/nanobrag_torch/models/detector.py
+src/nanobrag_torch/models/experiment.py
 src/nanobrag_torch/utils/__init__.py
 src/nanobrag_torch/utils/auto_selection.py
 src/nanobrag_torch/utils/c_random.py
@@ -100,15 +101,20 @@ tests/test_at_src_001.py
 tests/test_at_src_001_cli.py
 tests/test_at_src_001_simple.py
 tests/test_at_src_002.py
+tests/test_at_src_003.py
 tests/test_at_sta_001.py
+tests/test_at_stagea_param_001.py
 tests/test_at_str_001.py
 tests/test_at_str_002.py
 tests/test_at_str_003.py
 tests/test_at_str_004.py
 tests/test_at_tools_001.py
 tests/test_beam_center_offset.py
+tests/test_beam_center_source.py
 tests/test_cli_flags.py
 tests/test_cli_scaling.py
+tests/test_cli_scaling_phi0.py
+tests/test_compile_guard_001.py
 tests/test_configuration_consistency.py
 tests/test_crystal_geometry.py
 tests/test_custom_vectors.py
@@ -131,4 +137,6 @@ tests/test_physics.py
 tests/test_pivot_mode_selection.py
 tests/test_show_config.py
 tests/test_suite.py
+tests/test_trace_pixel.py
+tests/test_tricubic_vectorized.py
 tests/test_units.py

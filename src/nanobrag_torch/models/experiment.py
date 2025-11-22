@@ -327,6 +327,8 @@ class ExperimentModel(nn.Module):
         device: Optional[torch.device] = None,
         dtype: torch.dtype = torch.float32,
         param_init: str = "frozen",
+        hkl_data: Optional[torch.Tensor] = None,
+        hkl_metadata: Optional[dict] = None,
     ) -> None:
         super().__init__()
         if device is None:
@@ -354,6 +356,93 @@ class ExperimentModel(nn.Module):
             param_init=param_init,
         )
 
+        # Optional externally-provided structure factors (dense HKL grid).
+        # Downstream projects (e.g. dbex) can populate these either via the
+        # constructor or via set_structure_factors() below.
+        self._external_hkl_data: Optional[torch.Tensor] = hkl_data
+        self._external_hkl_metadata: Optional[dict] = hkl_metadata
+
+    def set_structure_factors(
+        self, hkl_data: torch.Tensor, hkl_metadata: dict
+    ) -> None:
+        """
+        Override structure factors with an external dense HKL grid.
+
+        Args:
+            hkl_data:
+                Dense HKL grid as a tensor (e.g. shape [H, K, L]) on any
+                device/dtype. The ExperimentModel will move it to its own
+                device/dtype before use.
+            hkl_metadata:
+                Dictionary containing at least the integer bounds:
+                'h_min', 'h_max', 'k_min', 'k_max', 'l_min', 'l_max'.
+
+        This is the supported hook for downstream projects that build their
+        own P1 grids and want ExperimentModel to reuse them, rather than
+        loading HKL files internally via Crystal.load_hkl().
+        """
+        self._external_hkl_data = hkl_data
+        self._external_hkl_metadata = hkl_metadata
+
+    def _build_simulator(self):
+        """
+        Internal helper to build Crystal/Detector/Simulator for the current parameters.
+
+        Returns:
+            (simulator, crystal, detector, beam_config)
+
+        Note: This is primarily intended for tests and tooling; callers should
+        prefer ExperimentModel.forward() for normal use.
+        """
+        # Build configs from raw parameters.
+        crystal_cfg = self.crystal_params.build_config()
+        detector_cfg = self.detector_params.build_config()
+        beam_cfg = self.beam_params.build_config()
+
+        # Instantiate core models on the requested device/dtype.
+        crystal = Crystal(
+            config=crystal_cfg,
+            beam_config=beam_cfg,
+            device=self.device,
+            dtype=self.dtype,
+        )
+
+        # Apply external HKL grid if provided.
+        if self._external_hkl_data is not None:
+            if isinstance(self._external_hkl_data, torch.Tensor):
+                hkl_tensor = self._external_hkl_data
+            else:
+                hkl_tensor = torch.as_tensor(self._external_hkl_data)
+            crystal.hkl_data = hkl_tensor.to(
+                device=self.device,
+                dtype=self.dtype,
+            )
+            crystal.hkl_metadata = (
+                dict(self._external_hkl_metadata)
+                if self._external_hkl_metadata is not None
+                else None
+            )
+
+        detector = Detector(
+            config=detector_cfg,
+            device=self.device,
+            dtype=self.dtype,
+        )
+
+        # Import Simulator lazily here to avoid circular imports at module load
+        # time (Simulator imports models.crystal / models.detector).
+        from ..simulator import Simulator
+
+        simulator = Simulator(
+            crystal=crystal,
+            detector=detector,
+            beam_config=beam_cfg,
+            device=self.device,
+            dtype=self.dtype,
+        )
+
+        return simulator, crystal, detector, beam_cfg
+
     def forward(
         self,
         pixel_batch_size: Optional[int] = None,
@@ -368,34 +457,7 @@ class ExperimentModel(nn.Module):
         Returns:
             Float image tensor with shape (spixels, fpixels).
         """
-        # Build configs from raw parameters.
-        crystal_cfg = self.crystal_params.build_config()
-        detector_cfg = self.detector_params.build_config()
-        beam_cfg = self.beam_params.build_config()
-
-        # Instantiate core models on the requested device/dtype.
-        crystal = Crystal(
-            config=crystal_cfg,
-            beam_config=beam_cfg,
-            device=self.device,
-            dtype=self.dtype,
-        )
-        detector = Detector(
-            config=detector_cfg,
-            device=self.device,
-            dtype=self.dtype,
-        )
-        # Import Simulator lazily here to avoid circular imports at module load
-        # time (Simulator imports models.crystal / models.detector).
-        from ..simulator import Simulator
-
-        simulator = Simulator(
-            crystal=crystal,
-            detector=detector,
-            beam_config=beam_cfg,
-            device=self.device,
-            dtype=self.dtype,
-        )
+        simulator, _, _, _ = self._build_simulator()
 
         return simulator.run(
             pixel_batch_size=pixel_batch_size,
