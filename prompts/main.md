@@ -13,6 +13,8 @@ One thing per loop:
   • If the referenced plan is missing or stale, note this in your loop output and add an item to docs/fix_plan.md describing the gap.
 - Do not begin implementation until having reviewed and analyzed all contextually relevant docs, source files, and any linked plan documents. Think harder when doing this analysis. Use parallel subagents when possible.
 
+- SupervisorMode is non-binding: Treat SupervisorMode (or Mode from input.md) as context for reporting and artifacts only. Your binding instructions are ActionType, DecisionStatus, InitiativeType, Do Now, Forbidden This Loop, and the mapped pytest nodes. If SupervisorMode=Docs but Do Now includes `Implement:`, you still implement it.
+
 Subagents policy:
 - You may use up to 200 subagents for search, summarization, inventory, and planning.
 - Use at most 1 subagent for building/running tests/acceptance suites to avoid back‑pressure.
@@ -48,8 +50,7 @@ Callchain Snapshot (analysis aid)
 
 - Test execution scope: Only run tests via `pytest` in `./tests/`. Do not execute ad‑hoc scripts in the repo root or elsewhere as part of validation.
 - Ralph is exempt from the supervisor’s Evidence-only phase.
-- Mode flags: input.md may specify mode flags (e.g., TDD | Parity | Perf | Docs). These overlay the current Phase; follow their guidance for this loop.
-- TDD mode (engineer-scoped): If a failing test exists, make it pass without weakening the test. If overspecified, propose a precise test adjustment back to galph and proceed once aligned.
+- SupervisorMode artifact hints: if SupervisorMode=Parity and DMI is present, include ledger + first-divergence metrics in artifacts; if SupervisorMode=Perf, include before/after timings; if SupervisorMode=TDD, include failing test evidence plus the passing result after the fix.
  - Mapped selectors from Evidence: Galph may include pytest selectors; execute them as part of your implementation loop.
 
 - **Project Hygiene**: All code, especially test runners and scripts, MUST assume the project is installed in editable mode (`pip install -e .`). Scripts MUST NOT manipulate `sys.path`. Tests MUST be runnable via standard tools like `pytest` from the project root. Refer to `CLAUDE.md` for setup instructions.

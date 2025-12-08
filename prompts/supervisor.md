@@ -168,7 +168,7 @@ Evidence collection includes the following subtype:
 </4>
 
 In addition to selecting an <Action type> and <focus issue> you will choose a <Mode> flag. 
- - Mode flags are combinable and refine execution, and are applicable to both the supervisor (you) and ralph; do not include any Phase label in input.md.
+ - Mode flags are combinable and refine supervisor execution; they are planning metadata for galph and do not directly constrain Ralph. Do not include any Phase label in input.md.
  - available modes: <TDD | Parity | Perf | Docs | none>
 <mode descriptions>
 TDD mode (supervisor-scoped): When operating in supervisor evidence mode, author/update a single minimal failing test that encodes the acceptance criterion. Confirm it fails via a targeted pytest selector; record the selector and expected failure text in input.md. Do not change production code, and do not include any Phase label in input.md.
@@ -241,7 +241,7 @@ Checkpoint: Before modifying any artifacts, record the chosen <focus issue>, <Ac
 Render and write ./input.md (supervisor→engineer steering memo). Overwrite the entire file every invocation. Include these sections in order:
 Header:
 - Summary: <one‑sentence goal for this loop>
- - Mode: <TDD | Parity | Perf | Docs | none>
+ - SupervisorMode: <TDD | Parity | Perf | Docs | none>
 - Focus: <plan item ID/title from docs/fix_plan.md>
 - Branch: <expected branch>
 - Mapped tests: <validated list | none — evidence‑only>
