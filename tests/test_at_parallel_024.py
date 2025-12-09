@@ -342,9 +342,9 @@ class TestAT_PARALLEL_024:
         seed = 12345
         mosaicity = np.pi / 2.0  # 90 degrees
 
-        # Generate two matrices with same seed
-        umat1 = mosaic_rotation_umat(mosaicity, seed)
-        umat2 = mosaic_rotation_umat(mosaicity, seed)
+        # Generate two matrices with same seed, explicitly using float64 for precision
+        umat1 = mosaic_rotation_umat(mosaicity, seed, dtype=torch.float64)
+        umat2 = mosaic_rotation_umat(mosaicity, seed, dtype=torch.float64)
 
         # They should be identical
         assert torch.allclose(umat1, umat2, rtol=1e-12, atol=1e-15), \

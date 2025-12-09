@@ -62,9 +62,10 @@ class TestATParallel002:
             detector = Detector(detector_config)
 
             # Calculate expected beam center in pixels
-            # When user explicitly provides beam_center in mm, it's converted directly to pixels
-            # (MOSFLM +0.5 offset is only applied when beam_center is auto-calculated in DetectorConfig)
-            expected_beam_pixel = beam_center_mm / pixel_size
+            # Per spec AT-GEO-001, MOSFLM convention ALWAYS applies +0.5 pixel offset
+            # Fbeam = Ybeam + 0.5·pixel, Sbeam = Xbeam + 0.5·pixel
+            # So: expected_pixels = (beam_center_mm + 0.5*pixel_size) / pixel_size
+            expected_beam_pixel = (beam_center_mm / pixel_size) + 0.5
 
             # The detector internally stores beam centers in pixels
             # Verify the beam center in pixels scales inversely with pixel size
@@ -263,8 +264,8 @@ class TestATParallel002:
             detector = Detector(detector_config)
 
             # Verify the detector stores beam centers correctly in pixels
-            # When user explicitly provides beam_center, it's converted directly without offset
-            expected_beam_pixel = beam_center_mm / pixel_size
+            # Per spec AT-GEO-001, MOSFLM convention ALWAYS applies +0.5 pixel offset
+            expected_beam_pixel = (beam_center_mm / pixel_size) + 0.5
 
             assert abs(detector.beam_center_s.item() - expected_beam_pixel) < 0.01, \
                 f"Detector beam_center_s incorrect for pixel_size={pixel_size}mm"

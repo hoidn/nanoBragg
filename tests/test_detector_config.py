@@ -24,8 +24,10 @@ class TestDetectorConfig:
         assert config.spixels == 1024
         assert config.fpixels == 1024
 
-        # Beam center - MOSFLM convention adds 0.5 pixel offset for 1024x1024 detector
-        # beam_center = (1024 * 0.1 + 0.1) / 2.0 = 51.25
+        # Beam center - Auto-calculated defaults per spec-a-core.md §71
+        # MOSFLM default: Xbeam = Ybeam = (detsize + pixel)/2
+        # For 1024 pixels × 0.1 mm: (102.4 + 0.1) / 2 = 51.25 mm
+        # The MOSFLM +0.5 pixel mapping offset is applied later in Detector class
         assert config.beam_center_s == 51.25
         assert config.beam_center_f == 51.25
 
@@ -138,7 +140,10 @@ class TestDetectorInitialization:
         assert detector.fpixels == 1024
 
         # Check beam center in pixels
-        # MOSFLM convention: 51.25 mm / 0.1 mm per pixel + 0.5 = 513.0
+        # MOSFLM convention default: 51.25 mm (per spec-a-core.md §71: (detsize + pixel)/2)
+        # With MOSFLM +0.5 pixel mapping offset applied in Detector:
+        # Fbeam = Ybeam + 0.5·pixel = 51.25 + 0.05 = 51.3 mm
+        # 51.3 mm / 0.1 mm per pixel = 513.0 pixels
         assert detector.beam_center_s == 513.0
         assert detector.beam_center_f == 513.0
         
@@ -167,8 +172,11 @@ class TestDetectorInitialization:
         assert detector.fpixels == 2048
 
         # Check beam center in pixels
-        # Default convention is MOSFLM which adds +0.5 pixel offset
-        assert detector.beam_center_s == 1024.5  # 204.8 mm / 0.2 mm per pixel + 0.5
+        # Per spec AT-GEO-001, MOSFLM convention ALWAYS applies +0.5 pixel mapping offset
+        # User provides: 204.8 mm
+        # Fbeam = Ybeam + 0.5·pixel = 204.8 + 0.1 = 204.9 mm
+        # In pixels: 204.9 / 0.2 = 1024.5 pixels
+        assert detector.beam_center_s == 1024.5
         assert detector.beam_center_f == 1024.5
 
     def test_backward_compatibility_check(self):

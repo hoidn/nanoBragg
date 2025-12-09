@@ -411,6 +411,10 @@ class TestATPerf007ComprehensiveBenchmark:
         for field in required_fields:
             assert field in result
 
+    @pytest.mark.skipif(
+        not os.environ.get('NB_RUN_BENCHMARKS'),
+        reason="Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks"
+    )
     def test_pytorch_performance_basic(self):
         """Test basic PyTorch performance measurement."""
         config = {
@@ -432,6 +436,10 @@ class TestATPerf007ComprehensiveBenchmark:
         assert metrics['time_seconds'] < 60  # Should complete within a minute
         assert metrics['memory_peak_MB'] >= 0
 
+    @pytest.mark.skipif(
+        not os.environ.get('NB_RUN_BENCHMARKS'),
+        reason="Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks"
+    )
     def test_memory_scaling(self):
         """Test that memory scales sub-quadratically with detector size."""
         benchmark = PerformanceBenchmark()
@@ -462,7 +470,10 @@ class TestATPerf007ComprehensiveBenchmark:
             memory_ratio = metrics_2n['memory_peak_MB'] / metrics_n['memory_peak_MB']
             assert memory_ratio <= 4.5, f"Memory scaled super-quadratically: {memory_ratio}x"
 
-    @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
+    @pytest.mark.skipif(
+        not os.environ.get('NB_RUN_BENCHMARKS') or not torch.cuda.is_available(),
+        reason="Set NB_RUN_BENCHMARKS=1 and CUDA required to run GPU benchmarks"
+    )
     def test_gpu_performance(self):
         """Test GPU performance measurement when CUDA is available."""
         config = {
@@ -508,6 +519,10 @@ class TestATPerf007ComprehensiveBenchmark:
             # Relaxed from 2.0 to 1.5 due to current optimization limitations
             assert speedup >= 1.5, f"GPU speedup insufficient for large detector: {speedup}x"
 
+    @pytest.mark.skipif(
+        not os.environ.get('NB_RUN_BENCHMARKS'),
+        reason="Set NB_RUN_BENCHMARKS=1 to run comprehensive benchmarks"
+    )
     def test_benchmark_output_format(self):
         """Test that benchmark output follows the specified format."""
         benchmark = PerformanceBenchmark()

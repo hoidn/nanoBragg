@@ -497,10 +497,14 @@ class BeamConfig:
     """Configuration for X-ray beam properties.
 
     Supports multiple sources for beam divergence and spectral dispersion (AT-SRC-001).
+
+    Note: wavelength_A, fluence, and polarization_factor can accept torch.Tensor
+    for gradient-based optimization (DBEX-GRADIENT-001).
     """
 
     # Basic beam properties
-    wavelength_A: float = 1.0  # X-ray wavelength in Angstroms (matches C default)
+    # Can be float or torch.Tensor for differentiable optimization
+    wavelength_A: Union[float, torch.Tensor] = 1.0  # X-ray wavelength in Angstroms (matches C default)
 
     # Source geometry (simplified)
     N_source_points: int = 1  # Number of source points for beam divergence
@@ -526,7 +530,8 @@ class BeamConfig:
     flux: float = 0.0  # Photons per second
     exposure: float = 0.0  # Exposure time in seconds
     beamsize_mm: float = 0.0  # Beam size in mm (used for fluence calculation and sample clipping)
-    fluence: float = 125932015286227086360700780544.0  # Photons per square meter (default from C code)
+    # Can be float or torch.Tensor for differentiable optimization (DBEX-GRADIENT-001)
+    fluence: Union[float, torch.Tensor] = 125932015286227086360700780544.0  # Photons per square meter (default from C code)
 
     # Resolution cutoff
     dmin: float = 0.0  # Minimum d-spacing in Angstroms (0 = no cutoff)

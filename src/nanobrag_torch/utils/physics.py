@@ -8,11 +8,15 @@ calculations from the original C code.
 import torch
 
 
-# Use different compile modes for CPU vs GPU to avoid CUDA graph issues
-# On GPU, "max-autotune" avoids the nested compilation CUDA graph problem
-# On CPU, "reduce-overhead" is faster
 def _get_compile_decorator():
-    """Get appropriate compile decorator based on available hardware."""
+    """Get appropriate compile decorator based on available hardware.
+
+    NOTE: On CUDA we return an identity decorator to avoid nested torch.compile
+    + CUDA graphs issues (\"static input data pointer changed\" arising from
+    helpers like sincg being compiled inside already-compiled kernels).
+    The hot paths are still fully vectorized; only Dynamo compilation is
+    disabled for these small helpers.
+    """
     import os
     disable_compile = os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0") == "1"
 
@@ -22,9 +26,13 @@ def _get_compile_decorator():
             return fn
         return identity_decorator
     elif torch.cuda.is_available():
-        # Use max-autotune mode on GPU to avoid CUDA graph issues
-        # with nested compilation
-        return torch.compile(mode="max-autotune")
+        # On CUDA, avoid compiling these helpers at all; they will be called
+        # from within a separately compiled kernel (compute_physics_for_position)
+        # and nested CUDA graph capture has been observed to trigger
+        # \"static input data pointer changed\" errors.
+        def identity_decorator(fn):
+            return fn
+        return identity_decorator
     else:
         # Use reduce-overhead on CPU for better performance
         return torch.compile(mode="reduce-overhead")

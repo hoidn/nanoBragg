@@ -199,11 +199,21 @@ class TestAT_IO_003:
                 assert header_values[4] == metadata['l_min']
                 assert header_values[5] == metadata['l_max']
 
-                # Data: should be h_range * k_range * l_range float64 values
-                data_size = 3 * 4 * 5 * 8  # dimensions * sizeof(float64)
+                # Data: C writes (h_range+1) * (k_range+1) * (l_range+1) float64 values with padding
+                # For this test: (3+1) * (4+1) * (5+1) = 4 * 5 * 6 = 120 doubles
+                data_size = 4 * 5 * 6 * 8  # padded dimensions * sizeof(float64)
                 data_bytes = f.read(data_size)
                 assert len(data_bytes) == data_size
 
-                # Verify a few values
-                data = np.frombuffer(data_bytes, dtype=np.float64).reshape(3, 4, 5)
+                # Verify data (excluding padding)
+                # Read all data including padding
+                data_padded = np.frombuffer(data_bytes, dtype=np.float64).reshape(4, 5, 6)
+                # Extract the non-padded portion
+                data = data_padded[:3, :4, :5]
                 assert np.allclose(data, 42.0, rtol=1e-6)
+
+                # Verify padding is zeros
+                # Last index in each dimension should be all zeros
+                assert np.allclose(data_padded[3, :, :], 0.0, rtol=1e-6)  # Last h plane
+                assert np.allclose(data_padded[:, 4, :], 0.0, rtol=1e-6)  # Last k column
+                assert np.allclose(data_padded[:, :, 5], 0.0, rtol=1e-6)  # Last l row

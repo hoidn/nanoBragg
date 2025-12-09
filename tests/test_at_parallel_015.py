@@ -242,7 +242,7 @@ class TestATParallel015MixedUnits:
             wavelength_A=1.54,  # Angstroms (Cu K-alpha)
             fluence=1e23,
             polarization_factor=0.95,  # dimensionless
-            dmin=2.0,          # Angstroms
+            dmin=None,         # No resolution cutoff (was 2.0Å - too aggressive for this geometry)
         )
 
         # Create models

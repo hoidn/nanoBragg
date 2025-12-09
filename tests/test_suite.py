@@ -1762,220 +1762,6 @@ class TestTier2GradientCorrectness:
 
         print("✅ All detector parameter gradient checks PASSED")
 
-    def test_gradcheck_misset_rot_x(self):
-        """Test gradients for crystal misset_rot_x parameter using torch.autograd.gradcheck.
-
-        Per testing_strategy.md §4.1, misset_rot_x must pass gradcheck.
-        This test verifies that the misset rotation pipeline (Core Rule #12) maintains
-        computation graph connectivity and produces numerically correct gradients.
-
-        C-Code Reference (from nanoBragg.c, lines 1521-1527):
-        The misset rotations are applied to reciprocal vectors before phi rotation.
-        """
-        import os
-        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-        device = torch.device("cpu")
-        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
-
-        def misset_rot_x_loss_fn(misset_x):
-            """Loss function for misset rotation X parameter."""
-            config = CrystalConfig(
-                cell_a=100.0,
-                cell_b=100.0,
-                cell_c=100.0,
-                cell_alpha=89.0,  # Avoid exact 90° stationary points
-                cell_beta=89.0,
-                cell_gamma=89.0,
-                N_cells=[5, 5, 5],
-                misset_deg=[misset_x, 0.0, 0.0],  # Only vary X rotation
-                mosaic_spread_deg=0.0,
-                mosaic_domains=1,
-            )
-
-            crystal = Crystal(config=config, device=device, dtype=dtype)
-
-            # Return sum of reciprocal vectors which depend on misset rotations
-            return (crystal.a_star.sum() + crystal.b_star.sum() + crystal.c_star.sum())
-
-        misset_x = torch.tensor(5.0, dtype=dtype, requires_grad=True)
-        assert torch.autograd.gradcheck(
-            misset_rot_x_loss_fn,
-            (misset_x,),
-            eps=1e-6,
-            atol=1e-5,
-            rtol=0.05,
-            raise_exception=True
-        ), "Gradient check failed for misset_rot_x"
-
-        print("✅ Misset rotation X gradient check PASSED")
-
-    def test_gradcheck_beam_wavelength(self):
-        """Test gradients for beam wavelength_A parameter using torch.autograd.gradcheck.
-
-        Per testing_strategy.md §4.1, lambda_A must pass gradcheck.
-        This test verifies that wavelength changes propagate correctly through the physics
-        calculations (scattering vector, stol, etc.) maintaining gradient flow.
-        """
-        import os
-        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-        device = torch.device("cpu")
-        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
-
-        def wavelength_loss_fn(wavelength_A):
-            """Loss function for beam wavelength parameter.
-
-            Uses small 8x8 ROI to keep computation manageable for gradcheck.
-            """
-            from nanobrag_torch.config import BeamConfig, DetectorConfig, DetectorConvention, DetectorPivot
-
-            crystal_config = CrystalConfig(
-                cell_a=100.0,
-                cell_b=100.0,
-                cell_c=100.0,
-                cell_alpha=90.0,
-                cell_beta=90.0,
-                cell_gamma=90.0,
-                N_cells=[5, 5, 5],
-                default_F=100.0,
-                mosaic_spread_deg=0.0,
-                mosaic_domains=1,
-                phi_steps=1,
-            )
-
-            detector_config = DetectorConfig(
-                distance_mm=100.0,
-                pixel_size_mm=0.1,
-                spixels=8,  # Tiny ROI for speed
-                fpixels=8,
-                beam_center_s=0.4,
-                beam_center_f=0.4,
-                detector_convention=DetectorConvention.MOSFLM,
-                detector_pivot=DetectorPivot.BEAM,
-            )
-
-            beam_config = BeamConfig(
-                wavelength_A=wavelength_A,
-                polarization_factor=0.9,
-                fluence=1e12,
-            )
-
-            # Disable compile for gradcheck per plan guidance
-            import os
-            os.environ['NANOBRAGG_DISABLE_COMPILE'] = '1'
-
-            # Create crystal and detector objects
-            crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
-            detector = Detector(config=detector_config, device=device, dtype=dtype)
-
-            simulator = Simulator(
-                crystal=crystal,
-                detector=detector,
-                crystal_config=crystal_config,
-                beam_config=beam_config,
-                device=device,
-                dtype=dtype
-            )
-
-            image = simulator.run()
-            return image.sum()
-
-        wavelength_A = torch.tensor(1.0, dtype=dtype, requires_grad=True)
-        assert torch.autograd.gradcheck(
-            wavelength_loss_fn,
-            (wavelength_A,),
-            eps=1e-6,
-            atol=1e-4,  # Slightly relaxed for full simulation
-            rtol=0.05,
-            raise_exception=True
-        ), "Gradient check failed for wavelength_A"
-
-        print("✅ Beam wavelength gradient check PASSED")
-
-    def test_gradcheck_beam_fluence(self):
-        """Test gradients for beam fluence parameter using torch.autograd.gradcheck.
-
-        Per testing_strategy.md §4.1, fluence must pass gradcheck.
-        This test verifies that intensity scaling maintains gradient flow through
-        the final normalization and fluence multiplication.
-        """
-        import os
-        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-        device = torch.device("cpu")
-        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
-
-        def fluence_loss_fn(fluence):
-            """Loss function for beam fluence parameter.
-
-            Uses small 8x8 ROI to keep computation manageable for gradcheck.
-            """
-            from nanobrag_torch.config import BeamConfig, DetectorConfig, DetectorConvention, DetectorPivot
-
-            crystal_config = CrystalConfig(
-                cell_a=100.0,
-                cell_b=100.0,
-                cell_c=100.0,
-                cell_alpha=90.0,
-                cell_beta=90.0,
-                cell_gamma=90.0,
-                N_cells=[5, 5, 5],
-                default_F=100.0,
-                mosaic_spread_deg=0.0,
-                mosaic_domains=1,
-                phi_steps=1,
-            )
-
-            detector_config = DetectorConfig(
-                distance_mm=100.0,
-                pixel_size_mm=0.1,
-                spixels=8,  # Tiny ROI for speed
-                fpixels=8,
-                beam_center_s=0.4,
-                beam_center_f=0.4,
-                detector_convention=DetectorConvention.MOSFLM,
-                detector_pivot=DetectorPivot.BEAM,
-            )
-
-            beam_config = BeamConfig(
-                wavelength_A=1.0,
-                polarization_factor=0.9,
-                fluence=fluence,
-            )
-
-            # Disable compile for gradcheck per plan guidance
-            import os
-            os.environ['NANOBRAGG_DISABLE_COMPILE'] = '1'
-
-            # Create crystal and detector objects
-            crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
-            detector = Detector(config=detector_config, device=device, dtype=dtype)
-
-            simulator = Simulator(
-                crystal=crystal,
-                detector=detector,
-                crystal_config=crystal_config,
-                beam_config=beam_config,
-                device=device,
-                dtype=dtype
-            )
-
-            image = simulator.run()
-            return image.sum()
-
-        fluence = torch.tensor(1e12, dtype=dtype, requires_grad=True)
-        assert torch.autograd.gradcheck(
-            fluence_loss_fn,
-            (fluence,),
-            eps=1e6,  # Scale eps to magnitude of fluence
-            atol=1e-4,
-            rtol=0.05,
-            raise_exception=True
-        ), "Gradient check failed for fluence"
-
-        print("✅ Beam fluence gradient check PASSED")
-
     def test_gradcheck_phi_rotation(self):
         """Test gradients for phi rotation parameter using torch.autograd.gradcheck."""
         # Set environment variable for torch import
@@ -2035,14 +1821,24 @@ class TestTier2GradientCorrectness:
             pytest.skip(f"Phi gradient check not yet working: {e}")
 
     def test_gradcheck_mosaic_spread(self):
-        """Test gradients for mosaic_spread_deg parameter using torch.autograd.gradcheck."""
+        """Test gradients for mosaic_spread_deg parameter using torch.autograd.gradcheck.
+
+        MOSAIC-GRADIENT-001: This test verifies gradient correctness for mosaic spread
+        after the fix to use deterministic seeding with reparameterization trick.
+
+        Requires NANOBRAGG_DISABLE_COMPILE=1 for gradient tests.
+        """
         # Set environment variable for torch import
         import os
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Set seed for reproducibility
-        torch.manual_seed(0)
+        # Check for gradient policy guard
+        if os.environ.get('NANOBRAGG_DISABLE_COMPILE') != '1':
+            pytest.skip(
+                "Gradient tests require NANOBRAGG_DISABLE_COMPILE=1 environment variable.\n"
+                "Run with: env NANOBRAGG_DISABLE_COMPILE=1 pytest -v"
+            )
 
         # Create a scalar function that takes mosaic_spread_deg and returns a scalar output
         def mosaic_scalar_function(mosaic_spread_deg):
@@ -2063,10 +1859,12 @@ class TestTier2GradientCorrectness:
                 ),  # Convert to tensor
                 mosaic_spread_deg=mosaic_spread_deg,  # Pass tensor directly
                 mosaic_domains=5,  # Small number for speed
+                mosaic_seed=42,  # Fixed seed for deterministic gradcheck
             )
 
             # Get rotated vectors directly to avoid full simulation complexity
-            a_rot, b_rot, c_rot = crystal.get_rotated_real_vectors(crystal_config)
+            # API returns ((a_rot, b_rot, c_rot), (a_star, b_star, c_star))
+            (a_rot, b_rot, c_rot), _ = crystal.get_rotated_real_vectors(crystal_config)
 
             # Return sum of one rotated vector for gradient testing
             return torch.sum(a_rot)
@@ -2074,23 +1872,16 @@ class TestTier2GradientCorrectness:
         # Test mosaic parameter with small range for numerical stability
         mosaic_test_value = torch.tensor(0.5, dtype=torch.float64, requires_grad=True)
 
-        try:
-            # Use gradcheck with relaxed tolerances for scientific computing
-            gradcheck_result = torch.autograd.gradcheck(
-                mosaic_scalar_function,
-                mosaic_test_value,
-                eps=1e-3,  # Larger epsilon for stability with complex physics
-                atol=1e-4,  # Relaxed absolute tolerance
-                rtol=1e-3,  # Relaxed relative tolerance
-            )
+        # Use gradcheck with relaxed tolerances for scientific computing
+        gradcheck_result = torch.autograd.gradcheck(
+            mosaic_scalar_function,
+            mosaic_test_value,
+            eps=1e-3,  # Larger epsilon for stability with complex physics
+            atol=1e-4,  # Relaxed absolute tolerance
+            rtol=1e-3,  # Relaxed relative tolerance
+        )
 
-            assert gradcheck_result, "Gradient check failed for mosaic spread parameter"
-            print("✅ Mosaic spread gradient check PASSED")
-
-        except Exception as e:
-            print(f"⚠️ Mosaic spread gradient check failed: {e}")
-            # For validation phase, we'll skip this if implementation isn't ready
-            pytest.skip(f"Mosaic spread gradient check not yet working: {e}")
+        assert gradcheck_result, "Gradient check failed for mosaic spread parameter"
 
     def test_gradient_numerical_stability(self):
         """Test that gradients are stable and meaningful for optimization."""

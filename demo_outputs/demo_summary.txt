@@ -1,0 +1,31 @@
+nanoBragg PyTorch Rotation and Mosaicity Demonstration Summary
+============================================================
+
+This demonstration showcases the rotation capabilities implemented in Phase 2
+and validated in Phase 3 of the PyTorch nanoBragg development.
+
+Generated Images:
+--------------------
+01_no_rotation_baseline.png         - Baseline case (phi=0°, mosaic=0°)
+02_phi_rotation_*_*deg.png          - Phi rotation series (0° to 150°)
+03_mosaicity_*_spread_*deg.png      - Mosaicity effects (0° to 5° spread)
+
+Key Observations:
+--------------------
+1. Phi rotation changes spot positions as crystal orientation changes
+2. Mosaicity broadens spots due to crystal imperfection simulation
+3. Higher mosaic spread produces more diffuse, broader spots
+4. All effects are differentiable for gradient-based optimization
+
+Implementation Details:
+--------------------
+- Crystal rotation via spindle axis (rotation_axis.py)
+- Mosaic domain generation using Gaussian distribution
+- Vectorized operations for efficient GPU computation
+- Maintains differentiability throughout the computation graph
+
+Next Steps:
+--------------------
+- Use these capabilities for structure refinement
+- Implement oscillation (phi stepping) for data collection simulation
+- Add beam divergence and spectral dispersion effects

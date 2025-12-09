@@ -41,6 +41,7 @@ class TestATParallel003:
         for beam_s_mm, beam_f_mm in beam_centers_mm:
             for detector_size in detector_sizes:
                 # Create detector config with specified beam center
+                # DETECTOR-CONFIG-001: Explicitly provided beam centers must set source="explicit"
                 detector_config = DetectorConfig(
                     detector_convention=DetectorConvention.MOSFLM,
                     distance_mm=100.0,
@@ -49,6 +50,7 @@ class TestATParallel003:
                     fpixels=detector_size,
                     beam_center_s=beam_s_mm,
                     beam_center_f=beam_f_mm,
+                    beam_center_source="explicit",  # MOSFLM +0.5 offset still applies per spec
                 )
 
                 # Verify beam centers are preserved in mm
@@ -61,10 +63,10 @@ class TestATParallel003:
                 detector = Detector(detector_config)
 
                 # Expected beam center in pixels
-                # When beam centers are explicitly provided, they are used as-is (no +0.5 offset)
-                # The MOSFLM +0.5 offset is ONLY for auto-calculated defaults
-                expected_s_pixels = beam_s_mm / pixel_size_mm
-                expected_f_pixels = beam_f_mm / pixel_size_mm
+                # AT-PARALLEL-004: MOSFLM SHALL ALWAYS add +0.5 pixel offset per spec-a-core.md:485
+                # The offset applies regardless of beam_center_source (auto or explicit)
+                expected_s_pixels = beam_s_mm / pixel_size_mm + 0.5
+                expected_f_pixels = beam_f_mm / pixel_size_mm + 0.5
 
                 # Verify beam centers in pixels
                 assert abs(detector.beam_center_s.item() - expected_s_pixels) < 0.01, \
@@ -89,6 +91,7 @@ class TestATParallel003:
 
         for beam_s_mm, beam_f_mm in beam_centers_mm:
             # Create configurations
+            # DETECTOR-CONFIG-001: Explicitly provided beam centers must set source="explicit"
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
                 distance_mm=100.0,
@@ -97,6 +100,7 @@ class TestATParallel003:
                 fpixels=detector_size,
                 beam_center_s=beam_s_mm,
                 beam_center_f=beam_f_mm,
+                beam_center_source="explicit",  # No MOSFLM +0.5 offset for explicit values
             )
 
             crystal_config = CrystalConfig(
@@ -157,6 +161,7 @@ class TestATParallel003:
             # Adjust pixel size to maintain same physical detector size
             pixel_size = base_pixel_size * base_detector_size / detector_size
 
+            # DETECTOR-CONFIG-001: Explicitly provided beam centers must set source="explicit"
             detector_config = DetectorConfig(
                 detector_convention=DetectorConvention.MOSFLM,
                 distance_mm=100.0,
@@ -165,6 +170,7 @@ class TestATParallel003:
                 fpixels=detector_size,
                 beam_center_s=beam_center_mm[0],
                 beam_center_f=beam_center_mm[1],
+                beam_center_source="explicit",  # No MOSFLM +0.5 offset for explicit values
             )
 
             # Calculate offset ratio (beam center position relative to detector center)

@@ -164,12 +164,14 @@ class TestAT_TOOLS_001_DualRunnerComparison:
             assert any(np.linalg.norm(np.array(peak) - np.array(p)) < 2
                       for p in peak_positions)
 
-    @pytest.mark.skipif(
-        not Path("./nanoBragg").exists() and not Path("./golden_suite_generator/nanoBragg").exists(),
-        reason="Requires C binary for integration test"
-    )
     def test_script_integration(self):
         """Test the full script execution."""
+        # Check if C binary can be found using the same resolution logic as the script
+        try:
+            c_binary = find_c_binary()
+        except FileNotFoundError:
+            pytest.skip("C binary not found - skipping integration test")
+
         # Run with minimal arguments
         cmd = [
             'python', 'scripts/nb_compare.py',
