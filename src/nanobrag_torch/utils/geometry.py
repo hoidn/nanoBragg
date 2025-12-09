@@ -190,27 +190,15 @@ def angles_to_rotation_matrix(
     Returns:
         torch.Tensor: 3x3 rotation matrix that applies rotations in XYZ order
     """
-    # Extract device and dtype from input angles
+    # P1.4: All call sites provide tensor inputs (CPU fallback removed)
     # Ensure all angles have the same dtype - convert to the highest precision dtype
-    if hasattr(phi_x, "dtype") and hasattr(phi_y, "dtype") and hasattr(phi_z, "dtype"):
-        # All are tensors
-        dtype = torch.promote_types(
-            torch.promote_types(phi_x.dtype, phi_y.dtype), phi_z.dtype
-        )
-        device = phi_x.device
-        phi_x = phi_x.to(dtype=dtype)
-        phi_y = phi_y.to(dtype=dtype)
-        phi_z = phi_z.to(dtype=dtype)
-    else:
-        # Mixed or scalar inputs - default to float64
-        device = torch.device("cpu")
-        dtype = torch.float64
-        if not isinstance(phi_x, torch.Tensor):
-            phi_x = torch.tensor(phi_x, dtype=dtype, device=device)
-        if not isinstance(phi_y, torch.Tensor):
-            phi_y = torch.tensor(phi_y, dtype=dtype, device=device)
-        if not isinstance(phi_z, torch.Tensor):
-            phi_z = torch.tensor(phi_z, dtype=dtype, device=device)
+    dtype = torch.promote_types(
+        torch.promote_types(phi_x.dtype, phi_y.dtype), phi_z.dtype
+    )
+    device = phi_x.device
+    phi_x = phi_x.to(dtype=dtype)
+    phi_y = phi_y.to(dtype=dtype)
+    phi_z = phi_z.to(dtype=dtype)
 
     # Calculate sin and cos for all angles
     cos_x = torch.cos(phi_x)
@@ -222,7 +210,8 @@ def angles_to_rotation_matrix(
 
     # Construct rotation matrix for X-axis rotation
     # Rx = [[1, 0, 0], [0, cos(x), -sin(x)], [0, sin(x), cos(x)]]
-    Rx = torch.zeros(3, 3, device=device, dtype=dtype)
+    # Use tensor.new_zeros() to avoid fresh allocation and stay on same device/dtype
+    Rx = cos_x.new_zeros(3, 3)
     Rx[0, 0] = 1.0
     Rx[1, 1] = cos_x
     Rx[1, 2] = -sin_x
@@ -231,7 +220,7 @@ def angles_to_rotation_matrix(
 
     # Construct rotation matrix for Y-axis rotation
     # Ry = [[cos(y), 0, sin(y)], [0, 1, 0], [-sin(y), 0, cos(y)]]
-    Ry = torch.zeros(3, 3, device=device, dtype=dtype)
+    Ry = cos_y.new_zeros(3, 3)
     Ry[0, 0] = cos_y
     Ry[0, 2] = sin_y
     Ry[1, 1] = 1.0
@@ -240,7 +229,7 @@ def angles_to_rotation_matrix(
 
     # Construct rotation matrix for Z-axis rotation
     # Rz = [[cos(z), -sin(z), 0], [sin(z), cos(z), 0], [0, 0, 1]]
-    Rz = torch.zeros(3, 3, device=device, dtype=dtype)
+    Rz = cos_z.new_zeros(3, 3)
     Rz[0, 0] = cos_z
     Rz[0, 1] = -sin_z
     Rz[1, 0] = sin_z
@@ -280,9 +269,8 @@ def rotate_around_x(v: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Rotated vectors with shape (..., 3)
     """
-    device = v.device
-    dtype = v.dtype
-    x_axis = torch.tensor([1.0, 0.0, 0.0], device=device, dtype=dtype)
+    # Use .new_tensor() to avoid fresh allocation and stay on same device/dtype
+    x_axis = v.new_tensor([1.0, 0.0, 0.0])
     return rotate_axis(v, x_axis, angle)
 
 
@@ -297,9 +285,8 @@ def rotate_around_y(v: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Rotated vectors with shape (..., 3)
     """
-    device = v.device
-    dtype = v.dtype
-    y_axis = torch.tensor([0.0, 1.0, 0.0], device=device, dtype=dtype)
+    # Use .new_tensor() to avoid fresh allocation and stay on same device/dtype
+    y_axis = v.new_tensor([0.0, 1.0, 0.0])
     return rotate_axis(v, y_axis, angle)
 
 
@@ -314,7 +301,6 @@ def rotate_around_z(v: torch.Tensor, angle: torch.Tensor) -> torch.Tensor:
     Returns:
         torch.Tensor: Rotated vectors with shape (..., 3)
     """
-    device = v.device
-    dtype = v.dtype
-    z_axis = torch.tensor([0.0, 0.0, 1.0], device=device, dtype=dtype)
+    # Use .new_tensor() to avoid fresh allocation and stay on same device/dtype
+    z_axis = v.new_tensor([0.0, 0.0, 1.0])
     return rotate_axis(v, z_axis, angle)

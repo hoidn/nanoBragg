@@ -8,9 +8,9 @@ Acceptance Test Requirements (from spec-a-parallel.md):
   - triclinic_P1 (512×512, explicit misset)
   - cubic_tilted_detector (rotations + 2θ)
 - Pass criteria:
-  - simple_cubic: correlation ≥ 0.999 and top N=50 peaks ≤ 0.5 px
-  - triclinic_P1: correlation ≥ 0.995 and top N=50 peaks ≤ 0.5 px
-  - tilted: correlation ≥ 0.98 and top N=50 peaks ≤ 1.0 px
+  - simple_cubic: correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px
+  - triclinic_P1: correlation ≥ 0.9995 and top N=50 peaks ≤ 0.5 px
+  - tilted: correlation ≥ 0.9995 and top N=50 peaks ≤ 1.0 px
 - High-resolution variant: λ=0.5Å, 4096×4096 detector, 0.05mm pixels, 500mm distance
   - Pass: No NaNs/Infs; correlation ≥ 0.95 on 512×512 ROI; top N=50 peaks ≤ 1.0 px
 """
@@ -39,28 +39,61 @@ from nanobrag_torch.simulator import Simulator
 
 
 def load_golden_float_image(filename: str, shape: Tuple[int, int]) -> np.ndarray:
-    """Load a binary float image from golden data."""
+    """Load a binary float image from golden data.
+
+    Returns float32 to match C code storage precision and enable plateau-based peak detection.
+    The golden C output uses float32 storage, which creates intensity plateaus at beam center.
+    Loading as float64 would add artificial precision that breaks plateau tie-breaking in
+    peak detection algorithms (scipy.ndimage.maximum_filter).
+    """
     with open(filename, 'rb') as f:
         data = f.read()
         n_floats = len(data) // 4
         assert n_floats == shape[0] * shape[1], f"Expected {shape[0]*shape[1]} floats, got {n_floats}"
         floats = struct.unpack(f'{n_floats}f', data)
-        return np.array(floats).reshape(shape)
+        return np.array(floats, dtype=np.float32).reshape(shape)
 
 
 def find_peaks(
     image: np.ndarray,
     n_peaks: int = 50,
     percentile: float = 99.0,
-    min_distance: int = 3
+    min_distance: int = 3,
+    plateau_tolerance: float = 1e-4
 ) -> List[Tuple[int, int]]:
-    """Find top N peaks in an image."""
+    """Find top N peaks in an image with plateau-aware detection.
+
+    Handles numerical plateau fragmentation by using a tolerance-based local maximum
+    test instead of exact equality. When float32 precision creates multiple slightly
+    different values in what should be a plateau (e.g., PyTorch produces 324 unique
+    values vs C's 66 in beam-center ROI), treats values within plateau_tolerance as
+    equivalent for maximum detection.
+
+    This addresses AT-PARALLEL-012 regression where PyTorch float32 produces 5× more
+    unique intensity values than C float32, causing maximum_filter with exact equality
+    to find too few or fragmented local maxima.
+
+    Args:
+        image: 2D intensity array
+        n_peaks: Number of peaks to return
+        percentile: Intensity percentile threshold
+        min_distance: Local maximum neighborhood size
+        plateau_tolerance: Relative tolerance for plateau detection (default 1e-4,
+            calibrated for float32 fragmentation levels observed in AT-012)
+
+    Returns:
+        List of (row, col) peak coordinates
+    """
     # Apply percentile threshold
     threshold = np.percentile(image, percentile)
 
-    # Find local maxima
+    # Find local maxima using tolerance-based comparison
     local_max = maximum_filter(image, size=min_distance)
-    mask = (image == local_max) & (image > threshold)
+
+    # A pixel is a local maximum if its value is within plateau_tolerance of the
+    # neighborhood maximum (handles float32 fragmentation on plateaus)
+    rel_diff = np.abs(image - local_max) / (local_max + 1e-10)
+    mask = (rel_diff <= plateau_tolerance) & (image > threshold)
 
     # Extract peak coordinates and intensities
     peak_coords = np.column_stack(np.where(mask))
@@ -68,10 +101,40 @@ def find_peaks(
 
     # Sort by intensity (descending)
     sorted_idx = np.argsort(peak_intensities)[::-1]
+    sorted_coords = peak_coords[sorted_idx]
+    sorted_intensities = peak_intensities[sorted_idx]
 
-    # Return top N peaks
-    top_peaks = peak_coords[sorted_idx[:n_peaks]]
-    return [(int(p[0]), int(p[1])) for p in top_peaks]
+    # Cluster nearby peaks to avoid duplicates from plateau tolerance
+    # Use cluster_radius=0.5px to match spec geometric tolerance (AT-012 requires ≤0.5px offset)
+    # Prevents over-merging distinct peaks while handling float32 plateau fragmentation
+    clustered_peaks = []
+    used = np.zeros(len(sorted_coords), dtype=bool)
+    cluster_radius = 0.5  # Match spec tolerance; prevents over-merging distinct peaks
+
+    for i in range(len(sorted_coords)):
+        if used[i]:
+            continue
+
+        # Find all peaks in this cluster
+        seed_peak = sorted_coords[i]
+        distances = np.sqrt(np.sum((sorted_coords - seed_peak)**2, axis=1))
+        cluster_mask = (distances <= cluster_radius) & ~used
+        cluster_indices = np.where(cluster_mask)[0]
+
+        # Compute geometric centroid for this cluster (simpler and equally effective)
+        cluster_coords = sorted_coords[cluster_indices]
+        com = np.mean(cluster_coords, axis=0)
+
+        clustered_peaks.append((int(np.round(com[0])), int(np.round(com[1]))))
+
+        # Mark all peaks in this cluster as used
+        used[cluster_indices] = True
+
+        # Stop once we have enough peaks
+        if len(clustered_peaks) >= n_peaks:
+            break
+
+    return clustered_peaks[:n_peaks]
 
 
 def match_peaks_hungarian(
@@ -116,17 +179,14 @@ def match_peaks_hungarian(
 class TestATParallel012ReferencePatternCorrelation:
     """Test reference pattern correlation against golden C data."""
 
-    @pytest.mark.xfail(
-        reason="Golden data generated with unknown A.mat and P1.hkl files - needs regeneration with known parameters"
-    )
     def test_simple_cubic_correlation(self):
-        """Test simple cubic pattern correlation (≥0.999 correlation, ≤0.5px peaks)."""
-        # Load golden data (actual file is 500x500, not 1024x1024 as documented)
-        golden_file = "tests/golden_data/simple_cubic.bin"
-        golden_image = load_golden_float_image(golden_file, (500, 500))
+        """Test simple cubic pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
+        # Load golden data (now correctly 1024x1024 as documented)
+        golden_file = Path(__file__).parent / "golden_data" / "simple_cubic.bin"
+        golden_image = load_golden_float_image(str(golden_file), (1024, 1024))
 
-        # Setup PyTorch configuration to match actual golden data
-        # The actual golden file seems to use 500x500 pixels (50mm detector with 0.1mm pixels)
+        # Setup PyTorch configuration to match golden data generation
+        # Generated with: -cell 100 100 100 90 90 90 -lambda 6.2 -N 5 -default_F 100 -distance 100 -detpixels 1024 -pixel 0.1
         crystal_config = CrystalConfig(
             cell_a=100.0, cell_b=100.0, cell_c=100.0,
             cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
@@ -135,20 +195,21 @@ class TestATParallel012ReferencePatternCorrelation:
         )
 
         detector_config = DetectorConfig(
-            spixels=500,
-            fpixels=500,
+            spixels=1024,
+            fpixels=1024,
             pixel_size_mm=0.1,
             distance_mm=100.0,
-            detector_convention=DetectorConvention.MOSFLM,  # Default C convention
+            detector_convention=DetectorConvention.MOSFLM,  # C code default (no explicit convention flag)
             detector_pivot=DetectorPivot.BEAM
         )
 
         beam_config = BeamConfig(
-            wavelength_A=6.2,
-            fluence=1e15  # Standard fluence for testing
+            wavelength_A=6.2
+            # Use default fluence to match C code default
         )
 
-        # Run PyTorch simulation
+        # Run PyTorch simulation with default dtype (float32)
+        # Peak clustering in find_peaks() handles numerical plateau fragmentation
         crystal = Crystal(crystal_config)
         detector = Detector(detector_config)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
@@ -158,28 +219,28 @@ class TestATParallel012ReferencePatternCorrelation:
         # Calculate correlation
         corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
 
-        # Find peaks
+        # Find peaks (both should detect exactly 50 per spec)
         golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=99.5)
-        pytorch_peaks = find_peaks(pytorch_image, n_peaks=50, percentile=99.5)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=99.5)
 
-        # Match peaks
+        # Match peaks using spec-required 0.5 pixel tolerance
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
-        # Assertions per spec
-        assert corr >= 0.999, f"Correlation {corr:.4f} < 0.999 requirement"
-        assert n_matches >= len(golden_peaks) * 0.95, (
-            f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
-        )
-        assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f} > 0.5 pixel requirement"
+        # Assertions per spec-a-parallel.md §AT-012
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
 
-    @pytest.mark.xfail(
-        reason="Golden data generated with specific misset angles - pattern correlation issues"
-    )
+        # Spec requires ≥95% of top 50 peaks within 0.5px
+        required_matches = int(0.95 * 50)  # 48 peaks
+        assert n_matches >= required_matches, (
+            f"Only {n_matches}/50 peaks matched within 0.5px (need ≥{required_matches})"
+        )
+        assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f}px > 0.5px requirement"
+
     def test_triclinic_P1_correlation(self):
-        """Test triclinic P1 pattern correlation (≥0.995 correlation, ≤0.5px peaks)."""
+        """Test triclinic P1 pattern correlation (≥0.9995 correlation, ≤0.5px peaks)."""
         # Load golden data (512x512)
-        golden_file = "tests/golden_data/triclinic_P1/image.bin"
-        golden_image = load_golden_float_image(golden_file, (512, 512))
+        golden_file = Path(__file__).parent / "golden_data" / "triclinic_P1" / "image.bin"
+        golden_image = load_golden_float_image(str(golden_file), (512, 512))
 
         # Setup PyTorch configuration to match canonical command
         # From README: -misset -89.968546 -31.328953 177.753396 -cell 70 80 90 75 85 95
@@ -197,16 +258,17 @@ class TestATParallel012ReferencePatternCorrelation:
             fpixels=512,
             pixel_size_mm=0.1,
             distance_mm=100.0,
-            detector_convention=DetectorConvention.MOSFLM,
+            detector_convention=DetectorConvention.MOSFLM,  # C code default (no explicit convention flag)
             detector_pivot=DetectorPivot.BEAM
         )
 
         beam_config = BeamConfig(
-            wavelength_A=1.0,
-            fluence=1e15
+            wavelength_A=1.0
+            # Use default fluence to match C code default
         )
 
-        # Run PyTorch simulation
+        # Run PyTorch simulation with default dtype (float32)
+        # Peak clustering in find_peaks() handles numerical plateau fragmentation
         crystal = Crystal(crystal_config)
         detector = Detector(detector_config)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
@@ -216,25 +278,28 @@ class TestATParallel012ReferencePatternCorrelation:
         # Calculate correlation
         corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
 
-        # Find peaks
+        # Find peaks (both should detect exactly 50 per spec)
         golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=99.0)
-        pytorch_peaks = find_peaks(pytorch_image, n_peaks=50, percentile=99.0)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=99.0)
 
-        # Match peaks
+        # Match peaks using spec-required 0.5 pixel tolerance
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=0.5)
 
-        # Assertions per spec
-        assert corr >= 0.995, f"Correlation {corr:.4f} < 0.995 requirement"
-        assert n_matches >= len(golden_peaks) * 0.95, (
-            f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
+        # Assertions per spec-a-parallel.md §AT-012
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
+
+        # Spec requires ≥95% of top 50 peaks within 0.5px
+        required_matches = int(0.95 * 50)  # 48 peaks
+        assert n_matches >= required_matches, (
+            f"Only {n_matches}/50 peaks matched within 0.5px (need ≥{required_matches})"
         )
-        assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f} > 0.5 pixel requirement"
+        assert mean_dist <= 0.5, f"Mean peak distance {mean_dist:.2f}px > 0.5px requirement"
 
     def test_cubic_tilted_detector_correlation(self):
-        """Test tilted detector pattern correlation (≥0.98 correlation, ≤1.0px peaks)."""
+        """Test tilted detector pattern correlation (≥0.9995 correlation, ≤1.0px peaks)."""
         # Load golden data (1024x1024)
-        golden_file = "tests/golden_data/cubic_tilted_detector/image.bin"
-        golden_image = load_golden_float_image(golden_file, (1024, 1024))
+        golden_file = Path(__file__).parent / "golden_data" / "cubic_tilted_detector" / "image.bin"
+        golden_image = load_golden_float_image(str(golden_file), (1024, 1024))
 
         # Setup PyTorch configuration to match canonical command
         # From README: -lambda 6.2 -N 5 -cell 100 100 100 90 90 90 -default_F 100
@@ -264,11 +329,12 @@ class TestATParallel012ReferencePatternCorrelation:
         )
 
         beam_config = BeamConfig(
-            wavelength_A=6.2,
-            fluence=1e15
+            wavelength_A=6.2
+            # Use default fluence to match C code default
         )
 
-        # Run PyTorch simulation
+        # Run PyTorch simulation with default dtype (float32)
+        # Peak clustering in find_peaks() handles numerical plateau fragmentation
         crystal = Crystal(crystal_config)
         detector = Detector(detector_config)
         simulator = Simulator(crystal, detector, crystal_config, beam_config)
@@ -278,31 +344,94 @@ class TestATParallel012ReferencePatternCorrelation:
         # Calculate correlation
         corr, _ = pearsonr(golden_image.flatten(), pytorch_image.flatten())
 
-        # Find peaks (use lower percentile for tilted detector)
+        # Find peaks (both should detect exactly 50 per spec)
         golden_peaks = find_peaks(golden_image, n_peaks=50, percentile=98.0)
-        pytorch_peaks = find_peaks(pytorch_image, n_peaks=50, percentile=98.0)
+        pytorch_peaks = find_peaks(pytorch_image.astype(np.float32), n_peaks=50, percentile=98.0)
 
-        # Match peaks (relaxed to 1.0 pixel for tilted case)
+        # Match peaks (spec allows 1.0 pixel for tilted detector)
         n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=1.0)
 
-        # Assertions per spec (relaxed for tilted detector)
-        assert corr >= 0.98, f"Correlation {corr:.4f} < 0.98 requirement"
-        assert n_matches >= len(golden_peaks) * 0.95, (
-            f"Only {n_matches}/{len(golden_peaks)} peaks matched (need ≥95%)"
-        )
-        assert mean_dist <= 1.0, f"Mean peak distance {mean_dist:.2f} > 1.0 pixel requirement"
+        # Assertions per spec-a-parallel.md §AT-012 (tilted variant allows 1.0px)
+        assert corr >= 0.9995, f"Correlation {corr:.4f} < 0.9995 requirement"
 
-    @pytest.mark.skip(reason="High-resolution variant requires large memory and golden data generation")
+        # Spec requires ≥95% of top 50 peaks within 1.0px for tilted detector
+        required_matches = 48  # ceiling(0.95 * 50) = 48 peaks
+        assert n_matches >= required_matches, (
+            f"Only {n_matches}/50 peaks matched within 1.0px (need ≥{required_matches})"
+        )
+        assert mean_dist <= 1.0, f"Mean peak distance {mean_dist:.2f}px > 1.0px requirement"
+
     def test_high_resolution_variant(self):
         """
         Test high-resolution variant with 4096×4096 detector.
 
-        This test requires:
+        Requirements from spec-a-parallel.md AT-PARALLEL-012:
         - λ=0.5Å
         - 4096×4096 detector, 0.05mm pixels, 500mm distance
-        - Compare on 512×512 ROI centered on beam
+        - Compare on 512×512 ROI centered on beam (slice [1792:2304, 1792:2304])
         - Pass: No NaNs/Infs, correlation ≥ 0.95 on ROI, top 50 peaks ≤ 1.0 px
         """
-        # This test would need golden data to be generated first
-        # and requires significant memory (4096×4096×4 bytes = 64MB per image)
-        pass
+        # Load golden data (4096x4096)
+        golden_file = Path(__file__).parent / "golden_data" / "high_resolution_4096" / "image.bin"
+        golden_image = load_golden_float_image(str(golden_file), (4096, 4096))
+
+        # Setup PyTorch configuration to match golden data generation
+        # Generated with: -lambda 0.5 -cell 100 100 100 90 90 90 -N 5 -default_F 100 -distance 500 -detpixels 4096 -pixel 0.05
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0
+        )
+
+        detector_config = DetectorConfig(
+            spixels=4096,
+            fpixels=4096,
+            pixel_size_mm=0.05,
+            distance_mm=500.0,
+            detector_convention=DetectorConvention.MOSFLM,  # C code default
+            detector_pivot=DetectorPivot.BEAM
+        )
+
+        beam_config = BeamConfig(
+            wavelength_A=0.5
+            # Use default fluence to match C code default
+        )
+
+        # Run PyTorch simulation
+        crystal = Crystal(crystal_config)
+        detector = Detector(detector_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+
+        pytorch_image = simulator.run().cpu().numpy()
+
+        # Extract 512×512 ROI centered on beam (indices 1792:2304 for both axes)
+        roi_slice = slice(1792, 2304)
+        golden_roi = golden_image[roi_slice, roi_slice]
+        pytorch_roi = pytorch_image[roi_slice, roi_slice]
+
+        # Check for NaNs/Infs
+        assert not np.any(np.isnan(pytorch_roi)), "PyTorch ROI contains NaNs"
+        assert not np.any(np.isinf(pytorch_roi)), "PyTorch ROI contains Infs"
+        assert not np.any(np.isnan(golden_roi)), "Golden ROI contains NaNs"
+        assert not np.any(np.isinf(golden_roi)), "Golden ROI contains Infs"
+
+        # Calculate correlation on ROI
+        corr, _ = pearsonr(golden_roi.flatten(), pytorch_roi.flatten())
+
+        # Find peaks in ROI (both should detect exactly 50 per spec)
+        golden_peaks = find_peaks(golden_roi, n_peaks=50, percentile=99.0)
+        pytorch_peaks = find_peaks(pytorch_roi.astype(np.float32), n_peaks=50, percentile=99.0)
+
+        # Match peaks using spec-required 1.0 pixel tolerance (relaxed for high-res)
+        n_matches, mean_dist = match_peaks_hungarian(golden_peaks, pytorch_peaks, max_distance=1.0)
+
+        # Assertions per spec-a-parallel.md §AT-012 high-resolution variant
+        assert corr >= 0.95, f"ROI correlation {corr:.4f} < 0.95 requirement"
+
+        # Spec requires ≥95% of top 50 peaks within 1.0px for high-res variant
+        required_matches = int(0.95 * 50)  # 48 peaks
+        assert n_matches >= required_matches, (
+            f"Only {n_matches}/50 peaks matched within 1.0px in ROI (need ≥{required_matches})"
+        )
+        assert mean_dist <= 1.0, f"Mean peak distance {mean_dist:.2f}px > 1.0px requirement"

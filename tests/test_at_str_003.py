@@ -19,6 +19,7 @@ import numpy as np
 
 from nanobrag_torch.config import CrystalConfig, CrystalShape, DetectorConfig, BeamConfig
 from nanobrag_torch.models.crystal import Crystal
+from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
 from nanobrag_torch.utils.physics import sincg, sinc3
 
@@ -131,7 +132,7 @@ class TestAT_STR_003_LatticeShapeModels:
         # Create simulator to test the full implementation
         simulator = Simulator(
             crystal=Crystal(self.crystal_config),
-            detector=None,  # Not needed for this test
+            detector=Detector(self.detector_config, device="cpu", dtype=torch.float32),
             crystal_config=self.crystal_config,
             beam_config=self.beam_config,
         )
@@ -180,14 +181,14 @@ class TestAT_STR_003_LatticeShapeModels:
             # Create simulator with this shape
             simulator = Simulator(
                 crystal=Crystal(self.crystal_config),
-                detector=None,
+                detector=Detector(self.detector_config, device="cpu", dtype=torch.float32),
                 crystal_config=self.crystal_config,
                 beam_config=self.beam_config,
             )
 
             # We would run the simulator here and extract F_latt
             # For now, just verify the shape is set correctly
-            assert simulator.crystal_config.shape == shape
+            assert simulator.crystal.config.shape == shape
             results[shape] = shape.value
 
         # Verify all four models were tested

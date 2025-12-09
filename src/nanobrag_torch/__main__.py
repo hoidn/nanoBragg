@@ -37,7 +37,24 @@ from .utils.units import (
     angstroms_to_meters, mrad_to_radians
 )
 from .utils.noise import generate_poisson_noise
-from .utils.auto_selection import auto_select_divergence, auto_select_dispersion
+from .utils.auto_selection import (
+    auto_select_divergence, auto_select_dispersion,
+    generate_sources_from_divergence_dispersion
+)
+
+
+class UnsupportedFlagAction(argparse.Action):
+    """Action class to handle unsupported flags with helpful error messages."""
+    def __init__(self, option_strings, dest, supported_alternative=None, **kwargs):
+        self.supported_alternative = supported_alternative
+        # Set nargs to consume the value that follows the flag
+        super().__init__(option_strings, dest, nargs='?', **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        msg = f"Error: {option_string} is not supported in this version."
+        if self.supported_alternative:
+            msg += f" Use {self.supported_alternative} instead."
+        parser.error(msg)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -47,6 +64,7 @@ def create_parser() -> argparse.ArgumentParser:
         prog='nanoBragg',
         description='PyTorch implementation of nanoBragg diffraction simulator',
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False,  # Prevent abbreviations like -dispstep matching -dispsteps
         epilog="""
 Examples:
   # Basic simulation
@@ -71,6 +89,16 @@ Examples:
                         help='Read SMV mask (0 values are skipped)')
     parser.add_argument('-sourcefile', type=str, metavar='FILE',
                         help='Multi-column text file with sources')
+
+    # Auxiliary S(Q) files (read but not used in this version per spec)
+    parser.add_argument('-stol', type=str, metavar='FILE',
+                        help='Structure factor vs sin(θ)/λ for amorphous materials (read but not used)')
+    parser.add_argument('-4stol', dest='stol', type=str, metavar='FILE',
+                        help='Alias for -stol (read but not used)')
+    parser.add_argument('-Q', dest='stol', type=str, metavar='FILE',
+                        help='Alias for -stol (read but not used)')
+    parser.add_argument('-stolout', type=str, metavar='FILE',
+                        help='Output file for S(Q) (read but not used)')
 
     # Structure factors
     parser.add_argument('-default_F', type=float, default=0.0,
@@ -105,7 +133,7 @@ Examples:
                         help='Detector rotation about Y axis (degrees)')
     parser.add_argument('-detector_rotz', type=float, default=0.0, metavar='DEG',
                         help='Detector rotation about Z axis (degrees)')
-    parser.add_argument('-twotheta', type=float, default=0.0, metavar='DEG',
+    parser.add_argument('-twotheta', type=float, default=None, metavar='DEG',
                         help='Detector rotation about twotheta axis')
     parser.add_argument('-twotheta_axis', nargs=3, type=float,
                         metavar=('X', 'Y', 'Z'),
@@ -159,6 +187,9 @@ Examples:
     parser.add_argument('-pix0_vector', nargs=3, type=float,
                         metavar=('X', 'Y', 'Z'),
                         help='Detector origin offset (meters)')
+    parser.add_argument('-pix0_vector_mm', nargs=3, type=float,
+                        metavar=('X', 'Y', 'Z'),
+                        help='Detector origin offset (millimeters)')
 
     # Beam centers
     parser.add_argument('-Xbeam', type=float, metavar='MM',
@@ -199,6 +230,10 @@ Examples:
                         help='Vertical divergence step count')
     parser.add_argument('-divsteps', type=int,
                         help='Sets both H and V step counts')
+    parser.add_argument('-round_div', action='store_true', default=True,
+                        help='Apply elliptical trimming to divergence grid (default)')
+    parser.add_argument('-square_div', action='store_false', dest='round_div',
+                        help='Disable elliptical trimming (square grid)')
 
     # Polarization
     parser.add_argument('-polar', type=float, metavar='K',
@@ -268,6 +303,14 @@ Examples:
                         help='Recompute polarization per subpixel')
     parser.add_argument('-oversample_omega', action='store_true',
                         help='Recompute solid angle per subpixel')
+
+    # Memory management (PIXEL-BATCH-001)
+    parser.add_argument('-pixel_batch_size', '--pixel-batch-size', type=int,
+                        metavar='N',
+                        help='Process detector in chunks of N rows. Reduces peak GPU memory. '
+                             'Recommended: 128-256 for 24GB GPU, 64-128 for 12GB GPU. '
+                             'Default: None (full vectorization)')
+
     parser.add_argument('-roi', nargs=4, type=int,
                         metavar=('xmin', 'xmax', 'ymin', 'ymax'),
                         help='Pixel index limits (inclusive, zero-based)')
@@ -301,6 +344,8 @@ Examples:
                         help='Scale factor for PGM output')
     parser.add_argument('-noisefile', '-noiseimage', type=str, metavar='FILE',
                         dest='noisefile', help='SMV with Poisson noise')
+    parser.add_argument('-nonoise', action='store_true',
+                        help='Suppress noise image generation')
     parser.add_argument('-nopgm', action='store_true',
                         help='Disable PGM output')
 
@@ -325,8 +370,71 @@ Examples:
                         help='Enable progress meter')
     parser.add_argument('-seed', type=int,
                         help='Noise RNG seed')
+    parser.add_argument('-show_config', '-echo_config', action='store_true',
+                        help='Print configuration parameters for debugging')
+
+    # Performance options (PERF-PYTORCH-006)
+    parser.add_argument('-dtype', type=str, choices=['float32', 'float64'],
+                        default='float32',
+                        help='Floating point precision (float32 for speed, float64 for accuracy)')
+    parser.add_argument('-device', type=str, choices=['cpu', 'cuda'],
+                        default='cpu',
+                        help='Device for computation (cpu or cuda)')
+
+    # Explicitly handle unsupported flags from the spec
+    parser.add_argument('-dispstep', dest='_unsupported_dispstep',
+                        action=UnsupportedFlagAction,
+                        supported_alternative='-dispsteps <int>',
+                        help=argparse.SUPPRESS)
+    parser.add_argument('-hdiv', dest='_unsupported_hdiv',
+                        action=UnsupportedFlagAction,
+                        supported_alternative='-hdivrange <mrad>',
+                        help=argparse.SUPPRESS)
+    parser.add_argument('-vdiv', dest='_unsupported_vdiv',
+                        action=UnsupportedFlagAction,
+                        supported_alternative='-vdivrange <mrad>',
+                        help=argparse.SUPPRESS)
 
     return parser
+
+
+def determine_beam_center_source(args: argparse.Namespace, config: Dict[str, Any]) -> str:
+    """Determine if beam center is explicit or auto-calculated.
+
+    Per DETECTOR-CONFIG-001 Phase C2, beam_center_source tracks whether
+    beam centers were explicitly provided by the user ("explicit") or should
+    be auto-calculated from detector size defaults ("auto").
+
+    The MOSFLM +0.5 pixel offset (spec-a-core.md §72, arch.md §ADR-03)
+    applies ONLY to auto-calculated beam centers, not explicit user inputs.
+
+    Args:
+        args: Parsed command-line arguments
+        config: Configuration dict (may contain beam centers from headers)
+
+    Returns:
+        "explicit" if beam center was explicitly provided, "auto" otherwise
+    """
+    # Check CLI flags that explicitly provide beam centers
+    explicit_flags = [
+        args.Xbeam is not None,
+        args.Ybeam is not None,
+        args.Xclose is not None,
+        args.Yclose is not None,
+        args.ORGX is not None,
+        args.ORGY is not None
+    ]
+
+    if any(explicit_flags):
+        return "explicit"
+
+    # Check if beam centers were set via header ingestion (from -img or -mask)
+    # Header-derived beam centers are treated as explicit (user provided the file)
+    if 'beam_center_x_mm' in config or 'beam_center_y_mm' in config:
+        return "explicit"
+
+    # Default: beam centers will be auto-calculated from detector size
+    return "auto"
 
 
 def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
@@ -366,6 +474,12 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         cell_params = reciprocal_to_real_cell(a_star, b_star, c_star)
         config['cell_params'] = cell_params
 
+        # Phase G1: Store MOSFLM reciprocal vectors for Crystal orientation
+        # These are in Å⁻¹ and already wavelength-scaled from read_mosflm_matrix
+        config['mosflm_a_star'] = a_star  # numpy array from read_mosflm_matrix
+        config['mosflm_b_star'] = b_star
+        config['mosflm_c_star'] = c_star
+
         # Also store wavelength if not already set
         if 'wavelength_A' not in config:
             config['wavelength_A'] = wavelength_A
@@ -373,7 +487,6 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         config['cell_params'] = args.cell
 
     # Load HKL data
-    config['hkl_data'] = None
     config['default_F'] = args.default_F
     if args.hkl:
         config['hkl_data'] = read_hkl_file(args.hkl, default_F=args.default_F)
@@ -392,7 +505,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     # Convention and pivot
     if any([args.fdet_vector, args.sdet_vector, args.odet_vector,
             args.beam_vector, args.polar_vector, args.spindle_axis,
-            args.pix0_vector]):
+            args.pix0_vector, args.pix0_vector_mm]):
         config['convention'] = 'CUSTOM'
     elif args.convention:
         config['convention'] = args.convention
@@ -420,6 +533,10 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
         pivot = 'BEAM'
     elif any([args.Xclose is not None, args.Yclose is not None,
               args.ORGX is not None, args.ORGY is not None]):
+        pivot = 'SAMPLE'
+
+    # C-code line 786: -twotheta sets detector_pivot = SAMPLE (even if twotheta=0)
+    if args.twotheta is not None:
         pivot = 'SAMPLE'
 
     if args.pivot:  # Explicit override wins
@@ -462,12 +579,38 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['detector_rotx_deg'] = args.detector_rotx
     config['detector_roty_deg'] = args.detector_roty
     config['detector_rotz_deg'] = args.detector_rotz
-    config['twotheta_deg'] = args.twotheta
+    config['twotheta_deg'] = args.twotheta if args.twotheta is not None else 0.0
     if args.twotheta_axis:
         config['twotheta_axis'] = args.twotheta_axis
 
     config['point_pixel'] = args.point_pixel
     config['curved_detector'] = args.curved_det
+
+    # Custom vectors for CUSTOM convention
+    if args.fdet_vector:
+        config['custom_fdet_vector'] = tuple(args.fdet_vector)
+    if args.sdet_vector:
+        config['custom_sdet_vector'] = tuple(args.sdet_vector)
+    if args.odet_vector:
+        config['custom_odet_vector'] = tuple(args.odet_vector)
+    if args.beam_vector:
+        config['custom_beam_vector'] = tuple(args.beam_vector)
+    if args.polar_vector:
+        config['custom_polar_vector'] = tuple(args.polar_vector)
+    if args.spindle_axis:
+        config['custom_spindle_axis'] = tuple(args.spindle_axis)
+    # Handle pix0 override (validate mutual exclusivity)
+    if args.pix0_vector and args.pix0_vector_mm:
+        raise ValueError("Cannot specify both -pix0_vector and -pix0_vector_mm simultaneously")
+
+    if args.pix0_vector:
+        config['custom_pix0_vector'] = tuple(args.pix0_vector)
+        # pix0_vector is in meters, convert to config
+        config['pix0_override_m'] = tuple(args.pix0_vector)
+    elif args.pix0_vector_mm:
+        # Convert millimeters to meters
+        config['pix0_override_m'] = tuple(x * 0.001 for x in args.pix0_vector_mm)
+        config['custom_pix0_vector'] = config['pix0_override_m']
 
     # Detector absorption
     if args.detector_abs:
@@ -524,7 +667,7 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
 
     # Sampling
     config['dmin'] = args.dmin if args.dmin else 0.0
-    config['oversample'] = args.oversample if args.oversample else 1
+    config['oversample'] = args.oversample if args.oversample else -1  # -1 means auto-select
     config['oversample_thick'] = args.oversample_thick
     config['oversample_polar'] = args.oversample_polar
     config['oversample_omega'] = args.oversample_omega
@@ -574,6 +717,32 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     elif args.polar is not None:
         config['polarization_factor'] = args.polar
 
+    # Divergence and dispersion parameters for source generation
+    # Convert from mrad to radians for divergence parameters
+    if args.divergence is not None:
+        config['hdivrange'] = mrad_to_radians(args.divergence)
+        config['vdivrange'] = mrad_to_radians(args.divergence)
+    if args.hdivrange is not None:
+        config['hdivrange'] = mrad_to_radians(args.hdivrange)
+    if args.vdivrange is not None:
+        config['vdivrange'] = mrad_to_radians(args.vdivrange)
+    if args.hdivstep is not None:
+        config['hdivstep'] = mrad_to_radians(args.hdivstep)
+    if args.vdivstep is not None:
+        config['vdivstep'] = mrad_to_radians(args.vdivstep)
+
+    # Store counts directly
+    config['hdivsteps'] = args.hdivsteps
+    config['vdivsteps'] = args.vdivsteps
+    config['dispsteps'] = args.dispsteps
+
+    # Store round_div flag for elliptical trimming
+    config['round_div'] = args.round_div
+
+    # Store dispersion as fraction (spec says it's a percent)
+    if args.dispersion is not None:
+        config['dispersion'] = args.dispersion / 100.0  # Convert percent to fraction
+
     # Interpolation
     if args.interpolate:
         config['interpolate'] = True
@@ -585,16 +754,125 @@ def parse_and_validate_args(args: argparse.Namespace) -> Dict[str, Any]:
     config['intfile'] = args.intfile
     config['pgmfile'] = args.pgmfile
     config['noisefile'] = args.noisefile
+    config['suppress_noise'] = args.nonoise
     config['scale'] = args.scale
     config['adc'] = args.adc
     config['pgmscale'] = args.pgmscale
     config['seed'] = args.seed if args.seed else int(-time.time())
 
-    # Sources
+    # Sourcefile (store path for later processing)
     if args.sourcefile:
-        config['sources'] = read_sourcefile(args.sourcefile)
+        config['sourcefile'] = args.sourcefile
+
+        # SOURCE-WEIGHT-001 Phase E: CLI warning guard (Option B)
+        # Per specs/spec-a-core.md:150-162, source weights are read but ignored.
+        # Warn if divergence/dispersion parameters are also provided, as they will be ignored
+        # when -sourcefile is specified (sources loaded from file only).
+        divergence_params_present = any([
+            args.hdivrange is not None,
+            args.vdivrange is not None,
+            args.divergence is not None,
+            args.dispersion is not None
+        ])
+
+        if divergence_params_present:
+            # SOURCE-WEIGHT-001 Phase E: Emit Python warning per Option B design
+            # This warning appears when both -sourcefile and divergence/dispersion params are provided
+            # Per specs/spec-a-core.md:151, source weights and generated sources are mutually exclusive
+            warnings.warn(
+                "Divergence/dispersion parameters ignored when sourcefile is provided. "
+                "Sources are loaded from file only (see specs/spec-a-core.md:151-162).",
+                UserWarning,
+                stacklevel=2
+            )
+
+    # S(Q) auxiliary files (read but not used per spec)
+    if args.stol:
+        # Check if file exists
+        if os.path.exists(args.stol):
+            print(f"Note: S(Q) file '{args.stol}' provided but not used in this version (per spec)")
+        else:
+            print(f"Warning: S(Q) file '{args.stol}' not found")
+    if args.stolout:
+        print(f"Note: stolout file '{args.stolout}' specified but S(Q) output not implemented in this version")
 
     return config
+
+
+def print_configuration(crystal_config, detector_config, beam_config, simulator_config=None):
+    """Print configuration parameters for debugging.
+
+    Args:
+        crystal_config: CrystalConfig object
+        detector_config: DetectorConfig object
+        beam_config: BeamConfig object
+        simulator_config: Optional simulator configuration dict
+    """
+    print("\n" + "="*60)
+    print("CONFIGURATION ECHO (for debugging)")
+    print("="*60)
+
+    print("\n### Crystal Configuration ###")
+    print(f"  Cell: a={crystal_config.cell_a:.3f} b={crystal_config.cell_b:.3f} c={crystal_config.cell_c:.3f} Å")
+    print(f"        α={crystal_config.cell_alpha:.3f}° β={crystal_config.cell_beta:.3f}° γ={crystal_config.cell_gamma:.3f}°")
+    print(f"  N_cells: {crystal_config.N_cells[0]} x {crystal_config.N_cells[1]} x {crystal_config.N_cells[2]}")
+    print(f"  Default F: {crystal_config.default_F}")
+    print(f"  Misset: {crystal_config.misset_deg[0]:.3f}° {crystal_config.misset_deg[1]:.3f}° {crystal_config.misset_deg[2]:.3f}°")
+    print(f"  Phi: start={crystal_config.phi_start_deg:.3f}° range={crystal_config.osc_range_deg:.3f}° steps={crystal_config.phi_steps}")
+    print(f"  Mosaic: spread={crystal_config.mosaic_spread_deg:.3f}° domains={crystal_config.mosaic_domains}")
+    if hasattr(crystal_config, 'shape') and crystal_config.shape:
+        print(f"  Crystal shape: {crystal_config.shape.name}")
+
+    print("\n### Detector Configuration ###")
+    print(f"  Pixels: {detector_config.spixels} x {detector_config.fpixels}")
+    print(f"  Pixel size: {detector_config.pixel_size_mm:.4f} mm")
+    print(f"  Distance: {detector_config.distance_mm:.3f} mm")
+    print(f"  Beam center: S={detector_config.beam_center_s:.3f} mm, F={detector_config.beam_center_f:.3f} mm")
+    print(f"  Convention: {detector_config.detector_convention.name}")
+    print(f"  Pivot: {detector_config.detector_pivot.name}")
+    print(f"  Rotations: rotx={detector_config.detector_rotx_deg:.3f}° roty={detector_config.detector_roty_deg:.3f}°")
+    print(f"             rotz={detector_config.detector_rotz_deg:.3f}° twotheta={detector_config.detector_twotheta_deg:.3f}°")
+    if detector_config.oversample != 1:
+        print(f"  Oversample: {detector_config.oversample}")
+
+    print("\n### Beam Configuration ###")
+    print(f"  Wavelength: {beam_config.wavelength_A:.4f} Å")
+    if hasattr(beam_config, 'polarization_factor') and beam_config.polarization_factor != 1.0:
+        print(f"  Polarization factor: {beam_config.polarization_factor:.3f}")
+    if beam_config.fluence:
+        print(f"  Fluence: {beam_config.fluence:.2e} photons/m²")
+    if beam_config.flux and beam_config.exposure:
+        print(f"  Flux: {beam_config.flux:.2e} photons/s")
+        print(f"  Exposure: {beam_config.exposure:.3f} s")
+    if hasattr(beam_config, 'beamsize_mm') and beam_config.beamsize_mm:
+        print(f"  Beam size: {beam_config.beamsize_mm:.3f} mm")
+
+    # Print source information if available
+    if beam_config.source_directions is not None and len(beam_config.source_directions) > 0:
+        print(f"  Sources: {len(beam_config.source_directions)} sources")
+        # Print divergence/dispersion info from config dict if available
+        if simulator_config and isinstance(simulator_config, dict):
+            if simulator_config.get('dispersion_pct', 0) > 0:
+                print(f"  Dispersion: {simulator_config['dispersion_pct']:.1f}% steps={simulator_config.get('dispersion_steps', 1)}")
+            if simulator_config.get('hdiv_range_mrad', 0) > 0:
+                print(f"  H divergence: {simulator_config['hdiv_range_mrad']:.3f} mrad steps={simulator_config.get('hdiv_steps', 1)}")
+            if simulator_config.get('vdiv_range_mrad', 0) > 0:
+                print(f"  V divergence: {simulator_config['vdiv_range_mrad']:.3f} mrad steps={simulator_config.get('vdiv_steps', 1)}")
+
+    if simulator_config and isinstance(simulator_config, dict):
+        print("\n### Simulator Configuration ###")
+        if 'roi' in simulator_config and simulator_config['roi']:
+            roi = simulator_config['roi']
+            print(f"  ROI: [{roi[0]}, {roi[1]}] x [{roi[2]}, {roi[3]}]")
+        if 'adc_offset' in simulator_config:
+            print(f"  ADC offset: {simulator_config.get('adc_offset', 40.0)}")
+        scale_val = simulator_config.get('scale', 0) if simulator_config else 0
+        if scale_val and scale_val > 0:
+            print(f"  Scale: {simulator_config['scale']}")
+        if simulator_config.get('oversample', -1) > 1:
+            print(f"  Oversample: {simulator_config['oversample']}")
+
+    print("="*60 + "\n")
 
 
 def main():
@@ -605,8 +883,17 @@ def main():
     args = parser.parse_args()
 
     try:
+        # Parse dtype and device early (DTYPE-DEFAULT-001)
+        dtype = torch.float32 if args.dtype == 'float32' else torch.float64
+        device = torch.device(args.device)
+
         # Validate and convert arguments
         config = parse_and_validate_args(args)
+
+        # DETECTOR-CONFIG-001 Phase C2: Determine beam center source (explicit vs auto)
+        # This must be called AFTER parse_and_validate_args (which may set beam centers from headers)
+        # but BEFORE creating DetectorConfig (which needs this information)
+        beam_center_source = determine_beam_center_source(args, config)
 
         # Create configuration objects
         if 'cell_params' in config:
@@ -617,7 +904,7 @@ def main():
                 cell_alpha=config['cell_params'][3],
                 cell_beta=config['cell_params'][4],
                 cell_gamma=config['cell_params'][5],
-                N_cells=(config.get('Na', 5), config.get('Nb', 5), config.get('Nc', 5)),
+                N_cells=(config.get('Na', 1), config.get('Nb', 1), config.get('Nc', 1)),  # Match C defaults
                 phi_start_deg=config.get('phi_deg', 0.0),
                 osc_range_deg=config.get('osc_deg', 0.0),
                 phi_steps=config.get('phi_steps', 1),
@@ -625,7 +912,11 @@ def main():
                 mosaic_domains=config.get('mosaic_domains', 1),
                 shape=CrystalShape[config.get('crystal_shape', 'SQUARE')],
                 fudge=config.get('fudge', 1.0),
-                default_F=config.get('default_F', 0.0)
+                default_F=config.get('default_F', 0.0),
+                # Phase G1: Pass MOSFLM orientation if provided
+                mosflm_a_star=config.get('mosflm_a_star'),
+                mosflm_b_star=config.get('mosflm_b_star'),
+                mosflm_c_star=config.get('mosflm_c_star')
             )
 
             if 'misset_deg' in config:
@@ -636,6 +927,9 @@ def main():
 
             if 'misset_seed' in config:
                 crystal_config.misset_seed = config['misset_seed']
+
+            if 'custom_spindle_axis' in config:
+                crystal_config.spindle_axis = config['custom_spindle_axis']
 
         # Create detector config
         detector_config = DetectorConfig(
@@ -650,19 +944,69 @@ def main():
             detector_twotheta_deg=config.get('twotheta_deg', 0.0),
             detector_convention=DetectorConvention[config.get('convention', 'MOSFLM')],
             detector_pivot=DetectorPivot[config.get('pivot', 'BEAM')] if config.get('pivot') else None,
-            oversample=config.get('oversample', 1),
+            oversample=config.get('oversample', -1),  # -1 means auto-select
             point_pixel=config.get('point_pixel', False),
             curved_detector=config.get('curved_detector', False),
             oversample_omega=config.get('oversample_omega', False),
             oversample_polar=config.get('oversample_polar', False),
-            oversample_thick=config.get('oversample_thick', False)
+            oversample_thick=config.get('oversample_thick', False),
+            # DETECTOR-CONFIG-001 Phase C2: Pass beam_center_source for MOSFLM offset logic
+            beam_center_source=beam_center_source,
+            # Custom vectors for CUSTOM convention
+            custom_fdet_vector=config.get('custom_fdet_vector'),
+            custom_sdet_vector=config.get('custom_sdet_vector'),
+            custom_odet_vector=config.get('custom_odet_vector'),
+            custom_beam_vector=config.get('custom_beam_vector'),
+            # Detector origin override (CLI-FLAGS-003)
+            pix0_override_m=config.get('pix0_override_m')
         )
 
         # Set beam center if provided (values are in mm)
-        if 'beam_center_x_mm' in config:
-            detector_config.beam_center_s = config['beam_center_x_mm']
-        if 'beam_center_y_mm' in config:
-            detector_config.beam_center_f = config['beam_center_y_mm']
+        # CRITICAL: C-code Xbeam/Ybeam semantics are convention AND pivot-mode dependent! (AT-PARALLEL-004 root cause)
+        #
+        # C-code behavior (nanoBragg.c lines 631-648, 1206-1275):
+        #   - `-Xbeam`/`-Ybeam` set detector_pivot = BEAM (line 632, 637)
+        #   - `-Xclose`/`-Yclose` set detector_pivot = SAMPLE (line 642, 647)
+        #   - Convention selection OVERRIDES pivot: XDS/DIALS force SAMPLE pivot (lines 1250, 1265)
+        #   - For SAMPLE pivot: Xbeam/Ybeam are IGNORED; C uses detector center (Fclose=detsize/2)
+        #   - For BEAM pivot: Xbeam/Ybeam are mapped to Fbeam/Sbeam with convention-specific axis swaps
+        #
+        # Result: `-xds -Xbeam X -Ybeam Y` is contradictory; C resolves by using SAMPLE pivot
+        #         and ignoring X/Y, falling back to detector center (detsize_f/2, detsize_s/2)
+        #
+        # PyTorch must replicate this: For XDS/DIALS conventions, ignore Xbeam/Ybeam and use detector center.
+        convention = detector_config.detector_convention
+        pixel_size_mm = detector_config.pixel_size_mm
+
+        if 'beam_center_x_mm' in config and 'beam_center_y_mm' in config:
+            Xbeam_mm = config['beam_center_x_mm']
+            Ybeam_mm = config['beam_center_y_mm']
+
+            # Check if convention forces SAMPLE pivot (XDS/DIALS)
+            # For these conventions, Xbeam/Ybeam are ignored; use detector center instead
+            if convention in [DetectorConvention.XDS, DetectorConvention.DIALS]:
+                # XDS/DIALS: Convention forces SAMPLE pivot; ignore Xbeam/Ybeam
+                # Use detector center: Fclose = detsize_f/2, Sclose = detsize_s/2 (C line 1178)
+                # Leave beam_center_f and beam_center_s at their defaults (detector center)
+                # NOTE: DetectorConfig defaults are already set to detector center
+                pass
+            elif convention in [DetectorConvention.MOSFLM, DetectorConvention.DENZO]:
+                # MOSFLM/DENZO: BEAM pivot with axis swap (Fbeam ← Ybeam, Sbeam ← Xbeam)
+                # +0.5 pixel offset is added later in Detector.__init__
+                detector_config.beam_center_f = Ybeam_mm
+                detector_config.beam_center_s = Xbeam_mm
+            elif convention == DetectorConvention.ADXV:
+                # ADXV: BEAM pivot with Y-axis flip
+                detsize_s_mm = detector_config.spixels * pixel_size_mm
+                detector_config.beam_center_f = Xbeam_mm
+                detector_config.beam_center_s = detsize_s_mm - Ybeam_mm
+            elif convention == DetectorConvention.CUSTOM:
+                # CUSTOM: No axis swap (Fbeam ← Xbeam, Sbeam ← Ybeam)
+                detector_config.beam_center_f = Xbeam_mm
+                detector_config.beam_center_s = Ybeam_mm
+        elif 'beam_center_x_mm' in config or 'beam_center_y_mm' in config:
+            # Partial beam center - this shouldn't happen in well-formed input
+            raise ValueError("Both -Xbeam and -Ybeam must be provided together")
 
         # ROI
         if 'roi' in config:
@@ -683,6 +1027,86 @@ def main():
             detector_config.detector_thick_um = config['detector_thick_um']
         if 'detector_thicksteps' in config:
             detector_config.detector_thicksteps = config['detector_thicksteps']
+
+        # Generate sources from divergence/dispersion if not from file
+        # This implements proper source generation per spec AT-SRC-002
+        if 'sourcefile' in config:
+            # Load sources from file
+            wavelength_m = angstroms_to_meters(config.get('wavelength_A', 1.0))
+
+            # Get beam direction based on detector convention (MOSFLM default is [1,0,0])
+            if detector_config.detector_convention == DetectorConvention.MOSFLM:
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=dtype)
+            else:
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)
+
+            source_directions, source_weights, source_wavelengths = read_sourcefile(
+                config['sourcefile'],
+                default_wavelength_m=wavelength_m,
+                default_source_distance_m=10.0,  # C code default
+                beam_direction=beam_direction
+            )
+
+            # Store loaded sources in config
+            config['source_directions'] = source_directions
+            config['source_weights'] = source_weights
+            config['source_wavelengths'] = source_wavelengths
+
+            # Report source loading
+            n_sources = len(source_directions)
+            print(f"Loaded {n_sources} sources from {config['sourcefile']}")
+        elif 'sourcefile' not in config:
+            # Auto-select divergence parameters
+            hdiv_params, vdiv_params = auto_select_divergence(
+                hdivsteps=config.get('hdivsteps'),
+                hdivrange=config.get('hdivrange'),
+                hdivstep=config.get('hdivstep'),
+                vdivsteps=config.get('vdivsteps'),
+                vdivrange=config.get('vdivrange'),
+                vdivstep=config.get('vdivstep')
+            )
+            disp_params = auto_select_dispersion(
+                dispsteps=config.get('dispsteps'),
+                dispersion=config.get('dispersion'),
+                dispstep=None  # No direct dispstep in CLI, computed from range/count
+            )
+
+            # Generate source arrays
+            wavelength_m = angstroms_to_meters(config.get('wavelength_A', 1.0))
+
+            # Get beam direction based on detector convention (MOSFLM default is [1,0,0])
+            if detector_config.detector_convention == DetectorConvention.MOSFLM:
+                beam_direction = torch.tensor([1.0, 0.0, 0.0], dtype=dtype)
+                polarization_axis = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)
+            else:
+                beam_direction = torch.tensor([0.0, 0.0, 1.0], dtype=dtype)
+                polarization_axis = torch.tensor([0.0, 1.0, 0.0], dtype=dtype)
+
+            source_directions, source_weights, source_wavelengths = \
+                generate_sources_from_divergence_dispersion(
+                    hdiv_params=hdiv_params,
+                    vdiv_params=vdiv_params,
+                    disp_params=disp_params,
+                    central_wavelength_m=wavelength_m,
+                    source_distance_m=10.0,  # Default 10m source distance
+                    beam_direction=beam_direction,
+                    polarization_axis=polarization_axis,
+                    round_div=config.get('round_div', True),  # Apply elliptical trimming based on CLI flag
+                    dtype=dtype
+                )
+
+            # Store generated sources in config
+            config['source_directions'] = source_directions
+            config['source_weights'] = source_weights
+            config['source_wavelengths'] = source_wavelengths
+
+            # Report source generation if multiple sources
+            n_sources = len(source_directions)
+            if n_sources > 1:
+                print(f"Generated {n_sources} sources from divergence/dispersion:")
+                print(f"  H divergence: {hdiv_params.count} steps, range={hdiv_params.range:.4f} rad")
+                print(f"  V divergence: {vdiv_params.count} steps, range={vdiv_params.range:.4f} rad")
+                print(f"  Dispersion: {disp_params.count} steps, range={disp_params.range:.4f}")
 
         # Create beam config
         beam_config = BeamConfig(
@@ -705,35 +1129,67 @@ def main():
         elif 'polarization_factor' in config:
             beam_config.polarization_factor = config['polarization_factor']
 
+        # Set generated sources if available
+        if 'source_directions' in config:
+            beam_config.source_directions = config['source_directions']
+            beam_config.source_weights = config['source_weights']
+            beam_config.source_wavelengths = config['source_wavelengths']
+
         # Create models
         detector = Detector(detector_config)
         crystal = Crystal(crystal_config, beam_config=beam_config)
 
         # Set HKL data if available
-        if 'hkl_data' in config and config['hkl_data'] is not None:
-            hkl_array, hkl_metadata = config['hkl_data']
+        hkl_entry = config.get('hkl_data')
+        if hkl_entry is not None:
+            hkl_array, hkl_metadata = hkl_entry
             # Check if we actually got data (not just (None, None))
             if hkl_array is not None:
                 if isinstance(hkl_array, torch.Tensor):
-                    crystal.hkl_data = hkl_array.clone().detach().to(dtype=torch.float64)
+                    crystal.hkl_data = hkl_array.clone().detach().to(device=device, dtype=dtype)
                 else:
-                    crystal.hkl_data = torch.tensor(hkl_array, dtype=torch.float64)
+                    crystal.hkl_data = torch.tensor(hkl_array, device=device, dtype=dtype)
                 crystal.hkl_metadata = hkl_metadata
 
         # Check interpolation settings
         if 'interpolate' in config:
             crystal.interpolation_enabled = config['interpolate']
 
-        # Create and run simulator
-        simulator = Simulator(crystal, detector, beam_config=beam_config)
+        # Create and run simulator with debug options
+        debug_config = {
+            'printout': args.printout,
+            'printout_pixel': args.printout_pixel,  # [fast, slow] indices
+            'trace_pixel': args.trace_pixel,  # [slow, fast] indices
+        }
+
+        # dtype and device already parsed earlier (DTYPE-DEFAULT-001)
+
+        simulator = Simulator(crystal, detector, beam_config=beam_config,
+                            device=device, dtype=dtype, debug_config=debug_config)
+
+        # Print configuration if requested
+        if args.show_config:
+            print_configuration(crystal_config, detector_config, beam_config, config)
 
         print(f"Running simulation...")
         print(f"  Detector: {detector_config.fpixels}x{detector_config.spixels} pixels")
         print(f"  Crystal: {crystal_config.cell_a:.1f}x{crystal_config.cell_b:.1f}x{crystal_config.cell_c:.1f} Å")
         print(f"  Wavelength: {beam_config.wavelength_A:.2f} Å")
+        print(f"  Device: {device}, Dtype: {dtype}")
+        if detector_config.detector_convention == DetectorConvention.CUSTOM:
+            print(f"  Convention: CUSTOM (using custom detector basis vectors)")
 
-        # Run simulation
-        intensity = simulator.run()
+        # Run simulation with any debug output
+        if args.printout:
+            print("\nDebug output enabled for simulation")
+        if args.printout_pixel:
+            print(f"  Limiting output to pixel (fast={args.printout_pixel[0]}, slow={args.printout_pixel[1]})")
+        if args.trace_pixel:
+            print(f"  Tracing pixel (slow={args.trace_pixel[0]}, fast={args.trace_pixel[1]})")
+        if args.pixel_batch_size:
+            print(f"  Pixel batching: {args.pixel_batch_size} rows per chunk")
+
+        intensity = simulator.run(pixel_batch_size=args.pixel_batch_size)
 
         # Compute statistics
         stats = simulator.compute_statistics(intensity)
@@ -804,7 +1260,8 @@ def main():
             write_pgm(config['pgmfile'], intensity.cpu().numpy(), pgmscale)
             print(f"Wrote PGM image to {config['pgmfile']}")
 
-        if config.get('noisefile'):
+        # CLI-FLAGS-003: Honor -nonoise flag
+        if config.get('noisefile') and not config.get('suppress_noise', False):
             # Generate and write noise image
             noise_config = NoiseConfig(
                 seed=config.get('seed'),

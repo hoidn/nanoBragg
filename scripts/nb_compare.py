@@ -10,12 +10,15 @@ a reproducible artifact bundle.
 """
 
 import argparse
+import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -112,8 +115,16 @@ def run_simulation(
     return runtime, result.stdout, result.stderr
 
 
-def load_float_image(filepath: str) -> np.ndarray:
-    """Load a float image from binary file."""
+def load_float_image(filepath: str, args_list: Optional[List[str]] = None) -> np.ndarray:
+    """Load a float image from binary file and infer dimensions.
+
+    Args:
+        filepath: Path to binary float32 image file
+        args_list: Command-line arguments to parse for detector dimensions
+
+    Returns:
+        2D numpy array if dimensions can be determined, else 1D array
+    """
     if not Path(filepath).exists():
         raise FileNotFoundError(f"Float image not found: {filepath}")
 
@@ -121,13 +132,38 @@ def load_float_image(filepath: str) -> np.ndarray:
     filesize = Path(filepath).stat().st_size
     n_pixels = filesize // 4  # float32
 
+    data = np.fromfile(filepath, dtype=np.float32)
+
+    # Try to extract dimensions from command-line arguments first
+    if args_list:
+        # Look for -detpixels_x and -detpixels_y (separate X/Y specification)
+        try:
+            if '-detpixels_x' in args_list:
+                idx_x = args_list.index('-detpixels_x')
+                fpixels = int(args_list[idx_x + 1])
+                if '-detpixels_y' in args_list:
+                    idx_y = args_list.index('-detpixels_y')
+                    spixels = int(args_list[idx_y + 1])
+                    if fpixels * spixels == n_pixels:
+                        return data.reshape(spixels, fpixels)
+        except (ValueError, IndexError):
+            pass
+
+        # Look for -detpixels (square detector)
+        try:
+            if '-detpixels' in args_list:
+                idx = args_list.index('-detpixels')
+                size = int(args_list[idx + 1])
+                if size * size == n_pixels:
+                    return data.reshape(size, size)
+        except (ValueError, IndexError):
+            pass
+
     # Common detector sizes to try
     common_sizes = [
         (64, 64), (128, 128), (256, 256), (512, 512), (1024, 1024),
         (2048, 2048), (4096, 4096)
     ]
-
-    data = np.fromfile(filepath, dtype=np.float32)
 
     # Try to find matching size
     for h, w in common_sizes:
@@ -238,7 +274,7 @@ def save_png_previews(
     py_img: np.ndarray,
     diff_img: np.ndarray,
     outdir: Path,
-    png_scale: int = 99
+    png_scale: float = 99.5
 ) -> None:
     """Save PNG preview images."""
     try:
@@ -247,15 +283,23 @@ def save_png_previews(
         print("Warning: PIL not available, skipping PNG previews")
         return
 
-    # Scale to percentile
-    def scale_to_uint8(img, percentile):
-        vmax = np.percentile(img[img > 0], percentile) if np.any(img > 0) else 1.0
-        scaled = np.clip(img / vmax * 255, 0, 255).astype(np.uint8)
+    # Scale to percentile using union of both images per spec
+    # png_scale is already the percentile value (default 99.5)
+
+    # Compute union percentile from both images
+    combined = np.concatenate([c_img[c_img > 0], py_img[py_img > 0]])
+    if len(combined) > 0:
+        vmax = np.percentile(combined, png_scale)
+    else:
+        vmax = 1.0
+
+    def scale_to_uint8(img, vmax_val):
+        scaled = np.clip(img / vmax_val * 255, 0, 255).astype(np.uint8)
         return Image.fromarray(scaled)
 
-    # Save images
-    scale_to_uint8(c_img, png_scale).save(outdir / 'c_output.png')
-    scale_to_uint8(py_img, png_scale).save(outdir / 'py_output.png')
+    # Save images with spec-compliant names
+    scale_to_uint8(c_img, vmax).save(outdir / 'c.png')
+    scale_to_uint8(py_img, vmax).save(outdir / 'py.png')
 
     # For diff, use symmetric scaling
     vmax = np.percentile(np.abs(diff_img), png_scale)
@@ -269,16 +313,16 @@ def main():
         usage='nb-compare [options] -- ARGS...'
     )
 
-    parser.add_argument('--outdir', type=str, default='comparison_artifacts',
-                       help='Output directory for artifacts')
+    parser.add_argument('--outdir', type=str, default=None,
+                       help='Output directory for artifacts (default: auto-generated)')
     parser.add_argument('--roi', type=int, nargs=4, metavar=('xmin', 'xmax', 'ymin', 'ymax'),
                        help='ROI for metric computation')
     parser.add_argument('--threshold', type=float, default=0.95,
                        help='Correlation threshold for pass/fail')
     parser.add_argument('--resample', action='store_true',
                        help='Resample images if shapes differ')
-    parser.add_argument('--png-scale', type=int, default=99, metavar='PCTL',
-                       help='Percentile for PNG scaling (default: 99)')
+    parser.add_argument('--png-scale', type=float, default=99.5, metavar='PCTL',
+                       help='Percentile for PNG scaling (default: 99.5)')
     parser.add_argument('--save-diff', action='store_true',
                        help='Save difference image')
     parser.add_argument('--c-bin', type=str, help='Path to C nanoBragg binary')
@@ -293,8 +337,16 @@ def main():
     else:
         args = parser.parse_args()
 
-    # Create output directory
-    outdir = Path(args.outdir)
+    # Create output directory with spec-compliant naming
+    if args.outdir:
+        outdir = Path(args.outdir)
+    else:
+        # Generate directory name: comparisons/YYYYMMDD-HHMMSS-<short-hash>
+        timestamp = datetime.now().strftime('%Y%m%d-%H%M%S')
+        # Create hash from canonicalized args
+        args_str = ' '.join(args.args)
+        args_hash = hashlib.md5(args_str.encode()).hexdigest()[:8]
+        outdir = Path('comparisons') / f'{timestamp}-{args_hash}'
     outdir.mkdir(parents=True, exist_ok=True)
 
     # Find binaries
@@ -341,8 +393,8 @@ def main():
 
         # Load float images
         print("\nLoading float images...")
-        c_img = load_float_image(c_float_path)
-        py_img = load_float_image(py_float_path)
+        c_img = load_float_image(c_float_path, args.args)
+        py_img = load_float_image(py_float_path, args.args)
 
         print(f"C image shape: {c_img.shape}")
         print(f"PyTorch image shape: {py_img.shape}")
@@ -363,10 +415,19 @@ def main():
         print("\nComputing metrics...")
         metrics = compute_metrics(c_img, py_img, args.roi)
 
-        # Add runtime info
-        metrics['c_runtime_s'] = c_runtime
-        metrics['py_runtime_s'] = py_runtime
+        # Add runtime info in milliseconds per spec
+        metrics['runtime_c_ms'] = int(c_runtime * 1000)
+        metrics['runtime_py_ms'] = int(py_runtime * 1000)
         metrics['speedup'] = c_runtime / py_runtime if py_runtime > 0 else np.inf
+
+        # Add spec-required fields
+        metrics['args'] = args.args
+        metrics['c_binary'] = str(c_bin)
+        metrics['py_binary'] = ' '.join(py_cmd) if isinstance(py_cmd, list) else str(py_cmd)
+        metrics['roi'] = args.roi if args.roi else None
+        metrics['resample'] = args.resample
+        metrics['png_scale_method'] = 'percentile'
+        metrics['png_scale_percentile'] = args.png_scale
 
         if resample_note:
             metrics['resample_note'] = resample_note
@@ -390,6 +451,12 @@ def main():
         with open(outdir / 'summary.json', 'w') as f:
             json.dump(metrics, f, indent=2)
 
+        # Copy/link float files to output directory with spec names
+        c_float_dest = outdir / 'c_float.bin'
+        py_float_dest = outdir / 'py_float.bin'
+        shutil.copy2(c_float_path, c_float_dest)
+        shutil.copy2(py_float_path, py_float_dest)
+
         # Save PNG previews
         print(f"\nSaving PNG previews to {outdir}/")
         diff_img = py_img - c_img
@@ -407,7 +474,7 @@ def main():
             return 0
         else:
             print(f"\n✗ FAIL: Correlation {metrics['correlation']:.6f} < {args.threshold}")
-            return 1
+            return 3  # Exit code 3 for correlation below threshold per spec
 
     finally:
         # Clean up temp files

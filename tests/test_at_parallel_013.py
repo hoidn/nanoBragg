@@ -13,6 +13,12 @@ Acceptance Test Requirements (from spec-a-parallel.md):
 import os
 import sys
 import platform
+
+# Set environment variables BEFORE importing torch to avoid device query issues
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['TORCHDYNAMO_DISABLE'] = '1'
+os.environ['NANOBRAGG_DISABLE_COMPILE'] = '1'
+
 import numpy as np
 import torch
 import pytest
@@ -38,7 +44,11 @@ except ImportError:
 
 
 def set_deterministic_mode():
-    """Set PyTorch to deterministic mode for reproducibility."""
+    """Set PyTorch to deterministic mode for reproducibility.
+
+    Note: CUDA_VISIBLE_DEVICES, TORCHDYNAMO_DISABLE, and NANOBRAGG_DISABLE_COMPILE
+    are set at module level before torch import to prevent device query issues.
+    """
     # Set seeds
     torch.manual_seed(42)
     np.random.seed(42)
@@ -51,9 +61,6 @@ def set_deterministic_mode():
 
     # Set default dtype to float64
     torch.set_default_dtype(torch.float64)
-
-    # Disable CUDA even if available
-    os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
     # Try to set threading for reproducibility, but don't fail if already set
     try:
@@ -71,6 +78,12 @@ def set_deterministic_mode():
         os.environ['MKL_NUM_THREADS'] = '1'
     if 'OMP_NUM_THREADS' not in os.environ:
         os.environ['OMP_NUM_THREADS'] = '1'
+
+    # Reset dynamo state after toggling so other tests resume with defaults
+    try:
+        torch._dynamo.reset()
+    except Exception:
+        pass  # Dynamo may not be available or already reset
 
 
 def get_platform_fingerprint():
@@ -126,9 +139,9 @@ def run_simulation_deterministic(seed: int = 42):
     )
 
     # Create models in deterministic mode
-    crystal = Crystal(crystal_config)
-    detector = Detector(detector_config)
-    simulator = Simulator(crystal, detector, crystal_config, beam_config)
+    crystal = Crystal(crystal_config, dtype=torch.float64)
+    detector = Detector(detector_config, dtype=torch.float64)
+    simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
 
     # Run simulation on CPU with float64
     result = simulator.run()
@@ -312,7 +325,7 @@ class TestATParallel013CrossPlatformConsistency:
         )
 
         # Verify float64 is used
-        crystal = Crystal(crystal_config)
+        crystal = Crystal(crystal_config, dtype=torch.float64)
 
         # Check that internal tensors are float64
         assert crystal.cell_a.dtype == torch.float64, "Crystal cell_a not float64"
@@ -327,9 +340,9 @@ class TestATParallel013CrossPlatformConsistency:
             distance_mm=100.0
         )
 
-        detector = Detector(detector_config)
+        detector = Detector(detector_config, dtype=torch.float64)
         beam_config = BeamConfig(wavelength_A=1.0, fluence=1e15)
-        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config, dtype=torch.float64)
 
         result = simulator.run()
         assert result.dtype == torch.float64, "Simulation result not float64"

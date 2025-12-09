@@ -56,8 +56,9 @@ def test_dmin_culling_basic():
     crystal = Crystal(crystal_config)
 
     # Run simulation without dmin cutoff
+    # Use oversample=1 for clear pixel-level culling test
     simulator = Simulator(crystal, detector, crystal_config, beam_config_no_cutoff)
-    image_no_cutoff = simulator.run()
+    image_no_cutoff = simulator.run(oversample=1)
 
     # Now run with dmin cutoff that should eliminate high-angle pixels
     # Choose dmin = 10.0 Angstroms to cut off more reflections with our geometry
@@ -67,7 +68,7 @@ def test_dmin_culling_basic():
     )
 
     simulator_with_cutoff = Simulator(crystal, detector, crystal_config, beam_config_with_cutoff)
-    image_with_cutoff = simulator_with_cutoff.run()
+    image_with_cutoff = simulator_with_cutoff.run(oversample=1)
 
     # Check that some pixels were culled
     # High-angle pixels (far from center) should have zero intensity with cutoff
@@ -148,8 +149,10 @@ def test_dmin_culling_exact_threshold():
     scattering_vector = (diffracted_unit - incident_unit) / wavelength
     stol_values = 0.5 * torch.norm(scattering_vector, dim=-1)
 
-    # Run simulation
-    image = simulator.run()
+    # Run simulation with oversample=1 to test pixel-level culling
+    # (With high oversampling, some subpixels may have stol below threshold
+    # even when pixel center has stol above threshold, which is correct per spec)
+    image = simulator.run(oversample=1)
 
     # Check culling based on stol threshold
     stol_threshold = 0.5 / beam_config.dmin  # = 0.5 / 5.0 = 0.1

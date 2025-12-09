@@ -111,12 +111,12 @@ class TestAT_PARALLEL_024:
             )
 
             # Create two separate simulators
-            crystal1 = Crystal(crystal_config1, beam_config)
-            detector1 = Detector(detector_config)
+            crystal1 = Crystal(crystal_config1, beam_config, dtype=torch.float64)
+            detector1 = Detector(detector_config, dtype=torch.float64)
             sim1 = Simulator(crystal1, detector1, crystal_config1, beam_config)
 
-            crystal2 = Crystal(crystal_config2, beam_config)
-            detector2 = Detector(detector_config)
+            crystal2 = Crystal(crystal_config2, beam_config, dtype=torch.float64)
+            detector2 = Detector(detector_config, dtype=torch.float64)
             sim2 = Simulator(crystal2, detector2, crystal_config2, beam_config)
 
             # Generate images
@@ -166,8 +166,8 @@ class TestAT_PARALLEL_024:
                 wavelength_A=base_config['wavelength']
             )
 
-            crystal = Crystal(crystal_config, beam_config)
-            detector = Detector(detector_config)
+            crystal = Crystal(crystal_config, beam_config, dtype=torch.float64)
+            detector = Detector(detector_config, dtype=torch.float64)
             sim = Simulator(crystal, detector, crystal_config, beam_config)
 
             images.append(sim.run())
@@ -276,8 +276,8 @@ class TestAT_PARALLEL_024:
                 wavelength_A=base_config['wavelength']
             )
 
-            crystal = Crystal(crystal_config, beam_config)
-            detector = Detector(detector_config)
+            crystal = Crystal(crystal_config, beam_config, dtype=torch.float64)
+            detector = Detector(detector_config, dtype=torch.float64)
             sim = Simulator(crystal, detector, crystal_config, beam_config)
             pt_image = sim.run()
 
@@ -342,9 +342,9 @@ class TestAT_PARALLEL_024:
         seed = 12345
         mosaicity = np.pi / 2.0  # 90 degrees
 
-        # Generate two matrices with same seed
-        umat1 = mosaic_rotation_umat(mosaicity, seed)
-        umat2 = mosaic_rotation_umat(mosaicity, seed)
+        # Generate two matrices with same seed, explicitly using float64 for precision
+        umat1 = mosaic_rotation_umat(mosaicity, seed, dtype=torch.float64)
+        umat2 = mosaic_rotation_umat(mosaicity, seed, dtype=torch.float64)
 
         # They should be identical
         assert torch.allclose(umat1, umat2, rtol=1e-12, atol=1e-15), \
@@ -370,15 +370,16 @@ class TestAT_PARALLEL_024:
         ]
 
         for angles in test_angles:
-            # Create rotation matrix from angles
-            rotx, roty, rotz = angles
+            # Create rotation matrix from angles (convert to tensors for PERF-PYTORCH-004 compatibility)
+            rotx, roty, rotz = [torch.tensor(a, dtype=torch.float64) for a in angles]
             umat = angles_to_rotation_matrix(rotx, roty, rotz)
 
             # Extract angles back
             extracted = umat2misset(umat)
 
-            # Create matrix from extracted angles to verify
-            umat_reconstructed = angles_to_rotation_matrix(*extracted)
+            # Create matrix from extracted angles to verify (convert to tensors for PERF-PYTORCH-004 compatibility)
+            extracted_tensors = [torch.tensor(a, dtype=torch.float64) for a in extracted]
+            umat_reconstructed = angles_to_rotation_matrix(*extracted_tensors)
 
             # The matrices should be identical (accounting for gimbal lock edge cases)
             assert torch.allclose(umat, umat_reconstructed, rtol=1e-10, atol=1e-12), \

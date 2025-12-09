@@ -23,7 +23,7 @@ class TestDetectorBasisVectors:
             detector_rotz_deg=0.0,
             detector_twotheta_deg=0.0,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Check basis vectors match expected MOSFLM convention
         torch.testing.assert_close(
@@ -45,7 +45,7 @@ class TestDetectorBasisVectors:
             detector_rotz_deg=0.0,
             detector_twotheta_deg=0.0,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Check basis vectors match expected XDS convention
         torch.testing.assert_close(
@@ -67,7 +67,7 @@ class TestDetectorBasisVectors:
             detector_rotz_deg=0.0,
             detector_twotheta_deg=0.0,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # After 90 degree rotation around X:
         # - fdet (0,0,1) -> (0,-1,0)
@@ -99,7 +99,7 @@ class TestDetectorBasisVectors:
             detector_rotz_deg=0.0,
             detector_twotheta_deg=0.0,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # After 90 degree rotation around Y:
         # - fdet (0,0,1) -> (1,0,0)
@@ -133,7 +133,7 @@ class TestDetectorBasisVectors:
             detector_rotz_deg=0.0,
             detector_twotheta_deg=0.0,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Manually calculate expected result
         rotx_rad = np.radians(30.0)
@@ -190,7 +190,7 @@ class TestDetectorBasisVectors:
             detector_twotheta_deg=30.0,
             twotheta_axis=torch.tensor([0.0, 1.0, 0.0]),
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Calculate expected vectors after 30 degree rotation around Y
         angle_rad = np.radians(30.0)
@@ -224,7 +224,7 @@ class TestDetectorBasisVectors:
             detector_twotheta_deg=15.0,
             twotheta_axis=torch.tensor([0.0, 1.0, 0.0]),
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Verify that basis vectors are orthonormal
         # Check orthogonality
@@ -251,7 +251,7 @@ class TestDetectorBasisVectors:
             detector_rotz_deg=rotz,
             detector_twotheta_deg=twotheta,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Verify tensors preserve gradients
         assert detector.fdet_vec.requires_grad

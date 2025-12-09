@@ -1,7 +1,51 @@
-"""C-compatible random number generation utilities.
+"""C-compatible Random Number Generator (Minimal Standard LCG + Bays-Durham Shuffle)
 
-This module provides Python implementations of the C random number functions
-used in nanoBragg.c, particularly for reproducible misset generation.
+This module implements the Minimal Standard Linear Congruential Generator
+(Park & Miller 1988) with Bays-Durham shuffle, providing bitwise-exact
+compatibility with nanoBragg.c's `ran1()` function.
+
+Algorithm Overview:
+-------------------
+- Core: LCG with multiplier IA=16807, modulus IM=2147483647 (2^31 - 1)
+- Enhancement: 32-element Bays-Durham shuffle table for improved randomness
+- Period: ~2.1 billion (IM - 1), sufficient for most simulations
+- Output: Uniform random values in [1.2e-7, 1.0-1.2e-7] (excludes exact 0.0/1.0)
+
+Seed Contract (C Pointer Side-Effect Semantics):
+------------------------------------------------
+The C implementation uses **pointer side effects** to advance seed state:
+    double ran1(long *idum) { ... *idum = new_state; ... }
+
+Each call mutates the seed variable in-place. The PyTorch implementation
+replicates this via the LCGRandom class (CLCG):
+    rng = CLCG(seed=12345)
+    val1 = rng.ran1()  # Advances internal state
+    val2 = rng.ran1()  # Advances again (deterministic sequence)
+
+Key Functions:
+--------------
+- mosaic_rotation_umat(): Generates random rotation matrix for mosaic/misset
+  Consumes **3 RNG values** per call (axis direction + angle scaling)
+- CLCG.ran1(): Generates single uniform random value in [0, 1)
+  Advances internal state by 1 step (equivalent to C's `ran1(&seed)`)
+
+Determinism Requirements:
+--------------------------
+1. Same seed → identical random sequence (bitwise reproducible)
+2. Independent seeds for noise/mosaic/misset domains (avoid correlation)
+3. CPU/GPU neutrality: Results independent of device (CPU vs CUDA)
+
+Validation:
+-----------
+Bitstream parity verified by test_lcg_compatibility (AT-PARALLEL-024).
+Determinism validated by AT-PARALLEL-013 (same-seed runs, correlation ≥0.9999999).
+
+References:
+-----------
+- C Source: nanoBragg.c lines 4143-4185 (ran1), 3820-3868 (mosaic_rotation_umat)
+- Spec: specs/spec-a-core.md §5.3 (RNG determinism)
+- Architecture: arch.md ADR-05 (Deterministic Sampling & Seeds)
+- Phase B3 Analysis: reports/determinism-callchain/phase_b3/20251011T051737Z/c_seed_flow.md
 """
 
 import math
@@ -122,7 +166,12 @@ class CLCG:
         return min(temp, self.RNMX)
 
 
-def mosaic_rotation_umat(mosaicity: float, seed: Optional[int] = None) -> torch.Tensor:
+def mosaic_rotation_umat(
+    mosaicity: float,
+    seed: Optional[int] = None,
+    dtype: Optional[torch.dtype] = None,
+    device: torch.device = torch.device('cpu')
+) -> torch.Tensor:
     """Generate a random unitary rotation matrix within a spherical cap.
 
     This function ports the mosaic_rotation_umat() function from nanoBragg.c,
@@ -181,10 +230,37 @@ def mosaic_rotation_umat(mosaicity: float, seed: Optional[int] = None) -> torch.
     Args:
         mosaicity: Maximum rotation angle in radians.
         seed: Random seed for reproducibility.
+        dtype: Data type for output tensor (default: torch.get_default_dtype())
+        device: Device for output tensor (default: CPU)
 
     Returns:
         A 3x3 unitary rotation matrix as a torch.Tensor.
+
+    RNG Consumption:
+    ----------------
+    This function consumes **3 random values** per call:
+    1. r1: Axis direction angle (uniform on [-1, 1])
+    2. r2: Axis Z-component (uniform on [-1, 1])
+    3. r3: Rotation magnitude scaling (uniform on [-1, 1])
+
+    C Equivalent:
+    -------------
+    Replicates nanoBragg.c lines 3820-3868 (mosaic_rotation_umat).
+    C version uses pointer side effects: `ran1(&seed)` mutates seed in-place.
+    PyTorch version uses stateful CLCG class for memory safety.
+
+    Seed State Progression Example:
+    --------------------------------
+    rng = CLCG(seed=-12345678)
+    umat1 = mosaic_rotation_umat(1.0, seed=-12345678)  # Consumes 3 values
+    # For next call, seed has advanced 3 steps internally
+
+    For 10 mosaic domains: Total 30 RNG calls → seed advances 30 steps.
     """
+    # Use default dtype if not specified
+    if dtype is None:
+        dtype = torch.get_default_dtype()
+
     rng = CLCG(seed)
 
     # Make three random uniform deviates on [-1:1]
@@ -215,7 +291,7 @@ def mosaic_rotation_umat(mosaicity: float, seed: Optional[int] = None) -> torch.
     t24 = v3 * v3
 
     # Populate the unitary rotation matrix
-    umat = torch.zeros(3, 3, dtype=torch.float64)
+    umat = torch.zeros(3, 3, dtype=dtype, device=device)
     umat[0, 0] = t1 + t2 * t3      # uxx
     umat[0, 1] = t7 - t9            # uxy
     umat[0, 2] = t11 + t12          # uxz

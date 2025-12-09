@@ -24,8 +24,10 @@ class TestDetectorConfig:
         assert config.spixels == 1024
         assert config.fpixels == 1024
 
-        # Beam center - MOSFLM convention adds 0.5 pixel offset for 1024x1024 detector
-        # beam_center = (1024 * 0.1 + 0.1) / 2.0 = 51.25
+        # Beam center - Auto-calculated defaults per spec-a-core.md §71
+        # MOSFLM default: Xbeam = Ybeam = (detsize + pixel)/2
+        # For 1024 pixels × 0.1 mm: (102.4 + 0.1) / 2 = 51.25 mm
+        # The MOSFLM +0.5 pixel mapping offset is applied later in Detector class
         assert config.beam_center_s == 51.25
         assert config.beam_center_f == 51.25
 
@@ -39,8 +41,8 @@ class TestDetectorConfig:
         assert config.detector_convention == DetectorConvention.MOSFLM
         assert config.detector_pivot == DetectorPivot.BEAM
 
-        # Sampling
-        assert config.oversample == 1
+        # Sampling - default is -1 for auto-selection
+        assert config.oversample == -1
         
         # Post_init should set twotheta_axis for MOSFLM convention
         # MOSFLM default is [0, 0, -1] (negative Z-axis) per C code line 1245
@@ -92,7 +94,7 @@ class TestDetectorConfig:
 
     def test_invalid_oversample(self):
         """Test that invalid oversample raises error."""
-        with pytest.raises(ValueError, match="Oversample must be at least 1"):
+        with pytest.raises(ValueError, match="Oversample must be -1 \\(auto-select\\) or >= 1"):
             DetectorConfig(oversample=0)
 
     def test_tensor_parameters(self):
@@ -123,7 +125,7 @@ class TestDetectorInitialization:
 
     def test_default_initialization(self):
         """Test that Detector initializes with default config."""
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
 
         # Check that config was created
         assert detector.config is not None
@@ -138,7 +140,10 @@ class TestDetectorInitialization:
         assert detector.fpixels == 1024
 
         # Check beam center in pixels
-        # MOSFLM convention: 51.25 mm / 0.1 mm per pixel + 0.5 = 513.0
+        # MOSFLM convention default: 51.25 mm (per spec-a-core.md §71: (detsize + pixel)/2)
+        # With MOSFLM +0.5 pixel mapping offset applied in Detector:
+        # Fbeam = Ybeam + 0.5·pixel = 51.25 + 0.05 = 51.3 mm
+        # 51.3 mm / 0.1 mm per pixel = 513.0 pixels
         assert detector.beam_center_s == 513.0
         assert detector.beam_center_f == 513.0
         
@@ -156,7 +161,7 @@ class TestDetectorInitialization:
             beam_center_s=204.8,  # 1024 pixels * 0.2 mm
             beam_center_f=204.8,
         )
-        detector = Detector(config)
+        detector = Detector(config, dtype=torch.float64)
 
         # Check unit conversions (detector uses meters internally)
         assert detector.distance == 0.2  # 200 mm = 0.2 m
@@ -167,15 +172,18 @@ class TestDetectorInitialization:
         assert detector.fpixels == 2048
 
         # Check beam center in pixels
-        # Default convention is MOSFLM which adds +0.5 pixel offset
-        assert detector.beam_center_s == 1024.5  # 204.8 mm / 0.2 mm per pixel + 0.5
+        # Per spec AT-GEO-001, MOSFLM convention ALWAYS applies +0.5 pixel mapping offset
+        # User provides: 204.8 mm
+        # Fbeam = Ybeam + 0.5·pixel = 204.8 + 0.1 = 204.9 mm
+        # In pixels: 204.9 / 0.2 = 1024.5 pixels
+        assert detector.beam_center_s == 1024.5
         assert detector.beam_center_f == 1024.5
 
     def test_backward_compatibility_check(self):
         """Test that _is_default_config works correctly."""
         # The _is_default_config method checks for specific "golden" values
         # Now that MOSFLM defaults to 51.25, a default detector WILL match
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
         assert detector._is_default_config()  # Default now has 51.25 for MOSFLM
 
         # Create a config with different values that should NOT match
@@ -197,7 +205,7 @@ class TestDetectorInitialization:
 
     def test_basis_vectors_initialization(self):
         """Test that basis vectors are initialized correctly."""
-        detector = Detector()
+        detector = Detector(dtype=torch.float64)
 
         # Check default basis vectors (use correct dtype)
         torch.testing.assert_close(
@@ -219,7 +227,11 @@ class TestDetectorInitialization:
 
         detector = Detector(device=device, dtype=torch.float32)
 
-        assert detector.device == device
+        # Normalize device for comparison (cuda -> cuda:0)
+        temp = torch.zeros(1, device=device)
+        expected_device = temp.device
+
+        assert detector.device == expected_device
         assert detector.dtype == torch.float32
-        assert detector.fdet_vec.device == device
+        assert detector.fdet_vec.device == expected_device
         assert detector.fdet_vec.dtype == torch.float32

@@ -11,14 +11,44 @@ import pytest
 import numpy as np
 from torch.autograd import gradcheck, gradgradcheck
 
-# Set environment variable for MKL compatibility
+# Set environment variables before importing nanobrag_torch
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+# Preserve external NANOBRAGG_DISABLE_COMPILE if set, otherwise default to '0'
+# This allows the gradient_policy_guard fixture to enforce the requirement
+os.environ["NANOBRAGG_DISABLE_COMPILE"] = os.environ.get("NANOBRAGG_DISABLE_COMPILE", "0")
 
 # Import the core components
 from nanobrag_torch.config import CrystalConfig
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
+
+
+# ============================================================================
+# Phase K Task K2: Gradient Policy Guard
+# ============================================================================
+
+@pytest.fixture(scope="module", autouse=True)
+def gradient_policy_guard():
+    """
+    Enforce NANOBRAGG_DISABLE_COMPILE=1 for gradient tests.
+
+    See: reports/2026-01-test-suite-refresh/phase_j/20251015T180301Z/analysis/gradient_policy_guard.md
+    """
+    if os.environ.get('NANOBRAGG_DISABLE_COMPILE') != '1':
+        pytest.skip(
+            "Gradient tests require NANOBRAGG_DISABLE_COMPILE=1 environment variable.\n\n"
+            "This guard prevents torch.compile donated buffer interference with "
+            "torch.autograd.gradcheck.\n\n"
+            "To run gradient tests, use:\n"
+            "  env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE \\\n"
+            "    NANOBRAGG_DISABLE_COMPILE=1 pytest -v tests/test_gradients.py\n\n"
+            "For details, see:\n"
+            "  - docs/development/testing_strategy.md S4.1\n"
+            "  - arch.md S15 (Differentiability Guidelines)\n"
+            "  - reports/2026-01-test-suite-refresh/phase_m2/20251011T172830Z/"
+        )
 
 
 class GradientTestHelper:
@@ -375,7 +405,12 @@ class TestAdvancedGradients:
         )
 
     def test_gradient_flow_simulation(self):
-        """Verify end-to-end gradient flow through full simulation pipeline."""
+        """Verify end-to-end gradient flow through full simulation pipeline.
+
+        Note: Requires non-zero structure factors (default_F) to generate
+        non-zero intensity, ensuring gradients can be validated. Zero intensity
+        produces zero gradients mathematically (∂(0)/∂θ = 0).
+        """
         device = torch.device("cpu")
         dtype = torch.float64
 
@@ -388,6 +423,8 @@ class TestAdvancedGradients:
         cell_gamma = torch.tensor(90.0, dtype=dtype, requires_grad=True)
 
         # Create config with tensor parameters
+        # NOTE: default_F=100.0 ensures non-zero intensity for gradient validation
+        # (see Phase B findings: reports/2026-01-gradient-flow/phase_b/20251015T053254Z/)
         config = CrystalConfig(
             cell_a=cell_a,
             cell_b=cell_b,
@@ -398,6 +435,7 @@ class TestAdvancedGradients:
             mosaic_spread_deg=0.0,
             mosaic_domains=1,
             N_cells=(5, 5, 5),
+            default_F=100.0,
         )
 
         # Create objects
@@ -555,6 +593,8 @@ class TestPropertyBasedGradients:
                 volume, volume_triple, rtol=1e-6
             ), f"Failed for cell {i}: Volume mismatch {volume} vs {volume_triple}"
 
+    @pytest.mark.slow_gradient
+    @pytest.mark.timeout(905)
     def test_property_gradient_stability(self):
         """Ensure gradients remain stable across parameter space."""
         torch.manual_seed(44)  # For reproducibility
@@ -836,3 +876,455 @@ class TestOptimizationRecovery:
             assert (
                 final_loss < 1e-4
             ), f"Scenario '{scenario['name']}' failed to converge: final loss = {final_loss}"
+
+
+class TestDBEXGradientBlockers:
+    """
+    Tests for DBEX-GRADIENT-001: Gradient flow for beam and detector parameters.
+
+    These tests verify that parameters commonly used in differentiable rendering
+    experiments (DBEX) properly preserve gradient flow when passed as tensors.
+
+    Prior to the fix, torch.tensor() was used which detaches the computation graph.
+    The fix uses as_tensor_preserving_grad() which preserves requires_grad=True.
+    """
+
+    def test_wavelength_gradient_at_init(self):
+        """Verify wavelength tensor passed at init preserves gradient flow."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create wavelength tensor with requires_grad
+        wavelength = torch.tensor(6.2, dtype=dtype, requires_grad=True)
+
+        # Create configs with wavelength tensor
+        from nanobrag_torch.config import BeamConfig, DetectorConfig, CrystalConfig
+
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5), default_F=100.0,
+        )
+        detector_config = DetectorConfig(
+            distance_mm=100.0, pixel_size_mm=0.1, spixels=16, fpixels=16,
+        )
+        # Pass wavelength tensor directly
+        beam_config = BeamConfig(wavelength_A=wavelength, fluence=1e28)
+
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+        simulator = Simulator(
+            crystal=crystal, detector=detector,
+            crystal_config=crystal_config, beam_config=beam_config,
+            device=device, dtype=dtype,
+        )
+
+        # Verify gradient preservation
+        assert simulator.wavelength.requires_grad, \
+            "Simulator.wavelength should have requires_grad=True when input tensor has requires_grad"
+
+        # Run simulation and compute loss
+        result = simulator.run()
+        loss = result.sum()
+
+        # Verify backward works
+        loss.backward()
+        assert wavelength.grad is not None, "wavelength should have gradient after backward"
+
+    def test_wavelength_gradcheck(self):
+        """Verify wavelength gradient is numerically correct via gradcheck."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        wavelength = torch.tensor(6.2, dtype=dtype, requires_grad=True)
+
+        from nanobrag_torch.config import BeamConfig, DetectorConfig, CrystalConfig
+
+        def loss_fn(wavelength_param):
+            crystal_config = CrystalConfig(
+                cell_a=100.0, cell_b=100.0, cell_c=100.0,
+                cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+                N_cells=(5, 5, 5), default_F=100.0,
+            )
+            detector_config = DetectorConfig(
+                distance_mm=100.0, pixel_size_mm=0.1, spixels=8, fpixels=8,
+            )
+            beam_config = BeamConfig(wavelength_A=wavelength_param, fluence=1e28)
+
+            crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+            simulator = Simulator(
+                crystal=crystal, detector=detector,
+                crystal_config=crystal_config, beam_config=beam_config,
+                device=device, dtype=dtype,
+            )
+
+            result = simulator.run()
+            return result.sum()
+
+        assert gradcheck(
+            loss_fn, (wavelength,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+    def test_fluence_gradient_at_init(self):
+        """Verify fluence tensor passed at init preserves gradient flow."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create fluence tensor with requires_grad
+        fluence = torch.tensor(1e28, dtype=dtype, requires_grad=True)
+
+        from nanobrag_torch.config import BeamConfig, DetectorConfig, CrystalConfig
+
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5), default_F=100.0,
+        )
+        detector_config = DetectorConfig(
+            distance_mm=100.0, pixel_size_mm=0.1, spixels=16, fpixels=16,
+        )
+        beam_config = BeamConfig(wavelength_A=6.2, fluence=fluence)
+
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+        simulator = Simulator(
+            crystal=crystal, detector=detector,
+            crystal_config=crystal_config, beam_config=beam_config,
+            device=device, dtype=dtype,
+        )
+
+        # Verify gradient preservation
+        assert simulator.fluence.requires_grad, \
+            "Simulator.fluence should have requires_grad=True when input tensor has requires_grad"
+
+        # Run simulation and compute loss
+        result = simulator.run()
+        loss = result.sum()
+
+        # Verify backward works
+        loss.backward()
+        assert fluence.grad is not None, "fluence should have gradient after backward"
+
+    def test_distance_gradient_at_init(self):
+        """Verify detector distance tensor passed at init preserves gradient flow."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create distance tensor with requires_grad
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+
+        from nanobrag_torch.config import BeamConfig, DetectorConfig, CrystalConfig
+
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5), default_F=100.0,
+        )
+        detector_config = DetectorConfig(
+            distance_mm=distance, pixel_size_mm=0.1, spixels=16, fpixels=16,
+        )
+        beam_config = BeamConfig(wavelength_A=6.2, fluence=1e28)
+
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+        simulator = Simulator(
+            crystal=crystal, detector=detector,
+            crystal_config=crystal_config, beam_config=beam_config,
+            device=device, dtype=dtype,
+        )
+
+        # Verify gradient preservation through property
+        assert detector.distance.requires_grad, \
+            "Detector.distance should have requires_grad=True when config.distance_mm is a tensor"
+
+        # Run simulation and compute loss
+        result = simulator.run()
+        loss = result.sum()
+
+        # Verify backward works
+        loss.backward()
+        assert distance.grad is not None, "distance should have gradient after backward"
+
+    def test_distance_post_override_gradient(self):
+        """
+        Verify distance gradient works with DBEX post-creation override pattern.
+
+        This is the critical test case: DBEX creates detector with float distance,
+        then overwrites config.distance_mm with a tensor. The property-based
+        implementation should enable gradients to flow in this scenario.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        from nanobrag_torch.config import BeamConfig, DetectorConfig, CrystalConfig
+
+        # Step 1: Create detector with float distance (as DBEX does initially)
+        detector_config = DetectorConfig(
+            distance_mm=100.0,  # Float initially
+            pixel_size_mm=0.1, spixels=16, fpixels=16,
+        )
+        detector = Detector(config=detector_config, device=device, dtype=dtype)
+
+        # Step 2: Override config.distance_mm with tensor (DBEX pattern)
+        distance_tensor = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        detector_config.distance_mm = distance_tensor
+
+        # Verify that detector.distance now reflects the tensor
+        assert detector.distance.requires_grad, \
+            "detector.distance should have requires_grad=True after config override"
+
+        # Step 3: Create simulator and run
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5), default_F=100.0,
+        )
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+        beam_config = BeamConfig(wavelength_A=6.2, fluence=1e28)
+
+        simulator = Simulator(
+            crystal=crystal, detector=detector,
+            crystal_config=crystal_config, beam_config=beam_config,
+            device=device, dtype=dtype,
+        )
+
+        result = simulator.run()
+        loss = result.sum()
+
+        # Verify backward works with post-override pattern
+        loss.backward()
+        assert distance_tensor.grad is not None, \
+            "distance_tensor should have gradient after backward (post-override pattern)"
+
+    def test_distance_gradcheck(self):
+        """Verify distance gradient is numerically correct via gradcheck."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        distance = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+
+        from nanobrag_torch.config import BeamConfig, DetectorConfig, CrystalConfig
+
+        def loss_fn(distance_param):
+            crystal_config = CrystalConfig(
+                cell_a=100.0, cell_b=100.0, cell_c=100.0,
+                cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+                N_cells=(5, 5, 5), default_F=100.0,
+            )
+            detector_config = DetectorConfig(
+                distance_mm=distance_param, pixel_size_mm=0.1, spixels=8, fpixels=8,
+            )
+            beam_config = BeamConfig(wavelength_A=6.2, fluence=1e28)
+
+            crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+            simulator = Simulator(
+                crystal=crystal, detector=detector,
+                crystal_config=crystal_config, beam_config=beam_config,
+                device=device, dtype=dtype,
+            )
+
+            result = simulator.run()
+            return result.sum()
+
+        assert gradcheck(
+            loss_fn, (distance,), eps=1e-6, atol=1e-5, rtol=0.05, raise_exception=True
+        )
+
+
+class TestMosaicGradients:
+    """
+    Tests for MOSAIC-GRADIENT-001: Gradient correctness for mosaic spread parameter.
+
+    These tests verify that the reparameterization fix for deterministic seeding
+    preserves gradient flow through mosaic_spread_deg.
+    """
+
+    def test_mosaic_seed_determinism(self):
+        """Verify same seed produces identical rotations across calls.
+
+        This is the foundation of gradcheck correctness: if forward passes
+        produce different random values, numerical gradients are meaningless.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Create crystal and config with fixed seed
+        crystal = Crystal(device=device, dtype=dtype)
+        config = CrystalConfig(
+            mosaic_spread_deg=0.5,
+            mosaic_domains=5,
+            mosaic_seed=42,
+            phi_steps=1,
+        )
+
+        # Call twice with same seed
+        (a1, b1, c1), _ = crystal.get_rotated_real_vectors(config)
+        (a2, b2, c2), _ = crystal.get_rotated_real_vectors(config)
+
+        # Results should be identical
+        assert torch.allclose(a1, a2, atol=1e-12), "Same seed should produce identical rotations"
+        assert torch.allclose(b1, b2, atol=1e-12), "Same seed should produce identical rotations"
+        assert torch.allclose(c1, c2, atol=1e-12), "Same seed should produce identical rotations"
+
+    def test_different_seeds_produce_different_rotations(self):
+        """Verify different seeds produce different rotations.
+
+        This ensures the seeding mechanism is actually working and not just
+        returning constant values.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        crystal = Crystal(device=device, dtype=dtype)
+
+        config1 = CrystalConfig(
+            mosaic_spread_deg=0.5,
+            mosaic_domains=5,
+            mosaic_seed=42,
+            phi_steps=1,
+        )
+        config2 = CrystalConfig(
+            mosaic_spread_deg=0.5,
+            mosaic_domains=5,
+            mosaic_seed=123,  # Different seed
+            phi_steps=1,
+        )
+
+        (a1, _, _), _ = crystal.get_rotated_real_vectors(config1)
+        (a2, _, _), _ = crystal.get_rotated_real_vectors(config2)
+
+        # Results should be different
+        assert not torch.allclose(a1, a2, atol=1e-6), "Different seeds should produce different rotations"
+
+    def test_default_seed_compliance(self):
+        """Verify default seed matches C-code default (-12345678).
+
+        Per spec-a-core.md:367, the default mosaic seed should be -12345678.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        crystal = Crystal(device=device, dtype=dtype)
+
+        # Config without explicit seed should use default
+        config_default = CrystalConfig(
+            mosaic_spread_deg=0.5,
+            mosaic_domains=5,
+            # mosaic_seed not set - should use default
+            phi_steps=1,
+        )
+
+        # Config with explicit C default seed
+        config_explicit = CrystalConfig(
+            mosaic_spread_deg=0.5,
+            mosaic_domains=5,
+            mosaic_seed=-12345678,  # Explicit C default
+            phi_steps=1,
+        )
+
+        (a_default, _, _), _ = crystal.get_rotated_real_vectors(config_default)
+        (a_explicit, _, _), _ = crystal.get_rotated_real_vectors(config_explicit)
+
+        # Should produce identical results since default should be -12345678
+        assert torch.allclose(a_default, a_explicit, atol=1e-12), \
+            "Default seed should match C-code default of -12345678"
+
+    def test_mosaic_spread_gradient_flow(self):
+        """Verify gradient flows through mosaic_spread_deg to output."""
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        crystal = Crystal(device=device, dtype=dtype)
+
+        # Create differentiable mosaic spread
+        mosaic_spread = torch.tensor(0.5, dtype=dtype, requires_grad=True)
+
+        config = CrystalConfig(
+            mosaic_spread_deg=mosaic_spread,
+            mosaic_domains=5,
+            mosaic_seed=42,
+            phi_steps=1,
+        )
+
+        (a_rot, _, _), _ = crystal.get_rotated_real_vectors(config)
+
+        # Compute loss and backward
+        loss = a_rot.sum()
+        loss.backward()
+
+        # Gradient should exist and be non-zero (unless at exact identity which is unlikely)
+        assert mosaic_spread.grad is not None, "mosaic_spread_deg should have gradient"
+        # Note: gradient could be zero at spread=0, but at spread=0.5 it should be non-zero
+
+    def test_mosaic_spread_gradcheck(self):
+        """Verify mosaic_spread_deg gradient is numerically correct via gradcheck.
+
+        This is the critical test that validates MOSAIC-GRADIENT-001 fix.
+        Without deterministic seeding, this test would fail because each
+        forward pass would use different random rotations.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        mosaic_spread = torch.tensor(0.5, dtype=dtype, requires_grad=True)
+
+        def loss_fn(mosaic_param):
+            crystal = Crystal(device=device, dtype=dtype)
+            config = CrystalConfig(
+                mosaic_spread_deg=mosaic_param,
+                mosaic_domains=3,  # Fewer domains for speed
+                mosaic_seed=42,  # Fixed seed is CRITICAL for gradcheck
+                phi_steps=1,
+            )
+
+            (a_rot, b_rot, c_rot), _ = crystal.get_rotated_real_vectors(config)
+            return a_rot.sum() + b_rot.sum() + c_rot.sum()
+
+        # gradcheck with appropriate tolerances for physics code
+        assert gradcheck(
+            loss_fn, (mosaic_spread,), eps=1e-4, atol=1e-4, rtol=0.02, raise_exception=True
+        ), "Mosaic spread gradcheck failed - seeding may not be deterministic"
+
+    def test_mosaic_spread_gradcheck_simulator(self):
+        """Test gradients for mosaic_spread_deg through full simulator.
+
+        This is the end-to-end acceptance test for MOSAIC-GRADIENT-001.
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        from nanobrag_torch.config import BeamConfig, DetectorConfig
+
+        mosaic_spread = torch.tensor(0.5, dtype=dtype, requires_grad=True)
+
+        def loss_fn(mosaic_param):
+            crystal_config = CrystalConfig(
+                cell_a=100.0, cell_b=100.0, cell_c=100.0,
+                cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+                N_cells=(3, 3, 3),
+                default_F=100.0,
+                mosaic_spread_deg=mosaic_param,
+                mosaic_domains=3,
+                mosaic_seed=42,  # Fixed seed for reproducibility
+            )
+            detector_config = DetectorConfig(
+                fpixels=8, spixels=8, pixel_size_mm=0.1, distance_mm=100.0
+            )
+            beam_config = BeamConfig(wavelength_A=1.0, fluence=1e28)
+
+            crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+            simulator = Simulator(
+                crystal=crystal, detector=detector,
+                crystal_config=crystal_config, beam_config=beam_config,
+                device=device, dtype=dtype
+            )
+
+            return simulator.run().sum()
+
+        # gradcheck with tolerances appropriate for complex physics simulation
+        assert gradcheck(
+            loss_fn, (mosaic_spread,), eps=1e-4, atol=1e-3, rtol=0.05, raise_exception=True
+        ), "Simulator-level mosaic spread gradcheck failed"

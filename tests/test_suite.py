@@ -165,9 +165,21 @@ class TestCrystalModel:
         assert_tensor_close(c_rot[0, 0], self.crystal.c)
 
     def test_phi_rotation_90_deg(self):
-        """Test 90-degree phi rotation around Z-axis."""
-        # Create config with 90-degree rotation around Z-axis - explicitly wrap float values in tensors
-        # With phi_steps=1, this uses the midpoint of the oscillation range (45°)
+        """Test phi rotation with 90-degree oscillation range.
+
+        IMPORTANT: This test validates C loop formula behavior (nanoBragg.c:3004-3009):
+            for(phi_tic = 0; phi_tic < phisteps; ++phi_tic) {
+                phi = phi0 + phistep*phi_tic;
+            }
+
+        With phi_steps=1, phi_tic=0, so:
+            phi = phi_start + phistep*0 = phi_start = 0°
+
+        This is NOT midpoint behavior! The first phi step is at phi_start (no rotation).
+        The implementation correctly matches the C code.
+        """
+        # Create config with 90-degree oscillation range
+        # With phi_steps=1, phi_tic=0, this means phi = phi_start = 0° (NO rotation)
         config = CrystalConfig(
             phi_start_deg=torch.tensor(0.0, device=self.device, dtype=self.dtype),
             phi_steps=1,
@@ -177,7 +189,7 @@ class TestCrystalModel:
             spindle_axis=(0.0, 0.0, 1.0),
         )
 
-        # Get base vectors to compute expected rotated values
+        # Get base vectors
         base_a = self.crystal.a
         base_b = self.crystal.b
         base_c = self.crystal.c
@@ -185,32 +197,11 @@ class TestCrystalModel:
         # Get rotated vectors
         (a_rot, b_rot, c_rot), _ = self.crystal.get_rotated_real_vectors(config)
 
-        # For 45-degree rotation around Z-axis (midpoint of 90° range):
-        # Rotation matrix for 45° around Z: [cos45 -sin45 0; sin45 cos45 0; 0 0 1]
-        # So: a=[ax,ay,az] -> [ax*cos45-ay*sin45, ax*sin45+ay*cos45, az]
-        cos45 = torch.cos(torch.tensor(torch.pi / 4, dtype=self.dtype))
-        sin45 = torch.sin(torch.tensor(torch.pi / 4, dtype=self.dtype))
-
-        # Calculate expected values based on actual base vectors
-        expected_a = torch.tensor([
-            base_a[0] * cos45 - base_a[1] * sin45,
-            base_a[0] * sin45 + base_a[1] * cos45, 
-            base_a[2]
-        ], dtype=self.dtype)
-        expected_b = torch.tensor([
-            base_b[0] * cos45 - base_b[1] * sin45,
-            base_b[0] * sin45 + base_b[1] * cos45,
-            base_b[2] 
-        ], dtype=self.dtype)
-        expected_c = torch.tensor([
-            base_c[0] * cos45 - base_c[1] * sin45,
-            base_c[0] * sin45 + base_c[1] * cos45,
-            base_c[2]
-        ], dtype=self.dtype)
-
-        assert_tensor_close(a_rot[0, 0], expected_a, atol=1e-6)
-        assert_tensor_close(b_rot[0, 0], expected_b, atol=1e-6)
-        assert_tensor_close(c_rot[0, 0], expected_c, atol=1e-6)
+        # C loop formula: phi = phi_start + phistep*0 = 0° (identity rotation)
+        # Therefore, rotated vectors should equal base vectors (no rotation applied)
+        assert_tensor_close(a_rot[0, 0], base_a, atol=1e-6)
+        assert_tensor_close(b_rot[0, 0], base_b, atol=1e-6)
+        assert_tensor_close(c_rot[0, 0], base_c, atol=1e-6)
 
     def test_rotation_gradients(self):
         """Test gradient correctness for rotation parameters."""
@@ -431,10 +422,22 @@ class TestTier1TranslationCorrectness:
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Create crystal with same parameters as simple_cubic
+        # Create crystal with same parameters as golden data generation
         device = torch.device("cpu")
         dtype = torch.float64
-        crystal = Crystal(device=device, dtype=dtype)
+
+        # Crystal config matching golden data: 100x100x100 cubic, N=5, default_F=100
+        from nanobrag_torch.config import BeamConfig
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0,
+            phi_start_deg=0.0,
+            osc_range_deg=0.0,
+            mosaic_spread_deg=0.0
+        )
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
 
         # Create detector with tilted configuration
         from nanobrag_torch.config import (
@@ -460,16 +463,14 @@ class TestTier1TranslationCorrectness:
         )
         detector = Detector(config=detector_config, device=device, dtype=dtype)
 
-        # Create crystal config (no rotation/mosaicity)
-        crystal_config = CrystalConfig(
-            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
+        # Create beam config matching golden data (λ=6.2 Å)
+        beam_config = BeamConfig(
+            wavelength_A=6.2
         )
 
-        # Create simulator
+        # Create simulator with correct beam config
         simulator = Simulator(
-            crystal, detector, crystal_config=crystal_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, device=device, dtype=dtype
         )
 
         # Run PyTorch simulation
@@ -562,17 +563,19 @@ class TestTier1TranslationCorrectness:
             mosaic_domains=1,
         )
 
+        # Create beam config matching golden data (1.0 Angstrom)
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+
         # Create simulator with triclinic crystal
         simulator = Simulator(
             crystal,
             detector,
+            beam_config=beam_config,
             crystal_config=crystal_rot_config,
             device=device,
             dtype=dtype,
         )
-
-        # Override wavelength to match golden data (1.0 Angstrom)
-        simulator.wavelength = 1.0
 
         # Run PyTorch simulation
         pytorch_image = simulator.run()
@@ -869,10 +872,13 @@ class TestTier1TranslationCorrectness:
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
 
+        # Set beam config with wavelength
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+
         simulator = Simulator(
-            crystal, detector, crystal_config=rot_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=rot_config, device=device, dtype=dtype
         )
-        simulator.wavelength = 1.0
 
         # Warm up with 2 runs
         for _ in range(2):
@@ -896,10 +902,21 @@ class TestTier1TranslationCorrectness:
         )
 
         # Compare with simple cubic (run simple cubic for comparison)
-        simple_crystal = Crystal(device=device, dtype=dtype)
+        simple_config = CrystalConfig(
+            cell_a=100.0,
+            cell_b=100.0,
+            cell_c=100.0,
+            cell_alpha=90.0,
+            cell_beta=90.0,
+            cell_gamma=90.0,
+            N_cells=[5, 5, 5],
+            default_F=100.0  # Need non-zero structure factor
+        )
+        simple_crystal = Crystal(config=simple_config, device=device, dtype=dtype)
         simple_simulator = Simulator(
             simple_crystal,
             detector,
+            beam_config=beam_config,  # Also need beam config
             crystal_config=rot_config,
             device=device,
             dtype=dtype,
@@ -1195,7 +1212,7 @@ class TestTier1TranslationCorrectness:
 
         print("\n=== Testing Rotation Compatibility ===")
 
-        # Create triclinic crystal
+        # Create triclinic crystal with proper parameters
         config = CrystalConfig(
             cell_a=70.0,
             cell_b=80.0,
@@ -1204,6 +1221,7 @@ class TestTier1TranslationCorrectness:
             cell_beta=85.0,
             cell_gamma=95.0,
             N_cells=[3, 3, 3],
+            default_F=100.0,  # Add non-zero structure factor
         )
 
         crystal = Crystal(config=config, device=device, dtype=dtype)
@@ -1222,10 +1240,13 @@ class TestTier1TranslationCorrectness:
             mosaic_domains=10,
         )
 
+        # Create beam config with proper wavelength
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(wavelength_A=1.0)
+
         simulator = Simulator(
-            crystal, detector, crystal_config=rot_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=rot_config, device=device, dtype=dtype
         )
-        simulator.wavelength = 1.0
 
         # Run simulation
         image = simulator.run()
@@ -1249,11 +1270,11 @@ class TestTier1TranslationCorrectness:
         simulator_static = Simulator(
             crystal,
             detector,
+            beam_config=beam_config,  # Use same beam config
             crystal_config=rot_config_static,
             device=device,
             dtype=dtype,
         )
-        simulator_static.wavelength = 1.0
 
         image_static = simulator_static.run()
 
@@ -1277,11 +1298,22 @@ class TestTier1TranslationCorrectness:
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Create crystal, detector, and simulator with mosaicity
+        # Create crystal with correct parameters matching golden data
         device = torch.device("cpu")
         dtype = torch.float64
 
-        crystal = Crystal(device=device, dtype=dtype)
+        # Crystal config matching golden data: 100x100x100 cubic, N=5, default_F=100
+        crystal_config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+            N_cells=(5, 5, 5),
+            default_F=100.0,
+            phi_start_deg=0.0,
+            osc_range_deg=0.0,
+            mosaic_spread_deg=1.0,  # Include mosaic spread from golden data
+            mosaic_domains=10  # Include mosaic domains from golden data
+        )
+        crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
         
         # Configure detector to match actual golden mosaic data size (1000x1000 pixels)
         # The actual simple_cubic_mosaic.bin has 1,000,000 elements = 1000x1000 pixels  
@@ -1297,16 +1329,16 @@ class TestTier1TranslationCorrectness:
         )
         detector = Detector(config=detector_config, device=device, dtype=dtype)
 
-        # Configure with mosaicity parameters matching the golden data generation - explicitly wrap in tensors
-        # Golden data was generated with: -mosaic_spread 1.0 -mosaic_domains 10 -detsize 100
-        crystal_config = CrystalConfig(
-            phi_start_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            osc_range_deg=torch.tensor(0.0, device=device, dtype=dtype),
-            mosaic_spread_deg=torch.tensor(1.0, device=device, dtype=dtype),
-            mosaic_domains=10,
+        # Create beam config matching golden data (λ=6.2 Å)
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(
+            wavelength_A=6.2
         )
+
+        # Create simulator with correct beam config
+        # Note: mosaic parameters are already in the crystal config above
         simulator = Simulator(
-            crystal, detector, crystal_config=crystal_config, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, device=device, dtype=dtype
         )
 
         # Run PyTorch simulation
@@ -1430,9 +1462,17 @@ class TestTier1TranslationCorrectness:
             cell_alpha=90.0,
             cell_beta=90.0,
             cell_gamma=90.0,
+            N_cells=(5, 5, 5),  # Add proper crystal size
+            default_F=100.0  # Add non-zero structure factor
         )
         crystal = Crystal(config=crystal_config, device=device, dtype=dtype)
         detector = Detector(device=device, dtype=dtype)
+
+        # Create beam config
+        from nanobrag_torch.config import BeamConfig
+        beam_config = BeamConfig(
+            wavelength_A=6.2  # Standard wavelength
+        )
 
         # Test with phi_start_deg=0 - explicitly wrap float values in tensors
         config_0 = CrystalConfig(
@@ -1442,7 +1482,7 @@ class TestTier1TranslationCorrectness:
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
         simulator_0 = Simulator(
-            crystal, detector, crystal_config=config_0, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=config_0, device=device, dtype=dtype
         )
         image_0 = simulator_0.run()
 
@@ -1454,7 +1494,7 @@ class TestTier1TranslationCorrectness:
             mosaic_spread_deg=torch.tensor(0.0, device=device, dtype=dtype),
         )
         simulator_30 = Simulator(
-            crystal, detector, crystal_config=config_30, device=device, dtype=dtype
+            crystal, detector, beam_config=beam_config, crystal_config=config_30, device=device, dtype=dtype
         )
         image_30 = simulator_30.run()
 
@@ -1573,17 +1613,154 @@ class TestTier1TranslationCorrectness:
 class TestTier2GradientCorrectness:
     """Tier 2: Gradient correctness tests."""
 
-    @pytest.mark.skip(reason="Requires implementation of differentiable parameters")
     def test_gradcheck_crystal_params(self):
-        """Test gradients for crystal parameters using torch.autograd.gradcheck."""
-        # TODO: Implement gradient checking for crystal parameters
-        pass
+        """Test gradients for crystal parameters using torch.autograd.gradcheck.
 
-    @pytest.mark.skip(reason="Requires implementation of differentiable parameters")
+        Per testing_strategy.md §4.1, the following crystal parameters must pass gradcheck:
+        - cell_a, cell_b, cell_c (unit cell dimensions)
+        - cell_alpha, cell_beta, cell_gamma (unit cell angles)
+
+        This test verifies that all six unit cell parameters maintain computation graph
+        connectivity and produce numerically correct gradients suitable for optimization.
+        """
+        import os
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+        device = torch.device("cpu")
+        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
+
+        def create_crystal_loss_function(param_name):
+            """Create a scalar loss function for a specific crystal parameter."""
+            def loss_fn(param_value):
+                # Build config with the parameter under test
+                config_kwargs = {
+                    "cell_a": 100.0,
+                    "cell_b": 100.0,
+                    "cell_c": 100.0,
+                    "cell_alpha": 89.0,  # Avoid exact 90° stationary points
+                    "cell_beta": 89.0,
+                    "cell_gamma": 89.0,
+                    "N_cells": [5, 5, 5],
+                    "mosaic_spread_deg": 0.0,
+                    "mosaic_domains": 1,
+                }
+                config_kwargs[param_name] = param_value
+
+                config = CrystalConfig(**config_kwargs)
+                crystal = Crystal(config=config, device=device, dtype=dtype)
+
+                # Return sum of reciprocal vectors for gradient testing
+                return (crystal.a_star.sum() + crystal.b_star.sum() + crystal.c_star.sum())
+
+            return loss_fn
+
+        # Test each of the six mandatory crystal parameters
+        test_cases = [
+            ("cell_a", 100.0),
+            ("cell_b", 100.0),
+            ("cell_c", 100.0),
+            ("cell_alpha", 89.0),
+            ("cell_beta", 89.0),
+            ("cell_gamma", 120.0),  # Include non-orthogonal case
+        ]
+
+        for param_name, test_value in test_cases:
+            param_tensor = torch.tensor(test_value, dtype=dtype, requires_grad=True)
+            loss_fn = create_crystal_loss_function(param_name)
+
+            # Run gradcheck with tolerances per arch.md §15
+            gradcheck_result = torch.autograd.gradcheck(
+                loss_fn,
+                (param_tensor,),
+                eps=1e-6,
+                atol=1e-5,
+                rtol=0.05,
+                raise_exception=True
+            )
+
+            assert gradcheck_result, f"Gradient check failed for {param_name}"
+
+        print("✅ All crystal parameter gradient checks PASSED")
+
     def test_gradcheck_detector_params(self):
-        """Test gradients for detector parameters using torch.autograd.gradcheck."""
-        # TODO: Implement gradient checking for detector parameters
-        pass
+        """Test gradients for detector parameters using torch.autograd.gradcheck.
+
+        Per testing_strategy.md §4.1, the following detector parameters must pass gradcheck:
+        - distance_mm (detector distance from sample)
+        - beam_center_f, beam_center_s (beam center position)
+
+        This test verifies that detector geometry parameters maintain computation graph
+        connectivity and produce numerically correct gradients suitable for optimization.
+        """
+        import os
+        os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+        device = torch.device("cpu")
+        dtype = torch.float64  # Use float64 for gradient checking per arch.md §15
+
+        # Test distance_mm parameter
+        def distance_loss_fn(distance_mm):
+            """Loss function for detector distance parameter."""
+            from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+            detector_config = DetectorConfig(
+                distance_mm=distance_mm,
+                pixel_size_mm=0.1,
+                spixels=64,  # Small detector for speed
+                fpixels=64,
+                beam_center_s=3.2,
+                beam_center_f=3.2,
+                detector_convention=DetectorConvention.MOSFLM,
+                detector_pivot=DetectorPivot.BEAM,
+            )
+
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+
+            # Return sum of pix0 vector for gradient testing
+            return detector.pix0_vector.sum()
+
+        distance_mm = torch.tensor(100.0, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            distance_loss_fn,
+            (distance_mm,),
+            eps=1e-6,
+            atol=1e-5,
+            rtol=0.05,
+            raise_exception=True
+        ), "Gradient check failed for distance_mm"
+
+        # Test beam_center_f parameter
+        def beam_center_f_loss_fn(beam_center_f):
+            """Loss function for beam center fast axis parameter."""
+            from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
+
+            detector_config = DetectorConfig(
+                distance_mm=100.0,
+                pixel_size_mm=0.1,
+                spixels=64,
+                fpixels=64,
+                beam_center_s=3.2,
+                beam_center_f=beam_center_f,
+                detector_convention=DetectorConvention.MOSFLM,
+                detector_pivot=DetectorPivot.BEAM,
+            )
+
+            detector = Detector(config=detector_config, device=device, dtype=dtype)
+
+            # Return sum of pix0 vector for gradient testing
+            return detector.pix0_vector.sum()
+
+        beam_center_f = torch.tensor(3.2, dtype=dtype, requires_grad=True)
+        assert torch.autograd.gradcheck(
+            beam_center_f_loss_fn,
+            (beam_center_f,),
+            eps=1e-6,
+            atol=1e-5,
+            rtol=0.05,
+            raise_exception=True
+        ), "Gradient check failed for beam_center_f"
+
+        print("✅ All detector parameter gradient checks PASSED")
 
     def test_gradcheck_phi_rotation(self):
         """Test gradients for phi rotation parameter using torch.autograd.gradcheck."""
@@ -1644,14 +1821,24 @@ class TestTier2GradientCorrectness:
             pytest.skip(f"Phi gradient check not yet working: {e}")
 
     def test_gradcheck_mosaic_spread(self):
-        """Test gradients for mosaic_spread_deg parameter using torch.autograd.gradcheck."""
+        """Test gradients for mosaic_spread_deg parameter using torch.autograd.gradcheck.
+
+        MOSAIC-GRADIENT-001: This test verifies gradient correctness for mosaic spread
+        after the fix to use deterministic seeding with reparameterization trick.
+
+        Requires NANOBRAGG_DISABLE_COMPILE=1 for gradient tests.
+        """
         # Set environment variable for torch import
         import os
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Set seed for reproducibility
-        torch.manual_seed(0)
+        # Check for gradient policy guard
+        if os.environ.get('NANOBRAGG_DISABLE_COMPILE') != '1':
+            pytest.skip(
+                "Gradient tests require NANOBRAGG_DISABLE_COMPILE=1 environment variable.\n"
+                "Run with: env NANOBRAGG_DISABLE_COMPILE=1 pytest -v"
+            )
 
         # Create a scalar function that takes mosaic_spread_deg and returns a scalar output
         def mosaic_scalar_function(mosaic_spread_deg):
@@ -1672,10 +1859,12 @@ class TestTier2GradientCorrectness:
                 ),  # Convert to tensor
                 mosaic_spread_deg=mosaic_spread_deg,  # Pass tensor directly
                 mosaic_domains=5,  # Small number for speed
+                mosaic_seed=42,  # Fixed seed for deterministic gradcheck
             )
 
             # Get rotated vectors directly to avoid full simulation complexity
-            a_rot, b_rot, c_rot = crystal.get_rotated_real_vectors(crystal_config)
+            # API returns ((a_rot, b_rot, c_rot), (a_star, b_star, c_star))
+            (a_rot, b_rot, c_rot), _ = crystal.get_rotated_real_vectors(crystal_config)
 
             # Return sum of one rotated vector for gradient testing
             return torch.sum(a_rot)
@@ -1683,23 +1872,16 @@ class TestTier2GradientCorrectness:
         # Test mosaic parameter with small range for numerical stability
         mosaic_test_value = torch.tensor(0.5, dtype=torch.float64, requires_grad=True)
 
-        try:
-            # Use gradcheck with relaxed tolerances for scientific computing
-            gradcheck_result = torch.autograd.gradcheck(
-                mosaic_scalar_function,
-                mosaic_test_value,
-                eps=1e-3,  # Larger epsilon for stability with complex physics
-                atol=1e-4,  # Relaxed absolute tolerance
-                rtol=1e-3,  # Relaxed relative tolerance
-            )
+        # Use gradcheck with relaxed tolerances for scientific computing
+        gradcheck_result = torch.autograd.gradcheck(
+            mosaic_scalar_function,
+            mosaic_test_value,
+            eps=1e-3,  # Larger epsilon for stability with complex physics
+            atol=1e-4,  # Relaxed absolute tolerance
+            rtol=1e-3,  # Relaxed relative tolerance
+        )
 
-            assert gradcheck_result, "Gradient check failed for mosaic spread parameter"
-            print("✅ Mosaic spread gradient check PASSED")
-
-        except Exception as e:
-            print(f"⚠️ Mosaic spread gradient check failed: {e}")
-            # For validation phase, we'll skip this if implementation isn't ready
-            pytest.skip(f"Mosaic spread gradient check not yet working: {e}")
+        assert gradcheck_result, "Gradient check failed for mosaic spread parameter"
 
     def test_gradient_numerical_stability(self):
         """Test that gradients are stable and meaningful for optimization."""

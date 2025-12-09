@@ -255,9 +255,110 @@ class TestAT_ROI_001:
     def test_statistics_exclude_masked_pixels(self):
         """Test that statistics calculations exclude masked/ROI-filtered pixels.
 
-        Note: This test is a placeholder for when statistics are implemented.
-        The spec requires that masked pixels be excluded from statistics.
+        Per spec AT-ROI-001:
+        - Pixels outside ROI or with mask value 0 SHALL be skipped in rendering
+          and excluded from statistics
+        - N counts only pixels inside the ROI and unmasked
         """
-        # This will be implemented when statistics calculation is added
-        # For now, we just verify that the masking infrastructure is in place
-        pass
+        # Create a 64x64 detector with specific ROI and mask
+        spixels, fpixels = 64, 64
+
+        # Create a diagonal mask that excludes the upper-right triangle
+        mask_array = torch.zeros(spixels, fpixels)
+        for i in range(spixels):
+            for j in range(fpixels):
+                if i + j < 50:  # Lower-left triangle included
+                    mask_array[i, j] = 1
+
+        # Define ROI to exclude outer 8 pixels on all sides
+        roi_xmin, roi_xmax = 8, 55
+        roi_ymin, roi_ymax = 8, 55
+
+        detector_config = DetectorConfig(
+            spixels=spixels,
+            fpixels=fpixels,
+            pixel_size_mm=0.1,
+            distance_mm=100.0,
+            roi_xmin=roi_xmin,
+            roi_xmax=roi_xmax,
+            roi_ymin=roi_ymin,
+            roi_ymax=roi_ymax,
+            mask_array=mask_array,
+        )
+
+        crystal_config = CrystalConfig(
+            cell_a=100.0,
+            cell_b=100.0,
+            cell_c=100.0,
+            default_F=100.0,
+            N_cells=(3, 3, 3),
+        )
+
+        beam_config = BeamConfig(
+            wavelength_A=6.2,
+            fluence=1e24,
+        )
+
+        # Create simulator
+        detector = Detector(detector_config)
+        crystal = Crystal(crystal_config)
+        simulator = Simulator(crystal, detector, crystal_config, beam_config)
+
+        # Run simulation
+        intensity = simulator.run()
+
+        # Compute statistics
+        stats = simulator.compute_statistics(intensity)
+
+        # Create the combined mask (ROI AND mask_array)
+        roi_mask = torch.ones(spixels, fpixels, dtype=torch.bool)
+        roi_mask[:, :roi_xmin] = False
+        roi_mask[:, roi_xmax+1:] = False
+        roi_mask[:roi_ymin, :] = False
+        roi_mask[roi_ymax+1:, :] = False
+        combined_mask = roi_mask & (mask_array > 0)
+
+        # Count pixels that should be included in statistics
+        expected_N = combined_mask.sum().item()
+
+        # Verify N matches expected count
+        assert stats["N"] == expected_N, (
+            f"Statistics N ({stats['N']}) should match masked pixel count ({expected_N})"
+        )
+
+        # Compute expected statistics manually from masked pixels
+        masked_pixels = intensity[combined_mask]
+        if expected_N > 0:
+            expected_mean = masked_pixels.mean().item()
+            expected_max = masked_pixels.max().item()
+
+            # Verify mean matches
+            assert abs(stats["mean"] - expected_mean) < 1e-6, (
+                f"Mean {stats['mean']:.6f} should match expected {expected_mean:.6f}"
+            )
+
+            # Verify max matches
+            assert abs(stats["max_I"] - expected_max) < 1e-6, (
+                f"Max {stats['max_I']:.6f} should match expected {expected_max:.6f}"
+            )
+
+            # Verify max location is within the combined mask
+            max_slow = stats["max_I_slow"]
+            max_fast = stats["max_I_fast"]
+            assert combined_mask[max_slow, max_fast], (
+                f"Maximum location ({max_slow}, {max_fast}) should be within combined mask"
+            )
+
+            # Verify RMS and RMSD are reasonable
+            assert stats["RMS"] >= 0, "RMS should be non-negative"
+            assert stats["RMSD"] >= 0, "RMSD should be non-negative"
+
+            # For non-uniform intensity, RMSD should be > 0
+            if masked_pixels.std() > 1e-6:
+                assert stats["RMSD"] > 0, "RMSD should be positive for non-uniform intensity"
+        else:
+            # If no pixels in mask, all stats should be zero
+            assert stats["mean"] == 0.0, "Mean should be 0 when no pixels in mask"
+            assert stats["max_I"] == 0.0, "Max should be 0 when no pixels in mask"
+            assert stats["RMS"] == 0.0, "RMS should be 0 when no pixels in mask"
+            assert stats["RMSD"] == 0.0, "RMSD should be 0 when no pixels in mask"

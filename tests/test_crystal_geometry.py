@@ -29,7 +29,8 @@ class TestCrystalGeometry:
             cell_gamma=90.0,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical regression test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Get the computed tensors
         tensors = crystal.compute_cell_tensors()
@@ -91,7 +92,8 @@ class TestCrystalGeometry:
             cell_gamma=95.0081,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical C-code validation test
+        crystal = Crystal(config=config, dtype=torch.float64)
         tensors = crystal.compute_cell_tensors()
 
         # Expected values from trace.log lines 9-18
@@ -166,7 +168,8 @@ class TestCrystalGeometry:
             cell_gamma=96.1,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical metric duality test (Core Rule #13)
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Get both real and reciprocal vectors
         a, b, c = crystal.a, crystal.b, crystal.c
@@ -174,11 +177,12 @@ class TestCrystalGeometry:
 
         # Check metric duality: a* · a = 1, a* · b = 0, etc.
         # The 9 relationships that define the reciprocal lattice
-        # Note: Using C-code convention introduces small numerical errors (~0.3%)
+        # Core Rule #13: Using V_actual ensures perfect metric duality (a·a* = 1 exactly)
+        # See nanoBragg.c lines 2103-2119 for the recalculation sequence
         torch.testing.assert_close(
             torch.dot(a_star, a),
             torch.tensor(1.0, dtype=torch.float64),
-            rtol=1e-12,
+            rtol=1e-12,  # Perfect metric duality with V_actual
             atol=1e-12,
         )
         torch.testing.assert_close(
@@ -326,7 +330,8 @@ class TestCrystalGeometry:
             cell_gamma=94.5,
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical rotation invariance test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Test with a specific reflection
         h, k, l = 2.0, 4.0, -3.0
@@ -603,7 +608,8 @@ class TestCrystalGeometry:
             misset_deg=(90.0, 0.0, 0.0),  # 90° rotation around X axis
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical misset orientation test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # For a cubic cell with 90° X rotation:
         # Original: a* = [0.01, 0, 0], b* = [0, 0.01, 0], c* = [0, 0, 0.01]
@@ -719,7 +725,8 @@ class TestCrystalGeometry:
             misset_deg=(30.0, 45.0, 60.0),
         )
 
-        crystal = Crystal(config=config)
+        # Override dtype to float64 for precision-critical rotation order test
+        crystal = Crystal(config=config, dtype=torch.float64)
 
         # Manually compute expected result with XYZ rotation order
         # Start with unrotated reciprocal vectors for cubic cell
@@ -791,3 +798,64 @@ class TestCrystalGeometry:
             [misset_x.grad, misset_y.grad, misset_z.grad], dtype=torch.float64
         )
         assert torch.any(all_misset_grads != 0.0), "All misset gradients are zero"
+
+    def test_inplace_cell_update_gradient_flow(self):
+        """
+        Verify in-place cell parameter updates work correctly for refinement.
+
+        Regression test for bug where compute_cell_tensors() used self.config.cell_a
+        (config scalar) instead of self.cell_a (tensor attribute) for rescaling,
+        breaking gradient flow when cell_a was updated in-place after Crystal creation.
+
+        Bug fix: crystal.py lines 881-885 changed from:
+            a_mag = self.config.cell_a  # Bug: uses stale config value
+        To:
+            a_mag = self.cell_a  # Fix: uses updated tensor attribute
+
+        This test captures the refinement workflow:
+        1. Create Crystal with initial cell_a
+        2. Update crystal.cell_a to a new tensor (with requires_grad=True)
+        3. Verify lattice vector 'a' reflects the new value
+        4. Verify gradients flow through to the updated parameter
+        """
+        device = torch.device("cpu")
+        dtype = torch.float64
+
+        # Step 1: Create crystal with initial cell_a=100
+        config = CrystalConfig(
+            cell_a=100.0, cell_b=100.0, cell_c=100.0,
+            cell_alpha=90.0, cell_beta=90.0, cell_gamma=90.0,
+        )
+        crystal = Crystal(config=config, device=device, dtype=dtype)
+
+        # Verify initial state
+        assert abs(crystal.cell_a.item() - 100.0) < 1e-6, "Initial cell_a should be 100"
+        assert abs(crystal.a[0].item() - 100.0) < 1e-6, "Initial a[0] should be 100"
+
+        # Step 2: Update cell_a in-place (refinement pattern)
+        new_cell_a = torch.tensor(95.0, device=device, dtype=dtype, requires_grad=True)
+        crystal.cell_a = new_cell_a
+
+        # Step 3: Verify lattice vector reflects the new value
+        # This was the bug: crystal.a[0] would still be 100.0 because
+        # compute_cell_tensors used self.config.cell_a (100.0) instead of
+        # self.cell_a (95.0) for the rescaling step
+        assert abs(crystal.a[0].item() - 95.0) < 1e-6, (
+            f"After in-place update, a[0] should be 95.0, got {crystal.a[0].item()}. "
+            "This indicates compute_cell_tensors is using config values instead of tensor attributes."
+        )
+
+        # Step 4: Verify gradients flow through
+        loss = torch.sum(crystal.a ** 2)
+        loss.backward()
+
+        assert new_cell_a.grad is not None, "Gradient should flow to updated cell_a"
+        assert torch.isfinite(new_cell_a.grad), "Gradient should be finite"
+        assert new_cell_a.grad.item() != 0.0, "Gradient should be non-zero"
+
+        # The gradient of sum(a^2) with respect to cell_a should be approximately 2*a[0]
+        # since a ≈ [cell_a, 0, 0] for cubic cells
+        expected_grad = 2.0 * 95.0  # 2 * cell_a
+        assert abs(new_cell_a.grad.item() - expected_grad) < 1.0, (
+            f"Gradient should be ~{expected_grad}, got {new_cell_a.grad.item()}"
+        )

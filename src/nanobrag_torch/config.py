@@ -60,8 +60,9 @@ if(strstr(argv[i], "-pixel") && (argc > (i+1)))
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
+import numpy as np
 import torch
 
 
@@ -71,6 +72,8 @@ class DetectorConvention(Enum):
     MOSFLM = "mosflm"
     XDS = "xds"
     DIALS = "dials"
+    ADXV = "adxv"
+    DENZO = "denzo"
     CUSTOM = "custom"  # For user-specified basis vectors
 
 
@@ -117,6 +120,13 @@ class CrystalConfig:
     misset_random: bool = False  # If True, generate random misset angles using seed
     misset_seed: Optional[int] = None  # Seed for random misset generation (C-compatible LCG)
 
+    # MOSFLM matrix orientation (Phase G - CLI-FLAGS-003)
+    # When -mat file is provided, these store the MOSFLM A* orientation in Å⁻¹
+    # If None, Crystal uses canonical orientation from cell parameters
+    mosflm_a_star: Optional[np.ndarray] = None  # MOSFLM a* reciprocal vector (Å⁻¹)
+    mosflm_b_star: Optional[np.ndarray] = None  # MOSFLM b* reciprocal vector (Å⁻¹)
+    mosflm_c_star: Optional[np.ndarray] = None  # MOSFLM c* reciprocal vector (Å⁻¹)
+
     # Spindle rotation parameters
     phi_start_deg: float = 0.0
     osc_range_deg: float = 0.0
@@ -129,10 +139,10 @@ class CrystalConfig:
     mosaic_seed: Optional[int] = None
 
     # Crystal size (number of unit cells in each direction)
-    N_cells: Tuple[int, int, int] = (5, 5, 5)
+    N_cells: Tuple[int, int, int] = (1, 1, 1)  # Matches C default
 
     # Structure factor parameters
-    default_F: float = 100.0  # Default structure factor magnitude
+    default_F: float = 0.0  # Default structure factor magnitude (matches C default)
 
     # Crystal shape parameters
     shape: CrystalShape = CrystalShape.SQUARE  # Crystal shape model for F_latt calculation
@@ -177,6 +187,14 @@ class DetectorConfig:
     beam_center_s: Union[float, torch.Tensor, None] = None  # slow axis (auto-calculated if None)
     beam_center_f: Union[float, torch.Tensor, None] = None  # fast axis (auto-calculated if None)
 
+    # Beam center source tracking (DETECTOR-CONFIG-001 Phase C1)
+    # Distinguishes auto-calculated defaults from explicit user-provided values
+    # - "auto": Beam center derived from detector size defaults → apply MOSFLM +0.5 pixel offset
+    # - "explicit": Beam center explicitly provided by user → no implicit offset
+    # Per spec-a-core.md §72 and arch.md §ADR-03, the MOSFLM +0.5 pixel offset
+    # applies ONLY to auto-calculated defaults, not explicit user inputs.
+    beam_center_source: Literal["auto", "explicit"] = "auto"
+
     # Detector rotations (degrees)
     detector_rotx_deg: Union[float, torch.Tensor] = 0.0
     detector_roty_deg: Union[float, torch.Tensor] = 0.0
@@ -191,7 +209,7 @@ class DetectorConfig:
     detector_pivot: Optional[DetectorPivot] = None  # Will be auto-selected per AT-GEO-002
 
     # Sampling
-    oversample: int = 1
+    oversample: int = -1  # -1 means auto-select based on crystal size and detector geometry
     oversample_omega: bool = False  # If True, apply solid angle per subpixel (not last-value)
     oversample_polar: bool = False  # If True, apply polarization per subpixel (not last-value)
     oversample_thick: bool = False  # If True, apply absorption per subpixel (not last-value)
@@ -200,10 +218,14 @@ class DetectorConfig:
     curved_detector: bool = False  # If True, use spherical mapping for pixel positions
     point_pixel: bool = False  # If True, use 1/R^2 solid angle only (no obliquity)
 
+    # Detector origin override (CLI-FLAGS-003)
+    pix0_override_m: Optional[Union[Tuple[float, float, float], torch.Tensor]] = None  # Override pix0 vector (meters)
+
     # Custom basis vectors for CUSTOM convention (unit vectors)
     custom_fdet_vector: Optional[Tuple[float, float, float]] = None  # Fast axis direction
     custom_sdet_vector: Optional[Tuple[float, float, float]] = None  # Slow axis direction
     custom_odet_vector: Optional[Tuple[float, float, float]] = None  # Normal direction
+    custom_beam_vector: Optional[Tuple[float, float, float]] = None  # Incident beam direction (unit vector)
 
     # Detector absorption parameters (AT-ABS-001)
     detector_abs_um: Optional[Union[float, torch.Tensor]] = None  # Attenuation depth in micrometers
@@ -226,13 +248,35 @@ class DetectorConfig:
         - If only distance_mm is provided (not close_distance_mm): pivot = BEAM
         - If only close_distance_mm is provided: pivot = SAMPLE
         - If detector_pivot is explicitly set: use that (explicit override wins)
-        """
-        # AT-GEO-002: Automatic pivot selection based on distance parameters
-        if self.detector_pivot is None:
-            # Determine if distance_mm was explicitly provided (not just defaulted)
-            # Note: In real CLI, we'd know if user provided -distance vs -close_distance
-            # For testing, we use the presence/absence of close_distance_mm as indicator
 
+        C-Code Implementation Reference (from nanoBragg.c, lines ~1690-1750):
+        When custom detector vectors or pix0 override are present, C code forces SAMPLE pivot:
+        ```c
+        // C code forces SAMPLE pivot when custom vectors are supplied
+        if (custom_fdet || custom_sdet || custom_odet || custom_beam || pix0_override) {
+            detector_pivot = SAMPLE;  // Force SAMPLE mode for custom geometry
+        }
+        ```
+        This ensures geometric consistency when detector orientation is overridden.
+        See docs/architecture/detector.md §5.2 and specs/spec-a-cli.md precedence rules.
+        """
+        # CLI-FLAGS-003 Phase H6f: Force SAMPLE pivot when custom BASIS VECTORS present
+        # This matches nanoBragg.c behavior and ensures parity when custom geometry is supplied
+        # Note: pix0_override alone does NOT force SAMPLE; only custom detector basis vectors do
+        has_custom_basis_vectors = (
+            self.custom_fdet_vector is not None
+            or self.custom_sdet_vector is not None
+            or self.custom_odet_vector is not None
+            or self.custom_beam_vector is not None
+        )
+
+        if has_custom_basis_vectors:
+            # Custom detector basis vectors force SAMPLE pivot (matching C behavior)
+            # See reports/2025-10-cli-flags/phase_h6/pivot_parity.md for evidence
+            self.detector_pivot = DetectorPivot.SAMPLE
+        elif self.detector_pivot is None:
+            # AT-GEO-002: Automatic pivot selection based on distance parameters
+            # Only applies when no custom vectors are present
             if self.close_distance_mm is not None:
                 # Setup B: -close_distance provided -> pivot SHALL be SAMPLE
                 self.detector_pivot = DetectorPivot.SAMPLE
@@ -246,20 +290,37 @@ class DetectorConfig:
 
         # Auto-calculate beam centers if not explicitly provided
         # This ensures beam centers scale correctly with detector size
+        # NOTE: We do NOT apply the MOSFLM +0.5 pixel offset here.
+        # The offset is part of the MOSFLM beam-center MAPPING formula and should
+        # be applied when converting beam centers to Fbeam/Sbeam in the Detector class.
         if self.beam_center_s is None or self.beam_center_f is None:
             detsize_s = self.spixels * self.pixel_size_mm  # Total detector size in slow axis (mm)
             detsize_f = self.fpixels * self.pixel_size_mm  # Total detector size in fast axis (mm)
 
+            # Per spec-a-core.md §71-72:
+            # MOSFLM/DENZO: Default Xbeam = Ybeam = (detsize + pixel)/2
+            # ADXV: Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2
+            # Others: beam_center = detsize / 2 (simple center)
             if self.detector_convention == DetectorConvention.MOSFLM:
-                # MOSFLM convention adds 0.5 pixel offset (per spec AT-GEO-001)
-                # For MOSFLM: beam_center = (detsize + pixel_size) / 2
+                # Per spec-a-core.md §71: "Default Xbeam = (detsize_s + pixel)/2, Ybeam = (detsize_f + pixel)/2"
                 if self.beam_center_s is None:
                     self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
                 if self.beam_center_f is None:
                     self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            elif self.detector_convention == DetectorConvention.DENZO:
+                # DENZO uses same defaults as MOSFLM (per spec-a-core.md §73)
+                if self.beam_center_s is None:
+                    self.beam_center_s = (detsize_s + self.pixel_size_mm) / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
+            elif self.detector_convention == DetectorConvention.ADXV:
+                # Per spec-a-core.md §66-67: "Default Xbeam = (detsize_f + pixel)/2, Ybeam = (detsize_s - pixel)/2"
+                if self.beam_center_s is None:
+                    self.beam_center_s = (detsize_s - self.pixel_size_mm) / 2.0
+                if self.beam_center_f is None:
+                    self.beam_center_f = (detsize_f + self.pixel_size_mm) / 2.0
             else:
-                # XDS, DIALS, and other conventions: center without offset
-                # For XDS: beam_center = detsize / 2
+                # XDS, DIALS, CUSTOM: simple center (detsize / 2)
                 if self.beam_center_s is None:
                     self.beam_center_s = detsize_s / 2.0
                 if self.beam_center_f is None:
@@ -271,12 +332,18 @@ class DetectorConfig:
             if self.detector_convention == DetectorConvention.MOSFLM:
                 # MOSFLM convention: twotheta axis is [0, 0, -1]
                 self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
+            elif self.detector_convention == DetectorConvention.DENZO:
+                # DENZO convention: Same as MOSFLM for twotheta axis [0, 0, -1]
+                self.twotheta_axis = torch.tensor([0.0, 0.0, -1.0])
             elif self.detector_convention == DetectorConvention.XDS:
                 # XDS convention: twotheta axis is [1, 0, 0]
                 self.twotheta_axis = torch.tensor([1.0, 0.0, 0.0])
             elif self.detector_convention == DetectorConvention.DIALS:
                 # DIALS convention: twotheta axis is [0, 1, 0]
                 self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
+            elif self.detector_convention == DetectorConvention.ADXV:
+                # ADXV convention: twotheta axis is [-1, 0, 0]
+                self.twotheta_axis = torch.tensor([-1.0, 0.0, 0.0])
             else:
                 # Default fallback to DIALS axis [0, 1, 0]
                 self.twotheta_axis = torch.tensor([0.0, 1.0, 0.0])
@@ -294,9 +361,9 @@ class DetectorConfig:
             if self.pixel_size_mm <= 0:
                 raise ValueError("Pixel size must be positive")
 
-        # Validate oversample
-        if self.oversample < 1:
-            raise ValueError("Oversample must be at least 1")
+        # Validate oversample (-1 means auto-select)
+        if self.oversample < -1 or self.oversample == 0:
+            raise ValueError("Oversample must be -1 (auto-select) or >= 1")
 
         # Validate and set ROI defaults (AT-ROI-001)
         # If ROI not specified, default to full detector
@@ -405,12 +472,18 @@ class DetectorConfig:
         if self.detector_convention == DetectorConvention.MOSFLM:
             # MOSFLM default is [0, 0, -1]
             is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
+        elif self.detector_convention == DetectorConvention.DENZO:
+            # DENZO default is [0, 0, -1] (same as MOSFLM)
+            is_default = (abs(axis[0]) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2] + 1.0) < 1e-6)
         elif self.detector_convention == DetectorConvention.XDS:
             # XDS default is [1, 0, 0]
             is_default = (abs(axis[0] - 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
         elif self.detector_convention == DetectorConvention.DIALS:
             # DIALS default is [0, 1, 0]
             is_default = (abs(axis[0]) < 1e-6 and abs(axis[1] - 1.0) < 1e-6 and abs(axis[2]) < 1e-6)
+        elif self.detector_convention == DetectorConvention.ADXV:
+            # ADXV default is [-1, 0, 0]
+            is_default = (abs(axis[0] + 1.0) < 1e-6 and abs(axis[1]) < 1e-6 and abs(axis[2]) < 1e-6)
         else:
             # CUSTOM convention or unknown - default to False
             return False
@@ -424,10 +497,14 @@ class BeamConfig:
     """Configuration for X-ray beam properties.
 
     Supports multiple sources for beam divergence and spectral dispersion (AT-SRC-001).
+
+    Note: wavelength_A, fluence, and polarization_factor can accept torch.Tensor
+    for gradient-based optimization (DBEX-GRADIENT-001).
     """
 
     # Basic beam properties
-    wavelength_A: float = 6.2  # X-ray wavelength in Angstroms
+    # Can be float or torch.Tensor for differentiable optimization
+    wavelength_A: Union[float, torch.Tensor] = 1.0  # X-ray wavelength in Angstroms (matches C default)
 
     # Source geometry (simplified)
     N_source_points: int = 1  # Number of source points for beam divergence
@@ -440,7 +517,12 @@ class BeamConfig:
     source_wavelengths: Optional[torch.Tensor] = None  # (N,) wavelengths in meters for each source
 
     # Beam polarization
-    polarization_factor: float = 1.0  # Kahn polarization factor K in [0,1] (1.0 = unpolarized)
+    # C defaults: polar=1.0, polarization=0.0, nopolar=0 (golden_suite_generator/nanoBragg.c:308-309)
+    # polar controls the Kahn factor application; polarization is the E-vector rotation angle
+    # CRITICAL (CLI-FLAGS-003 Phase K3b): C code initializes polar=1.0 but resets polarization=0.0
+    # per pixel (nanoBragg.c:3732), computing ~0.9126 dynamically. PyTorch default 0.0 triggers
+    # this same computation path, matching C behavior. User can override via -polar flag.
+    polarization_factor: float = 0.0  # Kahn polarization factor K in [0,1] (0.0 = compute from geometry, matches C default behavior)
     nopolar: bool = False  # If True, force polarization factor to 1 (disable polarization)
     polarization_axis: tuple[float, float, float] = (0.0, 0.0, 1.0)  # Polarization E-vector direction
 
@@ -448,7 +530,8 @@ class BeamConfig:
     flux: float = 0.0  # Photons per second
     exposure: float = 0.0  # Exposure time in seconds
     beamsize_mm: float = 0.0  # Beam size in mm (used for fluence calculation and sample clipping)
-    fluence: float = 125932015286227086360700780544.0  # Photons per square meter (default from C code)
+    # Can be float or torch.Tensor for differentiable optimization (DBEX-GRADIENT-001)
+    fluence: Union[float, torch.Tensor] = 125932015286227086360700780544.0  # Photons per square meter (default from C code)
 
     # Resolution cutoff
     dmin: float = 0.0  # Minimum d-spacing in Angstroms (0 = no cutoff)
@@ -461,6 +544,9 @@ class BeamConfig:
 
         Per spec: fluence SHALL be recomputed as flux·exposure/beamsize^2 whenever
         flux != 0 and exposure > 0 and beamsize ≥ 0.
+
+        SOURCE-WEIGHT-001 Phase C2: Validate source_weights edge cases.
+        Ensures physical correctness for weighted multi-source simulations.
         """
         if self.flux != 0 and self.exposure > 0 and self.beamsize_mm >= 0:
             # Convert beamsize from mm to meters for fluence calculation
@@ -473,6 +559,17 @@ class BeamConfig:
         elif self.exposure > 0 and self.beamsize_mm > 0 and self.fluence > 0:
             beamsize_m = self.beamsize_mm / 1000.0
             self.flux = self.fluence * (beamsize_m * beamsize_m) / self.exposure
+
+        # SOURCE-WEIGHT-001 Phase C1 resolution: Source weights are read but ignored per spec
+        # Per spec-a-core.md line 151: "The weight column is read but ignored (equal weighting results)"
+        # No validation needed since weights don't affect simulation output
+
+        # SOURCE-WEIGHT-001 Phase E: Sourcefile + divergence validation guard
+        # NOTE: BeamConfig doesn't have a source_file field since it's a CLI-level concept.
+        # The validation guard SHALL be implemented in __main__.py when parsing CLI arguments:
+        # When both -sourcefile and any divergence parameters (-hdivrange/-vdivrange/-dispersion)
+        # are provided, a UserWarning SHALL be emitted per Option B design
+        # (see reports/2025-11-source-weights/phase_d/20251009T103212Z/design_notes.md)
 
 
 @dataclass

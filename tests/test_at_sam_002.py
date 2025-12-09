@@ -13,7 +13,7 @@ From spec:
 import torch
 import pytest
 import numpy as np
-from src.nanobrag_torch.config import DetectorConfig, CrystalConfig
+from src.nanobrag_torch.config import DetectorConfig, CrystalConfig, BeamConfig
 from src.nanobrag_torch.models.detector import Detector
 from src.nanobrag_torch.models.crystal import Crystal
 from src.nanobrag_torch.simulator import Simulator
@@ -57,15 +57,22 @@ class TestAT_SAM_002_OversampleLastValue:
             phi_steps=1,
             mosaic_spread_deg=0.0,
             mosaic_domains=1,
+            default_F=100.0,  # Non-zero structure factor to generate intensity
         )
 
         crystal = Crystal(crystal_config, device=self.device, dtype=self.dtype)
+
+        # Create beam configuration
+        beam_config = BeamConfig(
+            wavelength_A=1.5,  # Wavelength in Angstroms
+        )
 
         # Create simulator
         simulator = Simulator(
             crystal=crystal,
             detector=detector,
             crystal_config=crystal_config,
+            beam_config=beam_config,
             device=self.device,
             dtype=self.dtype,
         )
@@ -132,15 +139,22 @@ class TestAT_SAM_002_OversampleLastValue:
             cell_b=100.0,
             cell_c=100.0,
             N_cells=(5, 5, 5),
+            default_F=100.0,  # Non-zero structure factor
         )
 
         crystal = Crystal(crystal_config, device=self.device, dtype=self.dtype)
+
+        # Create beam configuration
+        beam_config = BeamConfig(
+            wavelength_A=1.5,  # Wavelength in Angstroms
+        )
 
         # Create simulator
         simulator = Simulator(
             crystal=crystal,
             detector=detector,
             crystal_config=crystal_config,
+            beam_config=beam_config,
             device=self.device,
             dtype=self.dtype,
         )

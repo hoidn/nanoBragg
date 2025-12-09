@@ -35,7 +35,7 @@ def test_beam_pivot_keeps_beam_indices_and_alignment():
         beam_center_s=51.2, beam_center_f=51.2,
         detector_twotheta_deg=0.0,
     )
-    d = Detector(cfg)
+    d = Detector(cfg, dtype=torch.float64)
 
     # 1) Direct beam fractional indices must be equal to beam_center_s and beam_center_f
     # (Note: MOSFLM +0.5 offset is already included in d.beam_center_s/f)
@@ -68,7 +68,7 @@ def test_sample_pivot_moves_beam_indices_with_twotheta():
         beam_center_s=51.2, beam_center_f=51.2,
         detector_twotheta_deg=0.0,
     )
-    d = Detector(cfg)
+    d = Detector(cfg, dtype=torch.float64)
 
     # At zero rotation with center-based indexing, beam indices equal beam centers
     s0, f0 = _beam_indices(d)

@@ -323,11 +323,11 @@ class TestATParallel020:
         print(f"PyTorch max intensity: {np.max(py_image):.2f}")
         print(f"C max intensity: {np.max(c_image):.2f}")
 
-        # Realistic assertions for comprehensive test with absorption
-        # Note: Absorption implementation causes additional discrepancies
-        assert correlation >= 0.85, f"Correlation {correlation:.4f} < 0.85"
-        assert match_fraction >= 0.35, f"Only {match_fraction:.2%} peaks matched (need ≥35%)"
-        assert 0.15 <= intensity_ratio <= 1.5, f"Intensity ratio {intensity_ratio:.4f} outside [0.15, 1.5]"
+        # Spec requirements (AT-PARALLEL-020): correlation ≥0.95, peaks ≤1.0px (≥95% match), ratio [0.9,1.1]
+        # FIXED 2025-09-30: Removed torch.abs() from parallax calculation in absorption (matches C code)
+        assert correlation >= 0.95, f"Correlation {correlation:.4f} < 0.95 (spec requirement)"
+        assert match_fraction >= 0.95, f"Only {match_fraction:.2%} peaks matched (spec requires ≥95%)"
+        assert 0.9 <= intensity_ratio <= 1.1, f"Intensity ratio {intensity_ratio:.4f} outside [0.9, 1.1]"
 
     def test_comprehensive_without_absorption(self, test_config, tmp_path):
         """Test comprehensive integration without absorption (simpler case)"""
@@ -355,10 +355,11 @@ class TestATParallel020:
         print(f"Peak matching: {match_fraction:.2%}")
         print(f"Intensity ratio: {intensity_ratio:.4f}")
 
-        # Realistic criteria for this complex case with many features enabled
-        assert correlation >= 0.85, f"Correlation {correlation:.4f} < 0.85"
-        assert match_fraction >= 0.40, f"Only {match_fraction:.2%} peaks matched (need ≥40%)"
-        assert 0.85 <= intensity_ratio <= 1.15, f"Intensity ratio {intensity_ratio:.4f} outside [0.85, 1.15]"
+        # Spec requirements for comprehensive test (even without absorption should meet spec)
+        # FIXED 2025-09-30: Parallax bug fix should improve correlation significantly
+        assert correlation >= 0.95, f"Correlation {correlation:.4f} < 0.95 (spec requirement)"
+        assert match_fraction >= 0.95, f"Only {match_fraction:.2%} peaks matched (spec requires ≥95%)"
+        assert 0.9 <= intensity_ratio <= 1.1, f"Intensity ratio {intensity_ratio:.4f} outside [0.9, 1.1]"
 
     def test_phi_rotation_only(self, test_config, tmp_path):
         """Test with only phi rotation enabled"""
@@ -390,9 +391,10 @@ class TestATParallel020:
         print(f"PyTorch max: {np.max(py_image):.2f}")
         print(f"C max: {np.max(c_image):.2f}")
 
-        # Relaxed thresholds for phi rotation (more challenging than static cases)
-        assert correlation >= 0.85, f"Correlation {correlation:.4f} < 0.85 for phi rotation"
-        assert 0.80 <= intensity_ratio <= 1.20, f"Intensity ratio {intensity_ratio:.4f} outside [0.80, 1.20]"
+        # Spec requirements apply to all comprehensive test variants
+        # FIXED 2025-09-30: Parallax bug fix should meet spec thresholds
+        assert correlation >= 0.95, f"Correlation {correlation:.4f} < 0.95 (spec requirement)"
+        assert 0.9 <= intensity_ratio <= 1.1, f"Intensity ratio {intensity_ratio:.4f} outside [0.9, 1.1]"
 
     def test_comprehensive_minimal_features(self, test_config, tmp_path):
         """Test with minimal features as a baseline"""
