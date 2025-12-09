@@ -9,12 +9,16 @@ Evidence base: reports/2025-10-cli-flags/phase_a/README.md
 import os
 import pytest
 import torch
+from pathlib import Path
 from nanobrag_torch.__main__ import create_parser, parse_and_validate_args
 from nanobrag_torch.config import DetectorConfig, DetectorConvention, DetectorPivot
 from nanobrag_torch.models.detector import Detector
 
 # Set required environment variable
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+# Repository root for absolute path resolution
+REPO_ROOT = Path(__file__).parent.parent
 
 
 def run_parse(args):
@@ -381,10 +385,13 @@ class TestCLIBeamVector:
             beam_config=beam_config
         )
 
-        # CRITICAL: Simulator.incident_beam_direction must match detector.beam_vector
+        # CRITICAL: Simulator.incident_beam_direction must be negation of detector.beam_vector
+        # detector.beam_vector points from sample→source (per detector.py line 1069)
+        # simulator.incident_beam_direction points from source→sample (negated for physics, per simulator.py line 565)
         incident = simulator.incident_beam_direction
-        assert torch.allclose(incident, expected_norm, atol=1e-6), \
-            f"Simulator incident_beam_direction {incident} != detector beam_vector {expected_norm}"
+        expected_negated = -expected_norm
+        assert torch.allclose(incident, expected_negated, atol=1e-6), \
+            f"Simulator incident_beam_direction {incident} != -detector beam_vector {expected_negated}"
 
 
 class TestCLIPix0Override:
@@ -470,10 +477,9 @@ class TestCLIPix0Override:
         Evidence: reports/2025-10-cli-flags/phase_h/implementation/pix0_mapping_analysis.md
         """
         import json
-        from pathlib import Path
 
-        # Load expected C pix0 vector
-        expected_json_path = Path("reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json")
+        # Load expected C pix0 vector (use REPO_ROOT for path resolution)
+        expected_json_path = REPO_ROOT / "reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json"
         with open(expected_json_path) as f:
             expected_data = json.load(f)
 
@@ -841,15 +847,55 @@ class TestHKLFdumpParity:
         """
         from pathlib import Path
         import tempfile
+        import subprocess
+        import shutil
         from nanobrag_torch.io.hkl import read_hkl_file, write_fdump, read_fdump
 
         # Input files from Phase L1b analysis
-        hkl_path = "scaled.hkl"
-        c_fdump_path = "reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin"
+        hkl_path = Path("scaled.hkl")
+        c_fdump_path = Path("reports/2025-10-cli-flags/phase_l/hkl_parity/Fdump_scaled_20251006181401.bin")
 
-        # Verify files exist
-        assert Path(hkl_path).exists(), f"Missing {hkl_path}"
-        assert Path(c_fdump_path).exists(), f"Missing C-generated Fdump cache"
+        # Verify HKL file exists
+        assert hkl_path.exists(), f"Missing {hkl_path}"
+
+        # Generate C-reference Fdump if missing
+        if not c_fdump_path.exists():
+            # Find C binary
+            c_bin_candidates = [
+                Path("golden_suite_generator/nanoBragg"),
+                Path("nanoBragg"),
+            ]
+            c_bin = None
+            for candidate in c_bin_candidates:
+                if candidate.exists():
+                    c_bin = candidate
+                    break
+
+            if c_bin is None:
+                pytest.skip(f"Missing C-generated Fdump cache and no C binary found to generate it")
+
+            # Generate Fdump.bin by running C binary with minimal params
+            # C binary creates Fdump.bin as a side effect when reading HKL file
+            try:
+                subprocess.run(
+                    [str(c_bin), "-hkl", str(hkl_path), "-cell", "100", "100", "100", "90", "90", "90",
+                     "-lambda", "1.0", "-distance", "100", "-detpixels", "17", "-N", "1"],
+                    check=True,
+                    capture_output=True,
+                    timeout=30
+                )
+
+                # Move generated Fdump.bin to expected location
+                c_fdump_path.parent.mkdir(parents=True, exist_ok=True)
+                if Path("Fdump.bin").exists():
+                    shutil.move("Fdump.bin", c_fdump_path)
+                else:
+                    pytest.skip(f"C binary did not generate Fdump.bin")
+
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+                pytest.skip(f"Failed to generate C-reference Fdump: {e}")
+
+        assert c_fdump_path.exists(), f"Missing C-generated Fdump cache"
 
         # Read HKL text file
         F_hkl, meta_hkl = read_hkl_file(hkl_path, default_F=0.0, dtype=torch.float64)

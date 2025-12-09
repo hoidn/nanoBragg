@@ -69,13 +69,17 @@ def test_simulator_attempts_compile_when_not_disabled(monkeypatch):
 
     compile_calls = {"called": False}
 
-    def _fake_compile(fn, *args, **kwargs):
+    def _fake_compile(*args, **kwargs):
+        """Mock torch.compile that returns a decorator."""
         compile_calls["called"] = True
 
-        def _wrapped(*fn_args, **fn_kwargs):
-            return fn(*fn_args, **fn_kwargs)
+        def _decorator(fn):
+            """The decorator returned by torch.compile."""
+            def _wrapped(*fn_args, **fn_kwargs):
+                return fn(*fn_args, **fn_kwargs)
+            return _wrapped
 
-        return _wrapped
+        return _decorator
 
     monkeypatch.setattr(_torch, "compile", _fake_compile, raising=True)
 
