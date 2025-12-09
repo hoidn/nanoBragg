@@ -29,6 +29,7 @@ src/nanobrag_torch/utils/geometry.py
 src/nanobrag_torch/utils/noise.py
 src/nanobrag_torch/utils/physics.py
 src/nanobrag_torch/utils/runtime_cache.py
+src/nanobrag_torch/utils/tensor_utils.py
 src/nanobrag_torch/utils/units.py
 tests/test_at_abs_001.py
 tests/test_at_bkg_001.py

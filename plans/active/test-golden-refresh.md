@@ -9,10 +9,11 @@
   - `plans/active/vectorization-parity-regression.md` Phase E — blocked until golden refresh completes.
   - `reports/2026-01-vectorization-parity/phase_e/20251010T082240Z/phase_e_summary.md` — evidence of the current failure state (corr≈0.7157 on stale golden data).
 
-### Status Snapshot (2026-01-07)
+### Status Snapshot (2025-12-08)
 - Phase A staleness audit completed via Attempt #18 (`reports/2026-01-golden-refresh/phase_a/20251010T084007Z/`).
 - Phase B regeneration + README provenance refresh finished in Attempt #19 (`reports/2026-01-golden-refresh/phase_b/20251010T085124Z/`).
-- Phase C parity validation (ROI nb-compare + targeted pytest sweep) now blocks `[VECTOR-PARITY-001]` Phase E handoff.
+- Phase C parity validation **COMPLETE** (2025-12-08): All tasks [D]one, all dependent tests passing. Summary: `reports/test-golden-refresh-verification/phase_c3_dependent_tests_summary.md`.
+- Phase D ledger updates now in progress to unblock `[VECTOR-PARITY-001]` Phase E.
 
 ### Phase A — Scope Confirmation & Staleness Audit
 Goal: Enumerate which golden artifacts are invalidated, capture before/after metrics, and confirm the physics deltas introduced by Phase D5.
@@ -45,7 +46,7 @@ Exit Criteria: ROI correlation ≥ spec thresholds, targeted pytest passing, doc
 | --- | --- | --- | --- |
 | C1 | Validate ROI parity | [D] | ✅ Attempt #20 (2026-01-10T09:02:48Z): corr=1.000000 (≥0.95 ✅), sum_ratio=0.999987 (|ratio−1|≤5e-3 ✅). Artifacts: `reports/2026-01-golden-refresh/phase_c/20251010T090248Z/high_res_roi/`. |
 | C2 | Run targeted pytest selector | [D] | ✅ Attempt #20: `test_high_resolution_variant` PASSED in 5.83s. Log: `reports/2026-01-golden-refresh/phase_c/20251010T090248Z/pytest_highres.log`. |
-| C3 | Sweep dependent tests | [ ] | Execute additional selectors from Phase A mapping (e.g., triclinic, tilted detector) to ensure no regressions. Record pass/fail in `phase_c_summary.md`; capture evidence for failures. |
+| C3 | Sweep dependent tests | [D] | ✅ Verified 2025-12-08: All 40/41 dependent tests PASSED (1 skipped). Comprehensive sweep of test_at_parallel_012.py (4/4), test_at_parallel_013.py (5/6), test_detector_geometry.py (11/11), test_crystal_geometry.py (20/20). Summary: `reports/test-golden-refresh-verification/phase_c3_dependent_tests_summary.md`. |
 
 ### Phase D — Ledger Updates & Maintenance Hooks
 Goal: Integrate the refreshed state into plans/fix_plan, protect the new assets, and define monitoring cadence.

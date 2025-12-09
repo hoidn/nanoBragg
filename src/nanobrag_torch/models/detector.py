@@ -951,8 +951,8 @@ class Detector:
         # The idea is that each pixel is at the same distance from the sample,
         # but at different angular positions
 
-        # The beam direction points from sample toward source
-        # So -beam_vector points from sample toward detector
+        # beam_vector is the incident beam direction (source→sample, photon propagation)
+        # So -beam_vector points from sample toward detector (opposite of incident)
         beam_dir = -self.beam_vector
 
         # Compute the angular offsets for each pixel
@@ -1058,7 +1058,13 @@ class Detector:
         Otherwise use convention defaults.
 
         Returns:
-            torch.Tensor: Unit beam vector pointing from sample toward source
+            torch.Tensor: Unit beam vector representing incident beam direction (source→sample, along photon propagation)
+
+        Note:
+            C-code reference: nanoBragg.c lines 2578, 2989
+                source_X[source] = -source_distance*beam_vector[1]
+                incident[1] = -source_X[source] = beam_vector[1] * source_distance
+            Therefore beam_vector represents the incident beam direction (photon propagation).
         """
         # CUSTOM convention with user override
         if (self.config.detector_convention == DetectorConvention.CUSTOM
