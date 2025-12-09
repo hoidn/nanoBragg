@@ -878,9 +878,11 @@ class Crystal:
         else:
             # User-supplied cell parameters (not MOSFLM matrix)
             # Rescale cross products to enforce exact cell lengths
-            a_mag = self.config.cell_a
-            b_mag = self.config.cell_b
-            c_mag = self.config.cell_c
+            # CRITICAL: Use self.cell_a (tensor) not self.config.cell_a (config scalar)
+            # to preserve gradient flow during refinement
+            a_mag = self.cell_a
+            b_mag = self.cell_b
+            c_mag = self.cell_c
 
             # Rescale cross products to enforce: |(b* × c*)| = |a| / V_cell
             # This ensures real vectors will have exact user-specified magnitudes
