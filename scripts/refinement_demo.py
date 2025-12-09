@@ -9,12 +9,25 @@ then recovers those parameters via gradient descent optimization.
 Reference: plans/active/refinement-demo.md
 
 Usage:
-    python scripts/refinement_demo.py [--iterations N] [--fallback] [--plot]
+    python scripts/refinement_demo.py [options]
 
 Options:
-    --iterations N  Number of optimization iterations (default: 250)
-    --fallback      Use single-parameter (mosaic-only) mode for debugging
-    --plot          Generate visualization plots (requires matplotlib)
+    --iterations N    Number of optimization iterations (default: 250)
+    --fallback        Use single-parameter (mosaic-only) mode for debugging
+    --plot            Generate static visualization (PNG)
+    --gif             Generate animated GIF showing refinement progression
+    --frame-interval  Save frame every N iterations for GIF (default: 5)
+    --fps N           Frames per second for GIF (default: 8)
+
+Examples:
+    # Basic run with static plot
+    python scripts/refinement_demo.py --plot
+
+    # Full visualization with GIF animation
+    python scripts/refinement_demo.py --plot --gif --iterations 150
+
+    # Quick test with fewer iterations
+    python scripts/refinement_demo.py --iterations 50 --fallback --plot
 """
 
 import os
@@ -61,6 +74,8 @@ FIXED_PARAMS = dict(
 )
 
 # Detector configuration
+# Note: 64x64 is tuned for the current learning rates
+# For higher resolution visualization, also adjust LRs in run_refinement()
 DETECTOR_CONFIG = DetectorConfig(
     fpixels=64,  # Fast axis pixels
     spixels=64,  # Slow axis pixels
@@ -128,6 +143,8 @@ def run_refinement(
     dtype: torch.dtype,
     n_iterations: int = 100,
     use_fallback: bool = False,
+    save_frames: bool = False,
+    frame_interval: int = 5,
 ) -> dict:
     """Run gradient-based refinement to recover parameters.
 
@@ -137,9 +154,11 @@ def run_refinement(
         dtype: Torch dtype for computation
         n_iterations: Number of optimization iterations
         use_fallback: If True, only refine mosaic spread (not misset)
+        save_frames: If True, save predicted images for GIF animation
+        frame_interval: Save a frame every N iterations (default: 5)
 
     Returns:
-        Dictionary containing optimization history
+        Tuple of (history dict, final predicted image, optional frames list)
     """
     # Initialize parameters with wrong values
     init_mosaic = torch.tensor(0.2, dtype=dtype, requires_grad=True)
@@ -173,6 +192,9 @@ def run_refinement(
         "misset_y": [],
         "misset_z": [],
     }
+
+    # Frame storage for GIF animation
+    frames = [] if save_frames else None
 
     print(f"\nInitial parameters:")
     print(f"  mosaic_spread: {init_mosaic.item():.3f}° (true: {TRUE_MOSAIC_SPREAD}°)")
@@ -253,6 +275,16 @@ def run_refinement(
         history["misset_y"].append(init_misset_y.item())
         history["misset_z"].append(init_misset_z.item())
 
+        # Save frame for GIF animation
+        if save_frames and (iteration % frame_interval == 0 or iteration == n_iterations - 1):
+            frames.append({
+                "iteration": iteration,
+                "predicted": predicted_image.detach().cpu().clone(),
+                "loss": loss.item(),
+                "mosaic": init_mosaic.item(),
+                "misset": (init_misset_x.item(), init_misset_y.item(), init_misset_z.item()),
+            })
+
         # Progress reporting
         if iteration % 10 == 0 or iteration == n_iterations - 1:
             msg = f"Iter {iteration:3d}: loss={loss.item():.4e}, mosaic={init_mosaic.item():.3f}°"
@@ -263,8 +295,8 @@ def run_refinement(
                 )
             print(msg)
 
-    # Return history and final predicted image
-    return history, predicted_image
+    # Return history, final predicted image, and optional frames
+    return history, predicted_image, frames
 
 
 def print_results(history: dict, use_fallback: bool = False) -> dict:
@@ -460,6 +492,126 @@ def plot_results(
     plt.close()
 
 
+def create_refinement_gif(
+    frames: list,
+    experimental_image: torch.Tensor,
+    output_path: str = "refinement_animation.gif",
+    fps: int = 8,
+    use_fallback: bool = False,
+) -> None:
+    """Create animated GIF showing refinement progression.
+
+    Args:
+        frames: List of frame dictionaries from run_refinement
+        experimental_image: Ground truth diffraction pattern
+        output_path: Path to save the output GIF
+        fps: Frames per second for animation
+        use_fallback: If True, only mosaic spread was refined
+    """
+    try:
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import FuncAnimation, PillowWriter
+        import numpy as np
+    except ImportError:
+        print("WARNING: matplotlib not available, skipping GIF creation")
+        return
+
+    if not frames:
+        print("WARNING: No frames to animate")
+        return
+
+    true_misset = (0.0, 0.0, 0.0) if use_fallback else TRUE_MISSET
+    exp_np = experimental_image.numpy()
+
+    # Compute global intensity range for consistent colormap
+    all_intensities = [exp_np] + [f["predicted"].numpy() for f in frames]
+    vmin = min(arr.min() for arr in all_intensities)
+    vmax = max(arr.max() for arr in all_intensities)
+
+    # Create figure with 3 panels: Experiment | Model | Difference
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5))
+    fig.suptitle("Refinement Progress", fontsize=14, fontweight="bold")
+
+    # Static: Experimental image
+    im_exp = axes[0].imshow(exp_np, cmap="viridis", origin="lower", vmin=vmin, vmax=vmax)
+    axes[0].set_title("Experiment (Target)")
+    axes[0].set_xlabel("Fast axis (pixels)")
+    axes[0].set_ylabel("Slow axis (pixels)")
+    plt.colorbar(im_exp, ax=axes[0], fraction=0.046, label="Intensity")
+
+    # Dynamic: Model prediction
+    im_model = axes[1].imshow(
+        frames[0]["predicted"].numpy(), cmap="viridis", origin="lower", vmin=vmin, vmax=vmax
+    )
+    axes[1].set_title("Model (Predicted)")
+    axes[1].set_xlabel("Fast axis (pixels)")
+    plt.colorbar(im_model, ax=axes[1], fraction=0.046, label="Intensity")
+
+    # Dynamic: Difference (Experiment - Model)
+    diff_data = exp_np - frames[0]["predicted"].numpy()
+    # Compute symmetric colormap range for difference images
+    all_diffs = [exp_np - f["predicted"].numpy() for f in frames]
+    diff_max = max(max(abs(d.min()), abs(d.max())) for d in all_diffs)
+    im_diff = axes[2].imshow(
+        diff_data, cmap="RdBu_r", origin="lower", vmin=-diff_max, vmax=diff_max
+    )
+    axes[2].set_title("Residual (Exp - Model)")
+    axes[2].set_xlabel("Fast axis (pixels)")
+    plt.colorbar(im_diff, ax=axes[2], fraction=0.046, label="Δ Intensity")
+
+    # Text annotation for parameters
+    param_text = fig.text(
+        0.02, 0.02, "", fontsize=10, family="monospace",
+        verticalalignment="bottom", bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.8)
+    )
+
+    def update(frame_idx):
+        frame = frames[frame_idx]
+        pred_np = frame["predicted"].numpy()
+        diff_np = exp_np - pred_np
+
+        # Update model image
+        im_model.set_data(pred_np)
+        axes[1].set_title(f"Model (Iter {frame['iteration']})")
+
+        # Update difference image
+        im_diff.set_data(diff_np)
+
+        # Update parameter text
+        if use_fallback:
+            text = (
+                f"Iteration: {frame['iteration']}\n"
+                f"Loss: {frame['loss']:.3e}\n"
+                f"Mosaic: {frame['mosaic']:.3f}° (true: {TRUE_MOSAIC_SPREAD}°)"
+            )
+        else:
+            text = (
+                f"Iteration: {frame['iteration']}\n"
+                f"Loss: {frame['loss']:.3e}\n"
+                f"Mosaic: {frame['mosaic']:.3f}° (true: {TRUE_MOSAIC_SPREAD}°)\n"
+                f"Misset X: {frame['misset'][0]:+.2f}° (true: {true_misset[0]:+.1f}°)\n"
+                f"Misset Y: {frame['misset'][1]:+.2f}° (true: {true_misset[1]:+.1f}°)\n"
+                f"Misset Z: {frame['misset'][2]:+.2f}° (true: {true_misset[2]:+.1f}°)"
+            )
+        param_text.set_text(text)
+
+        return [im_model, im_diff, param_text]
+
+    plt.tight_layout(rect=[0, 0.08, 1, 0.95])
+
+    # Create animation
+    anim = FuncAnimation(
+        fig, update, frames=len(frames), interval=1000 // fps, blit=False
+    )
+
+    # Save as GIF
+    print(f"Creating GIF with {len(frames)} frames at {fps} fps...")
+    writer = PillowWriter(fps=fps)
+    anim.save(output_path, writer=writer)
+    print(f"Animation saved to: {output_path}")
+    plt.close()
+
+
 def main():
     """Main entry point for refinement demo."""
     parser = argparse.ArgumentParser(
@@ -480,6 +632,23 @@ def main():
         "--plot",
         action="store_true",
         help="Generate visualization plots (requires matplotlib)",
+    )
+    parser.add_argument(
+        "--gif",
+        action="store_true",
+        help="Generate animated GIF of refinement progression",
+    )
+    parser.add_argument(
+        "--frame-interval",
+        type=int,
+        default=5,
+        help="Save a frame every N iterations for GIF (default: 5)",
+    )
+    parser.add_argument(
+        "--fps",
+        type=int,
+        default=8,
+        help="Frames per second for GIF animation (default: 8)",
     )
     args = parser.parse_args()
 
@@ -508,31 +677,45 @@ def main():
     print(f"\n{'='*60}")
     print("PHASE 2: Run Gradient-Based Refinement")
     print(f"{'='*60}")
-    history, final_image = run_refinement(
+    history, final_image, frames = run_refinement(
         experimental_image,
         device,
         dtype,
         n_iterations=args.iterations,
         use_fallback=args.fallback,
+        save_frames=args.gif,
+        frame_interval=args.frame_interval,
     )
 
     # Phase 3: Print results
     metrics = print_results(history, use_fallback=args.fallback)
 
     # Phase 4: Optional visualization
-    if args.plot:
+    if args.plot or args.gif:
         print(f"\n{'='*60}")
         print("PHASE 4: Visualization")
         print(f"{'='*60}")
         OUTPUT_DIR.mkdir(exist_ok=True)
-        output_path = OUTPUT_DIR / "refinement_demo.png"
-        plot_results(
-            history,
-            experimental_image,
-            final_image,
-            use_fallback=args.fallback,
-            output_path=str(output_path),
-        )
+
+        if args.plot:
+            output_path = OUTPUT_DIR / "refinement_demo.png"
+            plot_results(
+                history,
+                experimental_image,
+                final_image,
+                use_fallback=args.fallback,
+                output_path=str(output_path),
+            )
+
+        if args.gif and frames:
+            gif_path = OUTPUT_DIR / "refinement_animation.gif"
+            create_refinement_gif(
+                frames,
+                experimental_image,
+                output_path=str(gif_path),
+                fps=args.fps,
+                use_fallback=args.fallback,
+            )
 
     # Return exit code based on success
     return 0 if metrics["success"] else 1
