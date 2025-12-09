@@ -10,7 +10,11 @@ ignore = ["E501"]
 
 [tool.pyrefly]
 project-includes = ["**/*"]
-project-excludes = ["**/*venv/**/*"]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/*venv/**/*",
+]
 
 [build-system]
 requires = ["setuptools", "wheel"]
@@ -40,11 +44,17 @@ dev = [
     "ruff",
     "isort"
 ]
+test = [
+    "pytest-timeout"
+]
 
 [tool.pytest.ini_options]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "slow_gradient: marks gradient tests with extended runtime tolerance (900s default)",
 ]
+timeout = 300
+timeout_func_only = true
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 norecursedirs = ["archive", ".*", "build", "dist", "*.egg"]
