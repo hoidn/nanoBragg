@@ -1821,14 +1821,24 @@ class TestTier2GradientCorrectness:
             pytest.skip(f"Phi gradient check not yet working: {e}")
 
     def test_gradcheck_mosaic_spread(self):
-        """Test gradients for mosaic_spread_deg parameter using torch.autograd.gradcheck."""
+        """Test gradients for mosaic_spread_deg parameter using torch.autograd.gradcheck.
+
+        MOSAIC-GRADIENT-001: This test verifies gradient correctness for mosaic spread
+        after the fix to use deterministic seeding with reparameterization trick.
+
+        Requires NANOBRAGG_DISABLE_COMPILE=1 for gradient tests.
+        """
         # Set environment variable for torch import
         import os
 
         os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-        # Set seed for reproducibility
-        torch.manual_seed(0)
+        # Check for gradient policy guard
+        if os.environ.get('NANOBRAGG_DISABLE_COMPILE') != '1':
+            pytest.skip(
+                "Gradient tests require NANOBRAGG_DISABLE_COMPILE=1 environment variable.\n"
+                "Run with: env NANOBRAGG_DISABLE_COMPILE=1 pytest -v"
+            )
 
         # Create a scalar function that takes mosaic_spread_deg and returns a scalar output
         def mosaic_scalar_function(mosaic_spread_deg):
@@ -1849,10 +1859,12 @@ class TestTier2GradientCorrectness:
                 ),  # Convert to tensor
                 mosaic_spread_deg=mosaic_spread_deg,  # Pass tensor directly
                 mosaic_domains=5,  # Small number for speed
+                mosaic_seed=42,  # Fixed seed for deterministic gradcheck
             )
 
             # Get rotated vectors directly to avoid full simulation complexity
-            a_rot, b_rot, c_rot = crystal.get_rotated_real_vectors(crystal_config)
+            # API returns ((a_rot, b_rot, c_rot), (a_star, b_star, c_star))
+            (a_rot, b_rot, c_rot), _ = crystal.get_rotated_real_vectors(crystal_config)
 
             # Return sum of one rotated vector for gradient testing
             return torch.sum(a_rot)
@@ -1860,23 +1872,16 @@ class TestTier2GradientCorrectness:
         # Test mosaic parameter with small range for numerical stability
         mosaic_test_value = torch.tensor(0.5, dtype=torch.float64, requires_grad=True)
 
-        try:
-            # Use gradcheck with relaxed tolerances for scientific computing
-            gradcheck_result = torch.autograd.gradcheck(
-                mosaic_scalar_function,
-                mosaic_test_value,
-                eps=1e-3,  # Larger epsilon for stability with complex physics
-                atol=1e-4,  # Relaxed absolute tolerance
-                rtol=1e-3,  # Relaxed relative tolerance
-            )
+        # Use gradcheck with relaxed tolerances for scientific computing
+        gradcheck_result = torch.autograd.gradcheck(
+            mosaic_scalar_function,
+            mosaic_test_value,
+            eps=1e-3,  # Larger epsilon for stability with complex physics
+            atol=1e-4,  # Relaxed absolute tolerance
+            rtol=1e-3,  # Relaxed relative tolerance
+        )
 
-            assert gradcheck_result, "Gradient check failed for mosaic spread parameter"
-            print("✅ Mosaic spread gradient check PASSED")
-
-        except Exception as e:
-            print(f"⚠️ Mosaic spread gradient check failed: {e}")
-            # For validation phase, we'll skip this if implementation isn't ready
-            pytest.skip(f"Mosaic spread gradient check not yet working: {e}")
+        assert gradcheck_result, "Gradient check failed for mosaic spread parameter"
 
     def test_gradient_numerical_stability(self):
         """Test that gradients are stable and meaningful for optimization."""

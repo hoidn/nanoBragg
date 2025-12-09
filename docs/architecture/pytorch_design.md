@@ -138,6 +138,42 @@ Principle: Differentiability is required; over-hardening is not. Prefer the mini
   - Include a microbenchmark (≥1e6 evaluations) comparing old/new helper.
   - Confirm vectorization preserved (no data-dependent Python control flow).
 
+### 1.2.1 Stochastic Operations in Differentiable Paths
+
+Stochastic tensor operations (e.g., mosaic rotation sampling) require special
+handling for gradient correctness:
+
+**Problem**: `torch.autograd.gradcheck` evaluates the function multiple times
+with perturbed inputs. If the function uses unseeded randomness, each evaluation
+sees different random values, making numerical gradient estimation meaningless.
+
+**Solution**: Deterministic seeding + reparameterization
+
+1. **Freeze the randomness**: Create a `torch.Generator` seeded from config
+   (e.g., `config.mosaic_seed`). Pass this generator to all stochastic ops.
+
+2. **Reparameterize for gradients**: Factor stochastic values as:
+   ```python
+   actual_value = frozen_base_noise * differentiable_scale
+   ```
+   where `frozen_base_noise` is sampled with the seeded generator (no gradient),
+   and `differentiable_scale` is the parameter that should receive gradients.
+
+3. **Test both properties**:
+   - **Gradient correctness**: `gradcheck` passes with non-zero stochastic params
+   - **Seed reproducibility**: Same seed produces identical results
+
+**Example**: Mosaic rotation generation (MOSAIC-GRADIENT-001)
+```python
+gen = torch.Generator(device=device)
+gen.manual_seed(config.mosaic_seed & 0x7FFFFFFF)  # Handle negative seeds
+
+base_angles = torch.randn(n_domains, generator=gen)  # frozen
+actual_angles = base_angles * mosaic_spread_rad       # gradient flows here
+```
+
+**Evidence**: `tests/test_gradients.py::TestMosaicGradients`
+
 ## 1.3 Stage-A Parameterized Experiment Model (High-Level API)
 
 Stage-A optimization introduces learnable geometry and beam parameterization on

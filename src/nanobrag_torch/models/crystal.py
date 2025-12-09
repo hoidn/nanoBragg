@@ -1313,16 +1313,50 @@ class Crystal:
         """
         Generate random rotation matrices for mosaic domains.
 
+        Uses deterministic seeding from config.mosaic_seed for reproducibility
+        and gradient correctness. The reparameterization trick preserves
+        gradient flow through mosaic_spread_deg.
+
         Args:
             config: CrystalConfig containing mosaic parameters.
 
         Returns:
             torch.Tensor: Rotation matrices with shape (N_mos, 3, 3).
+
+        C-Code Behavior Reference:
+            The C code (nanoBragg.c lines 3820-3868) uses mosaic_rotation_umat()
+            with deterministic CLCG seeding. While this implementation uses
+            Gaussian sampling instead of spherical cap sampling, it maintains
+            the key property of deterministic, reproducible rotations.
+            Default seed is -12345678 per spec-a-core.md:367.
+
+        Gradient Correctness (MOSAIC-GRADIENT-001):
+            Uses the reparameterization trick: actual_angles = base_noise * scale_param.
+            The base_noise is frozen (seeded, no gradient), while mosaic_spread_rad
+            carries gradients. This ensures torch.autograd.gradcheck passes.
         """
         from ..utils.geometry import rotate_axis
 
-        # Convert mosaic spread to radians
-        # Assume config.mosaic_spread_deg is a tensor (enforced at call site)
+        # Create deterministic generator from mosaic_seed
+        # Spec (spec-a-core.md:367): default seed is -12345678
+        gen = torch.Generator(device=self.device)
+        seed = config.mosaic_seed if config.mosaic_seed is not None else -12345678
+        # Convert to valid unsigned seed (handle negative C-style seeds)
+        gen.manual_seed(seed & 0x7FFFFFFF)
+
+        # Generate frozen base randomness (same every call with same seed)
+        # These do NOT carry gradients - they are the "noise" in reparameterization
+        base_axes = torch.randn(
+            config.mosaic_domains, 3, device=self.device, dtype=self.dtype, generator=gen
+        )
+        base_angle_scales = torch.randn(
+            config.mosaic_domains, device=self.device, dtype=self.dtype, generator=gen
+        )
+
+        # Normalize axes
+        axes_normalized = base_axes / torch.norm(base_axes, dim=1, keepdim=True)
+
+        # Convert mosaic spread to radians (preserves gradient if input is tensor)
         if isinstance(config.mosaic_spread_deg, torch.Tensor):
             mosaic_spread_rad = torch.deg2rad(config.mosaic_spread_deg)
         else:
@@ -1332,22 +1366,14 @@ class Crystal:
                 )
             )
 
-        # Generate random rotation axes (normalized)
-        random_axes = torch.randn(
-            config.mosaic_domains, 3, device=self.device, dtype=self.dtype
-        )
-        axes_normalized = random_axes / torch.norm(random_axes, dim=1, keepdim=True)
-
-        # Generate random rotation angles (small, scaled by mosaic spread)
-        random_angles = (
-            torch.randn(config.mosaic_domains, device=self.device, dtype=self.dtype)
-            * mosaic_spread_rad
-        )
+        # Reparameterization: actual_angles = base_noise * scale_parameter
+        # Gradient flows through mosaic_spread_rad, not through base_angle_scales
+        random_angles = base_angle_scales * mosaic_spread_rad
 
         # Create rotation matrices using Rodrigues' formula
         # Start with identity vectors
         # PERF-PYTORCH-004 P1.3: Use .new_tensor to avoid fresh allocation
-        identity = random_axes.new_zeros(3, 3)
+        identity = base_axes.new_zeros(3, 3)
         identity[0, 0] = 1.0
         identity[1, 1] = 1.0
         identity[2, 2] = 1.0

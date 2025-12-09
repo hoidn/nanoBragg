@@ -223,10 +223,18 @@ For all parameters, see [`docs/architecture/c_parameter_dictionary.md`](./docs/a
     -   **Forbidden:** Leaving datasets, constants, or configuration tensors on default CPU while multiplying by GPU intermediates; relying on implicit device promotion; assuming float64/CPU execution in production paths.
     -   **Scope:** This applies across the project and to any future PyTorch work you undertake—make code device/dtype agnostic by default.
 
-17. **Tooling & Benchmark Placement:** Benchmark, profiling, and diagnostic scripts SHALL live under structured tooling directories (`scripts/benchmarks/`, `scripts/profiling/`, etc.) and follow the repo’s CLI/env conventions.
+17. **Tooling & Benchmark Placement:** Benchmark, profiling, and diagnostic scripts SHALL live under structured tooling directories (`scripts/benchmarks/`, `scripts/profiling/`, etc.) and follow the repo's CLI/env conventions.
     -   **Action:** When creating or modifying benchmarking utilities, place them under `scripts/…`, require `KMP_DUPLICATE_LIB_OK=TRUE`, resolve binaries via the documented precedence, and record authoritative commands in `docs/development/testing_strategy.md` (or the relevant tooling index).
     -   **Forbidden:** Dropping standalone benchmarking files in the repo root or bypassing the editable-install expectation with ad-hoc `sys.path` tweaks.
     -   **Verification:** Update `docs/fix_plan.md` (Suite/Tooling section) with reproduction commands and results every time a benchmark uncovers an issue; ensure CI/docs reference the canonical script location.
+
+18. **Stochastic Operations Must Use Seeded Generators:** Any use of `torch.rand`, `torch.randn`, or similar stochastic functions in code that may be differentiated **MUST** use a `torch.Generator` with deterministic seeding.
+    -   **Action:** Create generator with `gen = torch.Generator(device=device)`, seed it from the appropriate config parameter (e.g., `config.mosaic_seed`), and pass `generator=gen` to stochastic ops.
+    -   **Forbidden:** `torch.randn(...)` without `generator=` argument in any code path that may be differentiated.
+    -   **Rationale:** Unseeded RNG produces different values per forward call, breaking `torch.autograd.gradcheck` which compares analytical gradients (from one forward pass) against numerical gradients (from multiple forwards with perturbed inputs). Without deterministic seeding, numerical gradients measure sensitivity to random noise, not to the intended parameter.
+    -   **Reparameterization Pattern:** For parameters that scale stochastic values (e.g., `mosaic_spread_deg`), use: `actual_value = frozen_base_noise * scale_param`. The frozen noise has no gradient; the scale parameter carries gradients.
+    -   **Verification:** Any function using stochastic operations must have a passing `torch.autograd.gradcheck` test with non-zero stochastic parameters.
+    -   **Reference:** MOSAIC-GRADIENT-001, `tests/test_gradients.py::TestMosaicGradients`
 
 ## Crystallographic Conventions
 
