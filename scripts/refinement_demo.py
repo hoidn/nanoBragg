@@ -56,18 +56,23 @@ from nanobrag_torch.simulator import Simulator
 # ============================================================================
 
 # Ground truth parameters to recover
-TRUE_MOSAIC_SPREAD = 0.8  # degrees
-TRUE_MISSET = (5.0, 3.0, -2.0)  # degrees (Rx, Ry, Rz)
+TRUE_MOSAIC_SPREAD = 0.6  # degrees
+TRUE_MISSET = (12.0, 8.0, -5.0)  # degrees - tilted orientation for realistic pattern
+
+# Initial guess offset from truth (what we try to recover FROM)
+INIT_MISSET_OFFSET = (-2.0, -1.5, 1.5)  # Start a few degrees away from truth
 
 # Fixed parameters (not refined)
+# Using orthorhombic cell with misset for non-grid diffraction pattern
+# Orthorhombic is easier to optimize than triclinic but still looks realistic
 FIXED_PARAMS = dict(
-    cell_a=100.0,
-    cell_b=100.0,
-    cell_c=100.0,
+    cell_a=80.0,
+    cell_b=95.0,
+    cell_c=110.0,
     cell_alpha=90.0,
     cell_beta=90.0,
     cell_gamma=90.0,
-    N_cells=(5, 5, 5),
+    N_cells=(8, 8, 8),
     default_F=100.0,
     mosaic_domains=5,
     mosaic_seed=42,  # CRITICAL: deterministic sampling for gradients
@@ -173,14 +178,15 @@ def run_refinement(
         optimizer = torch.optim.Adam(params, lr=0.05)
     else:
         # Full mode: refine mosaic spread and misset angles
-        init_misset_x = torch.tensor(0.0, dtype=dtype, requires_grad=True)
-        init_misset_y = torch.tensor(0.0, dtype=dtype, requires_grad=True)
-        init_misset_z = torch.tensor(0.0, dtype=dtype, requires_grad=True)
+        # Start offset from truth (not at zero) to avoid symmetry issues
+        init_misset_x = torch.tensor(TRUE_MISSET[0] + INIT_MISSET_OFFSET[0], dtype=dtype, requires_grad=True)
+        init_misset_y = torch.tensor(TRUE_MISSET[1] + INIT_MISSET_OFFSET[1], dtype=dtype, requires_grad=True)
+        init_misset_z = torch.tensor(TRUE_MISSET[2] + INIT_MISSET_OFFSET[2], dtype=dtype, requires_grad=True)
         # Use separate parameter groups with different learning rates
-        # Misset angles are more sensitive, so use higher LR for them
+        # Triclinic cell has more complex loss landscape - use moderate LRs
         optimizer = torch.optim.Adam([
-            {"params": [init_mosaic], "lr": 0.02},  # Lower LR for mosaic (tends to overshoot)
-            {"params": [init_misset_x, init_misset_y, init_misset_z], "lr": 0.1},  # Higher LR for misset
+            {"params": [init_mosaic], "lr": 0.01},  # Conservative for mosaic
+            {"params": [init_misset_x, init_misset_y, init_misset_z], "lr": 0.05},
         ])
 
     # History tracking
@@ -321,13 +327,15 @@ def print_results(history: dict, use_fallback: bool = False) -> dict:
     print("-" * 60)
 
     mosaic_error = abs(history["mosaic_spread"][-1] - TRUE_MOSAIC_SPREAD)
+    init_mosaic_val = history["mosaic_spread"][0]
     print(
-        f"{'mosaic_spread (°)':<18} | {TRUE_MOSAIC_SPREAD:>8.3f} | {'0.200':>8} | "
+        f"{'mosaic_spread (°)':<18} | {TRUE_MOSAIC_SPREAD:>8.3f} | {init_mosaic_val:>8.3f} | "
         f"{history['mosaic_spread'][-1]:>8.3f} | {mosaic_error:>8.3f}"
     )
 
     misset_errors = []
     if not use_fallback:
+        init_misset = (history["misset_x"][0], history["misset_y"][0], history["misset_z"][0])
         for i, (name, true_val) in enumerate(
             [("misset_x", true_misset[0]), ("misset_y", true_misset[1]), ("misset_z", true_misset[2])]
         ):
@@ -335,7 +343,7 @@ def print_results(history: dict, use_fallback: bool = False) -> dict:
             error = abs(refined - true_val)
             misset_errors.append(error)
             print(
-                f"{name + ' (°)':<18} | {true_val:>8.2f} | {'0.00':>8} | "
+                f"{name + ' (°)':<18} | {true_val:>8.2f} | {init_misset[i]:>8.2f} | "
                 f"{refined:>8.2f} | {error:>8.2f}"
             )
 
