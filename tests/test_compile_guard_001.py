@@ -45,12 +45,12 @@ def test_simulator_uses_eager_path_when_compile_disabled(monkeypatch):
     monkeypatch.delenv("NANOBRAGG_DISABLE_COMPILE", raising=False)
 
     # If torch.compile were called, raise to catch regressions in the guard.
-    import torch as _torch  # local alias to avoid confusion with outer import
+    from nanobrag_torch import simulator as simulator_module
 
     def _fail_compile(*args, **kwargs):  # pragma: no cover - should never be hit
         raise AssertionError("torch.compile was called despite disable flag")
 
-    monkeypatch.setattr(_torch, "compile", _fail_compile, raising=True)
+    monkeypatch.setattr(simulator_module.torch, "compile", _fail_compile, raising=True)
 
     simulator = _make_minimal_simulator()
 
@@ -64,8 +64,8 @@ def test_simulator_attempts_compile_when_not_disabled(monkeypatch):
     monkeypatch.delenv("NANOBRAG_DISABLE_COMPILE", raising=False)
     monkeypatch.delenv("NANOBRAGG_DISABLE_COMPILE", raising=False)
 
-    # Patch torch.compile to a sentinel wrapper so we can detect usage
-    import torch as _torch  # local alias
+    # Patch torch.compile in the simulator module's namespace
+    from nanobrag_torch import simulator as simulator_module
 
     compile_calls = {"called": False}
 
@@ -81,7 +81,7 @@ def test_simulator_attempts_compile_when_not_disabled(monkeypatch):
 
         return _decorator
 
-    monkeypatch.setattr(_torch, "compile", _fake_compile, raising=True)
+    monkeypatch.setattr(simulator_module.torch, "compile", _fake_compile, raising=True)
 
     simulator = _make_minimal_simulator()
 

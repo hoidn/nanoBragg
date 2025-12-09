@@ -385,13 +385,14 @@ class TestCLIBeamVector:
             beam_config=beam_config
         )
 
-        # CRITICAL: Simulator.incident_beam_direction must be negation of detector.beam_vector
-        # detector.beam_vector points from sample→source (per detector.py line 1069)
-        # simulator.incident_beam_direction points from source→sample (negated for physics, per simulator.py line 565)
+        # CRITICAL: Simulator.incident_beam_direction must match detector.beam_vector
+        # detector.beam_vector IS the incident direction (photon propagation direction)
+        # per simulator.py line 564-567: incident_beam_direction = beam_vector (no negation)
+        # This was corrected to match C-code convention where beam_vector represents
+        # the actual incident beam direction (source→sample)
         incident = simulator.incident_beam_direction
-        expected_negated = -expected_norm
-        assert torch.allclose(incident, expected_negated, atol=1e-6), \
-            f"Simulator incident_beam_direction {incident} != -detector beam_vector {expected_negated}"
+        assert torch.allclose(incident, expected_norm, atol=1e-6), \
+            f"Simulator incident_beam_direction {incident} != detector beam_vector {expected_norm}"
 
 
 class TestCLIPix0Override:
