@@ -5,7 +5,7 @@ This module orchestrates the entire diffraction simulation, taking Crystal and
 Detector objects as input and producing the final diffraction pattern.
 """
 
-from typing import Optional, Callable
+from typing import Optional, Callable, Union, Tuple
 
 import torch
 
@@ -866,6 +866,99 @@ class Simulator:
 
         return output
 
+    def _run_stochastic(
+        self,
+        stochastic_pixel_count: int,
+        pixel_coords_meters: torch.Tensor,
+        rot_a: torch.Tensor,
+        rot_b: torch.Tensor,
+        rot_c: torch.Tensor,
+        rot_a_star: torch.Tensor,
+        rot_b_star: torch.Tensor,
+        rot_c_star: torch.Tensor,
+        n_sources: int,
+        source_directions: Optional[torch.Tensor],
+        source_wavelengths_A: Optional[torch.Tensor],
+        source_weights: Optional[torch.Tensor],
+        steps: int,
+        oversample: int,
+        oversample_omega: bool,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Compute intensities for a random subset of pixels for SGD-style training.
+
+        STOCHASTIC-SGD-001: Enables stochastic gradient descent by randomly sampling
+        pixels each forward pass. This provides noisy but unbiased gradient estimates,
+        enabling faster iterations with smaller memory footprint.
+
+        Unlike pixel_batch_size (which processes all pixels in chunks), this method
+        truly samples a subset, making each forward pass compute different pixels.
+        This is the standard approach for SGD in deep learning.
+
+        Args:
+            stochastic_pixel_count: Number of pixels to randomly sample
+            pixel_coords_meters: Full detector pixel coordinates (S, F, 3) in meters
+            rot_a, rot_b, rot_c: Rotated real-space lattice vectors (N_phi, N_mos, 3)
+            rot_a_star, rot_b_star, rot_c_star: Rotated reciprocal vectors
+            n_sources: Number of beam sources
+            source_directions: Source direction vectors or None
+            source_wavelengths_A: Source wavelengths or None
+            source_weights: Source weights or None
+            steps: Normalization factor
+            oversample: Subpixel oversampling factor
+            oversample_omega: Apply solid angle per subpixel
+
+        Returns:
+            Tuple of (intensities, slow_indices, fast_indices):
+            - intensities: Shape (stochastic_pixel_count,), computed intensities
+            - slow_indices: Shape (stochastic_pixel_count,), row indices (detached)
+            - fast_indices: Shape (stochastic_pixel_count,), column indices (detached)
+        """
+        S, F, _ = pixel_coords_meters.shape
+        total_pixels = S * F
+
+        # Clamp to total pixel count
+        actual_count = min(stochastic_pixel_count, total_pixels)
+
+        # Sample random flat indices (uniform without replacement)
+        flat_indices = torch.randperm(total_pixels, device=self.device)[:actual_count]
+
+        # Convert flat indices to (slow, fast) coordinates
+        slow_indices = flat_indices // F
+        fast_indices = flat_indices % F
+
+        # Extract sampled pixel coordinates
+        # Shape: (actual_count, 3)
+        sampled_coords = pixel_coords_meters[slow_indices, fast_indices, :]
+
+        # Compute intensity for sampled pixels using the chunk intensity helper
+        # Reshape to (actual_count, 1, 3) to match chunk interface expectations
+        sampled_coords_reshaped = sampled_coords.unsqueeze(1)
+
+        # Use the chunk intensity computation (fully vectorized)
+        chunk_result = self._compute_chunk_intensity(
+            pixel_coords_meters=sampled_coords_reshaped,
+            rot_a=rot_a,
+            rot_b=rot_b,
+            rot_c=rot_c,
+            rot_a_star=rot_a_star,
+            rot_b_star=rot_b_star,
+            rot_c_star=rot_c_star,
+            n_sources=n_sources,
+            source_directions=source_directions,
+            source_wavelengths_A=source_wavelengths_A,
+            source_weights=source_weights,
+            steps=steps,
+            oversample=oversample,
+            oversample_omega=oversample_omega,
+        )
+
+        # Flatten result from (actual_count, 1) to (actual_count,)
+        intensities = chunk_result.squeeze(1)
+
+        # Return intensities and indices (indices detached since they're not differentiable)
+        return intensities, slow_indices.detach(), fast_indices.detach()
+
     def _compute_chunk_intensity(
         self,
         pixel_coords_meters: torch.Tensor,
@@ -1123,12 +1216,13 @@ class Simulator:
     def run(
         self,
         pixel_batch_size: Optional[int] = None,
+        stochastic_pixel_count: Optional[int] = None,
         override_a_star: Optional[torch.Tensor] = None,
         oversample: Optional[int] = None,
         oversample_omega: Optional[bool] = None,
         oversample_polar: Optional[bool] = None,
         oversample_thick: Optional[bool] = None,
-    ) -> torch.Tensor:
+    ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
         """
         Run the diffraction simulation with crystal rotation and mosaicity.
 
@@ -1188,6 +1282,17 @@ class Simulator:
                 - 256: ~256 × F × phi × mosaic × 300 bytes per chunk
                 - 128: Half the above, for very constrained GPUs
 
+            stochastic_pixel_count: If specified, randomly sample this many pixels
+                for stochastic gradient descent (SGD) style training. Instead of
+                computing gradients over all pixels, gradients are computed over a
+                random subset each forward pass. This provides noisy but unbiased
+                gradient estimates, enabling faster iterations with smaller memory.
+
+                When specified, returns a tuple instead of full image tensor.
+                Mutually exclusive with pixel_batch_size.
+
+                Typical values: 1000-10000 pixels per minibatch.
+
             override_a_star: Optional override for the a_star vector for testing.
             oversample: Number of subpixel samples per axis. Defaults to detector config.
             oversample_omega: Apply solid angle per subpixel. Defaults to detector config.
@@ -1195,7 +1300,20 @@ class Simulator:
             oversample_thick: Apply absorption per subpixel. Defaults to detector config.
 
         Returns:
-            torch.Tensor: Final diffraction image with shape (spixels, fpixels).
+            If stochastic_pixel_count is None (default):
+                torch.Tensor: Final diffraction image with shape (spixels, fpixels).
+
+            If stochastic_pixel_count is specified:
+                Tuple of (intensities, slow_indices, fast_indices):
+                - intensities: Shape (stochastic_pixel_count,), computed intensities
+                - slow_indices: Shape (stochastic_pixel_count,), row indices of sampled pixels
+                - fast_indices: Shape (stochastic_pixel_count,), column indices of sampled pixels
+
+                Usage for loss computation:
+                    intensities, si, fi = simulator.run(stochastic_pixel_count=1000)
+                    target_sampled = target_image[si, fi]
+                    loss = ((intensities - target_sampled) ** 2).mean()
+                    loss.backward()
         """
         # Unified vectorization path (spec-compliant fresh rotations)
         # Get oversampling parameters from detector config if not provided
@@ -1324,9 +1442,38 @@ class Simulator:
 
         steps = source_norm * phi_steps * mosaic_domains * oversample * oversample  # Include sources and oversample^2
 
+        # Get detector dimensions
+        S, F, _ = pixel_coords_meters.shape
+
+        # STOCHASTIC-SGD-001: Route to stochastic sampling path for SGD-style training
+        # When stochastic_pixel_count is specified, randomly sample pixels for minibatch gradients
+        if stochastic_pixel_count is not None:
+            if pixel_batch_size is not None:
+                raise ValueError(
+                    "stochastic_pixel_count and pixel_batch_size are mutually exclusive. "
+                    "Use stochastic_pixel_count for SGD minibatching, or pixel_batch_size "
+                    "for memory-efficient full-image computation."
+                )
+            return self._run_stochastic(
+                stochastic_pixel_count=stochastic_pixel_count,
+                pixel_coords_meters=pixel_coords_meters,
+                rot_a=rot_a,
+                rot_b=rot_b,
+                rot_c=rot_c,
+                rot_a_star=rot_a_star,
+                rot_b_star=rot_b_star,
+                rot_c_star=rot_c_star,
+                n_sources=n_sources,
+                source_directions=source_directions,
+                source_wavelengths_A=source_wavelengths_A,
+                source_weights=source_weights,
+                steps=steps,
+                oversample=oversample,
+                oversample_omega=oversample_omega,
+            )
+
         # PIXEL-BATCH-001: Route to chunked execution path for memory-constrained scenarios
         # When pixel_batch_size is specified and less than detector rows, process in chunks
-        S, F, _ = pixel_coords_meters.shape
         if pixel_batch_size is not None and pixel_batch_size < S:
             return self._run_chunked(
                 pixel_batch_size=pixel_batch_size,
