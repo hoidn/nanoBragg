@@ -265,3 +265,55 @@ for _ in range(num_steps):
 All vectorization, device/dtype neutrality, and differentiability guarantees
 from earlier sections apply unchanged; the ExperimentModel is a thin wrapper
 that only materializes new configs from the raw parameters.
+
+### 1.3.4 Training Efficiency: Simulator.run() Parameters
+
+The `Simulator.run()` method provides two parameters for memory-efficient and
+fast training on large detectors:
+
+#### pixel_batch_size (Memory Management)
+
+For memory-constrained scenarios, process pixels in row-wise chunks:
+
+```python
+# Full vectorization (default) - fastest but highest memory
+image = simulator.run()
+
+# Chunked execution - lower memory, same result
+image = simulator.run(pixel_batch_size=256)
+```
+
+- Processes all pixels but in chunks of `pixel_batch_size` rows
+- Returns identical results to full vectorization
+- Reduces peak GPU memory at cost of multiple kernel launches
+- Recommended: 128-256 for 24GB GPU, 64-128 for 12GB GPU
+
+#### stochastic_pixel_count (SGD Minibatching)
+
+For SGD-style training, randomly sample pixels each forward pass:
+
+```python
+# Sample 5000 random pixels per iteration
+intensities, slow_idx, fast_idx = simulator.run(stochastic_pixel_count=5000)
+
+# Compute loss on sampled pixels only
+target_sampled = target_image[slow_idx, fast_idx]
+loss = ((intensities - target_sampled) ** 2).mean()
+loss.backward()
+```
+
+- Returns tuple `(intensities, slow_indices, fast_indices)` instead of full image
+- Different random pixels sampled each forward pass (true SGD)
+- Provides noisy but unbiased gradient estimates
+- ~100x faster iterations for large detectors (e.g., 2463×2527 Pilatus)
+- Typical values: 1000-10000 pixels per minibatch
+
+**Trade-offs:**
+- Smaller batches → faster iterations, noisier gradients
+- Larger batches → slower iterations, more stable gradients
+- Gradient noise can help escape shallow local minima
+
+**Mutually exclusive:** Cannot combine `pixel_batch_size` and `stochastic_pixel_count`.
+
+**Evidence:** `tests/test_stochastic_pixel_sampling.py` (8 tests validating correctness,
+gradient flow, and consistency with full-image computation).
