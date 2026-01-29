@@ -13,7 +13,7 @@
 | [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | paused_legacy |
 | [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | paused_legacy |
 | [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | failed |
-| [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | planning |
+| [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | in_progress |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -172,22 +172,22 @@ Supervisor state: focus=STRAT-VI-001 state=task26_complete_failed dwell=0 artifa
 
 Supervisor state: focus=STRAT-VI-001 state=task27_complete_failed dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T235800Z/ next_action=close_strat_vi_001_escalate_gaussian_likelihood
 
-## [STRAT-VI-002] Gaussian likelihood VI path
 - Strategy Reference: `docs/strategy/mainstrategy.md §9` (post-hybrid escalation) — Gaussian likelihood replaces the Poisson ELBO to inject curvature into the VI loss landscape.
 - Plan Reference: `docs/plans/2026-01-29-vi-gaussian-likelihood.md`
 - Goal: Implement a Gaussian observation helper + ELBO, update diagnostics/benchmark CLIs, and capture new benchmark evidence so we can judge whether Gaussian likelihood recovers σ≥1.5° or produces a new finding documenting failure.
 - Dependencies: STRAT-VI-001 failure bundle (artifacts under `plans/active/strat-vi-001/`) and the existing VI simulator stack.
-- Artifacts Root: `plans/active/strat-vi-002/` (current loop report: `2026-01-29T130500Z`).
+- Artifacts Root: `plans/active/strat-vi-002/` (current loop report: `2026-01-29T213000Z`).
 - Next Actions:
-  1. **Task 1:** Author `docs/architecture/vi_gaussian_likelihood.md`, update `docs/index.md`, and add the §9.2 Gaussian escalation narrative in `docs/strategy/mainstrategy.md`.
-  2. **Task 2:** Extend `src/nanobrag_torch/vi/observation_utils.py` with `gaussian_sample_observations()` plus new tests in `tests/test_vi_mosaic.py`.
-  3. **Task 3:** Create `src/nanobrag_torch/vi/gaussian_elbo.py`, expose it via `vi.__init__`, and add gradcheck/regression coverage.
-  4. **Task 4:** Add `--likelihood {poisson,gaussian}` plumbing to `scripts/analysis/vi_poisson_diagnostics.py` and `scripts/benchmark_vi_mosaic.py`, including CLI smoke tests and demo artifact refresh.
-  5. **Task 5:** Run the canonical 150-iteration benchmark in Gaussian mode, archive diagnostics/PNG/JSON under `plans/active/strat-vi-002/reports/<ts>/gaussian_{diagnostics,benchmark}/`, and update `docs/findings.md` + `docs/development/testing_strategy.md` with the results.
+  1. ~~**Task 1:** Author `docs/architecture/vi_gaussian_likelihood.md`, update `docs/index.md`, and add the §9.2 Gaussian escalation narrative in `docs/strategy/mainstrategy.md`.~~ ✅ Completed 2026-01-29 (spec + doc hooks merged; evidence logged in `plans/active/strat-vi-002/reports/2026-01-29T130500Z/`).
+  2. ~~**Task 2:** Extend `src/nanobrag_torch/vi/observation_utils.py` with `gaussian_sample_observations()` plus new tests in `tests/test_vi_mosaic.py`.~~ ✅ Completed 2026-01-29 (observation helper + metadata tests landed).
+  3. ~~**Task 3:** Create `src/nanobrag_torch/vi/gaussian_elbo.py`, expose it via `vi.__init__`, and add gradcheck/regression coverage.~~ ✅ Completed 2026-01-29 (Gaussian ELBO + gradcheck suite recorded in `tests/test_vi_mosaic.py`).
+  4. ~~**Task 4:** Add `--likelihood {poisson,gaussian}` plumbing to `scripts/analysis/vi_poisson_diagnostics.py` and `scripts/benchmark_vi_mosaic.py`, including CLI smoke tests and demo artifact refresh.~~ ✅ Completed 2026-01-29 (diagnostics CLI accepts `--likelihood`; log archived under `plans/active/strat-vi-002/reports/2026-01-29T130500Z/`).
+  5. ~~**Task 5:** Update `scripts/benchmark_vi_mosaic.py` regression tests and CLI wiring so Gaussian runs emit `vi_vs_mc_*` artifacts plus `likelihood_model` metadata.~~ ✅ Completed 2026-01-29 (see `tests/test_vi_mosaic.py::TestBenchmarkCLI::test_benchmark_cli_gaussian`).
+  6. **Task 6 (ACTIVE):** Execute plan Task 6 — run Gaussian diagnostics + canonical 150-iteration benchmark (`--likelihood gaussian --iterations 150 --observation-mean 25 --observation-std 5 --outdir plans/active/strat-vi-002/reports/2026-01-29T213000Z/gaussian_benchmark/`), copy refreshed `vi_vs_mc_*` artifacts into both the timestamped outdir and `demo_outputs/`, and update `docs/findings.md` (FND-VI-2026-02), `docs/strategy/mainstrategy.md §9.2`, and `docs/development/testing_strategy.md` with the observed σ trajectory + workflow notes. Diagnostics JSON/logs belong in `.../gaussian_diagnostics/`; include `summary.md` capturing σ final value vs the ≥1.5° criterion.
 - Exit Criteria:
   - Gaussian helper + ELBO share the deterministic seeding and metadata contracts documented in `docs/architecture/vi_gaussian_likelihood.md`.
   - Diagnostics and benchmark CLIs accept `--likelihood gaussian` and emit artifacts that capture σ trajectories plus observation statistics.
   - Canonical benchmark either achieves σ≥1.5° or produces a new finding (FND-VI-2026-02) that formally records Gaussian failure with links to artifacts.
   - Strategy doc + README articulate when to choose Gaussian vs Poisson likelihood.
 
-Supervisor state: focus=STRAT-VI-002 state=planning dwell=0 artifacts=plans/active/strat-vi-002/reports/2026-01-29T130500Z/ next_action=delegate_task1_gaussian_spec
+Supervisor state: focus=STRAT-VI-002 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-002/reports/2026-01-29T213000Z/ next_action=delegate_task6_gaussian_benchmark
