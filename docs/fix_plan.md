@@ -231,15 +231,19 @@ Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=2 artifacts=p
 - Goal: Add a joint training path where MultiImageTrainer optimizes the shared structure-factor field (F_hkl) alongside per-image mosaic spread and observation scale so the Duck demo can show coupled global/local inference.
 - Dependencies: STRAT-M2-001 dataset/assets; STRAT-VI findings (structural collapse context); dataset spec updates from Task 1.
 - Artifacts Root: `plans/active/strat-m3-001/`
+- Status:
+  - ✅ Task 1 — Duck dataset spec/generator now emit `structure_factors.pt`; loader + tests cover metadata fallbacks.
+  - ✅ Task 2 — `StructureFactorLatent` module and `Crystal.set_hkl_tensor()` helper landed with regression tests.
+  - ✅ Task 3 — `MultiImageTrainer` joint mode + per-image scales/posteriors implemented with pytest + CLI smoke coverage.
+  - ⏳ Task 4 — CLI/docs/artifacts pending: `docs/strategy`/`docs/development/testing_strategy` still describe only shared/amortized modes and no 150-iter joint benchmark artifacts exist under `plans/active/strat-m3-001/`.
 - Next Actions:
-  1. Task 1 — Update Duck dataset spec/generator/loader to emit `structure_factors.pt` plus metadata, add pytest coverage (`tests/test_duck_dataset.py::test_duck_dataset_includes_structure_factors`).
-  2. Task 2 — Implement `StructureFactorLatent` + `Crystal.set_hkl_tensor`, add unit tests verifying gradient propagation.
-  3. Task 3 — Extend `MultiImageTrainer` with `joint_mode`, per-image posterior parameters, and learnable observation scales; capture pytest evidence for the new mode.
-  4. Task 4 — Add `--mode joint` to `scripts/demo_recover_duck.py`, refresh docs (strategy + testing), and archive the canonical joint benchmark under `plans/active/strat-m3-001/reports/<ts>/joint_demo/`.
+  1. Run the canonical joint benchmark (`scripts/demo_recover_duck.py --mode joint --iterations 150 --k-samples 4`) on `demo_inputs/duck_multi_image`, archive outputs under `plans/active/strat-m3-001/reports/<ts>/joint_demo/` plus `demo_outputs/duck_joint/`, and record summary metrics (loss trend, σ trajectories, structure-factor norm, per-image scales).
+  2. Update `docs/strategy/mainstrategy.md` §7 and `docs/development/testing_strategy.md` §6 to document the joint workflow (commands, expected artifacts, validation criteria) referencing the new report.
+  3. Refresh `docs/fix_plan.md` once Task 4 evidence lands (mark Status row complete, add findings if behavior deviates from expectations).
 - Exit Criteria:
-  - Duck dataset ships structure-factor metadata + tensor under version control and loader exposes it.
-  - Structure-factor latent module exists with unit tests proving differentiability and correct Crystal injection.
-  - MultiImageTrainer joint mode passes pytest (unit + CLI smoke) and exposes per-image sigma + scale histories.
-  - Canonical `demo_recover_duck.py --mode joint` benchmark artifacts + docs updates demonstrate coupled convergence and refresh STRAT §7.
+  - Duck dataset ships structure-factor metadata + tensor under version control and loader exposes it. ✅
+  - Structure-factor latent module exists with unit tests proving differentiability and correct Crystal injection. ✅
+  - MultiImageTrainer joint mode passes pytest (unit + CLI smoke) and exposes per-image sigma + scale histories. ✅
+  - Canonical `demo_recover_duck.py --mode joint` benchmark artifacts + docs updates demonstrate coupled convergence and refresh STRAT §7. ⏳
 
-Supervisor state: focus=STRAT-M3-001 state=planning dwell=1 artifacts=plans/active/strat-m3-001/reports/2026-01-29T142358Z/ next_action=delegate_task1_dataset_structure_factors
+Supervisor state: focus=STRAT-M3-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-m3-001/reports/2026-01-29T142358Z/ next_action=delegate_task4_joint_cli_docs
