@@ -3,7 +3,7 @@
 **Last Updated:** 2026-01-29 (Variational mosaic pivot)
 
 **Active Focus:**
-- STRAT-VI-002 — Execute `docs/plans/2026-01-29-vi-gaussian-likelihood.md` to build the Gaussian-likelihood fallback for VI mosaic inference
+- STRAT-M2-001 — Execute `docs/plans/2026-01-29-m2-amortized-multi-image.md` to deliver the Duck amortized multi-image demo (Strategy §7 Milestone M1)
 - STRAT-PROB-001/002/003 — Paused as legacy reference while VI replaces the analytic mosaic flow
 
 ## Index
@@ -13,7 +13,8 @@
 | [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | paused_legacy |
 | [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | paused_legacy |
 | [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | failed |
-| [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | in_progress |
+| [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | failed |
+| [STRAT-M2-001](#strat-m2-001-duck-multi-image-demo) | Duck multi-image demo | Critical | in_progress |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -183,11 +184,24 @@ Supervisor state: focus=STRAT-VI-001 state=task27_complete_failed dwell=0 artifa
   3. ~~**Task 3:** Create `src/nanobrag_torch/vi/gaussian_elbo.py`, expose it via `vi.__init__`, and add gradcheck/regression coverage.~~ ✅ Completed 2026-01-29 (Gaussian ELBO + gradcheck suite recorded in `tests/test_vi_mosaic.py`).
   4. ~~**Task 4:** Add `--likelihood {poisson,gaussian}` plumbing to `scripts/analysis/vi_poisson_diagnostics.py` and `scripts/benchmark_vi_mosaic.py`, including CLI smoke tests and demo artifact refresh.~~ ✅ Completed 2026-01-29 (diagnostics CLI accepts `--likelihood`; log archived under `plans/active/strat-vi-002/reports/2026-01-29T130500Z/`).
   5. ~~**Task 5:** Update `scripts/benchmark_vi_mosaic.py` regression tests and CLI wiring so Gaussian runs emit `vi_vs_mc_*` artifacts plus `likelihood_model` metadata.~~ ✅ Completed 2026-01-29 (see `tests/test_vi_mosaic.py::TestBenchmarkCLI::test_benchmark_cli_gaussian`).
-  6. **Task 6 (ACTIVE):** Execute plan Task 6 — run Gaussian diagnostics + canonical 150-iteration benchmark (`--likelihood gaussian --iterations 150 --observation-mean 25 --observation-std 5 --outdir plans/active/strat-vi-002/reports/2026-01-29T213000Z/gaussian_benchmark/`), copy refreshed `vi_vs_mc_*` artifacts into both the timestamped outdir and `demo_outputs/`, and update `docs/findings.md` (FND-VI-2026-02), `docs/strategy/mainstrategy.md §9.2`, and `docs/development/testing_strategy.md` with the observed σ trajectory + workflow notes. Diagnostics JSON/logs belong in `.../gaussian_diagnostics/`; include `summary.md` capturing σ final value vs the ≥1.5° criterion.
-- Exit Criteria:
-  - Gaussian helper + ELBO share the deterministic seeding and metadata contracts documented in `docs/architecture/vi_gaussian_likelihood.md`.
-  - Diagnostics and benchmark CLIs accept `--likelihood gaussian` and emit artifacts that capture σ trajectories plus observation statistics.
-  - Canonical benchmark either achieves σ≥1.5° or produces a new finding (FND-VI-2026-02) that formally records Gaussian failure with links to artifacts.
-  - Strategy doc + README articulate when to choose Gaussian vs Poisson likelihood.
+  6. ~~**Task 6** — Run Gaussian diagnostics + canonical benchmark and refresh docs/artifacts.~~ ✅ Completed 2026-01-29 (artifacts under `plans/active/strat-vi-002/reports/2026-01-29T213000Z/`). Benchmark failed the ≥1.5° criterion (σ=0.078°), producing FND-VI-2026-02. STRAT-VI-002 is closed as **failed**; escalate to STRAT-M2-001.
+- Exit Criteria (FAILED 2026-01-29): Gaussian helper + ELBO shipped but canonical benchmark still collapsed (FND-VI-2026-02). Initiative closed; follow-up is STRAT-M2-001 per strategy §7.
 
-Supervisor state: focus=STRAT-VI-002 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-002/reports/2026-01-29T213000Z/ next_action=delegate_task6_gaussian_benchmark
+Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active/strat-vi-002/reports/2026-01-29T213000Z/ next_action=escalate_to_strat_m2_001
+
+## [STRAT-M2-001] Duck multi-image demo
+- Strategy Reference: `docs/strategy/mainstrategy.md` §7 (Milestones M1–M3)
+- Plan Reference: `docs/plans/2026-01-29-m2-amortized-multi-image.md`
+- Goal: Build the amortized multi-image Duck demo (fixed orientations, shared F_hkl) that demonstrates loss decrease over 20 images and archives PNG/JSON artifacts for docs/strategy.
+- Dependencies: STRAT-VI-001/002 findings (posterior collapse), Duck dataset logic from `notebooks/refinement_tutorial.ipynb`.
+- Artifacts Root: `plans/active/strat-m2-001/`
+- Next Actions (Task numbers per plan):
+  1. **Task 1:** Author Duck dataset spec, generator CLI, and dataset loader with pytest coverage (`tests/test_duck_dataset.py`).
+  2. **Task 2:** Implement `MultiImageTrainer` pipeline + unit tests integrating with the Duck dataset (`tests/test_vi_mosaic.py::test_multi_image_trainer_batches_duck`).
+  3. **Task 3:** Ship `scripts/demo_recover_duck.py`, smoke-test via pytest CLI, and capture evidence bundle + doc updates (strategy/testing guides + fix plan).
+- Exit Criteria:
+  - Deterministic Duck dataset lives under `demo_inputs/duck_multi_image/` with documented schema.
+  - `MultiImageTrainer` aggregates ELBO across images with CPU/GPU parity and passing tests.
+  - Duck demo CLI produces PNG + JSON artifacts archived under `plans/active/strat-m2-001/reports/<ts>/duck_demo/` and referenced from strategy/testing docs.
+
+Supervisor state: focus=STRAT-M2-001 state=gathering_evidence dwell=0 artifacts=plans/active/strat-m2-001/reports/TBD next_action=prepare_task1_duck_dataset
