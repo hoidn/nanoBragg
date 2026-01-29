@@ -29,20 +29,20 @@
 
 ## [STRAT-PROB-002] Probabilistic benchmark artifacts
 - Strategy Reference: `docs/strategy/mainstrategy.md` §4 (benchmark + killer plot) & §5 risk table (speed + convergence proof)
-- Plan Reference: `docs/plans/2026-01-29-probabilistic-simulator-implementation.md` Task 3
+- Plan Reference: `docs/plans/2026-01-29-probabilistic-simulator-implementation.md` Task 3 + `docs/plans/2026-01-29-probabilistic-benchmark-realignment.md`
 - Goal: Provide reproducible benchmark script + PNG/JSON outputs demonstrating analytic speed/convergence win.
 - Dependencies: STRAT-PROB-001 (ProbabilisticSimulator must exist)
 - Artifacts Root: `plans/active/strat-prob-002/`
 - Next Actions:
-  1. Implement `scripts/benchmark_probabilistic.py` with deterministic configs pulled from `scripts/refinement_demo_diffuse.py`, helper builders, and CLI flags `--iterations`, `--device`, `--outdir`, `--plot-only` (Plan Task 3 Step 1).
-  2. Produce JSON + PNG artifacts (Plan Task 3 Step 2) capturing loss curves, per-iteration timing, and annotate the plot with measured speedup; stash outputs under both `demo_outputs/` and `plans/active/strat-prob-002/reports/<timestamp>/`.
-  3. Update `README_PYTORCH.md` (Performance) and `docs/strategy/mainstrategy.md` §4 with reproducible commands + observed speedup (Plan Task 3 Step 3).
-  4. Run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmark_probabilistic.py --iterations 150 --device cpu` plus `pytest -v tests/test_probabilistic_simulator.py` to validate no regressions, capturing console logs alongside the PNG/JSON (Plan Task 3 Step 4).
+  1. Task 1 (Alignment Plan): Refactor `scripts/benchmark_probabilistic.py` to introduce `BenchmarkScenario`, CLI geometry overrides, `--scenario`, and `--diagnose-gradients`. Add `tests/scripts/test_benchmark_probabilistic_cli.py`.
+  2. Task 2: Add preset catalog + sweep helper (`scripts/benchmark_probabilistic_presets.py`, `--sweep-json`, `--dry-run`), and refresh implementation plan references.
+  3. Task 3: Run hi-res scenarios (≥4× speedup) with diagnostics, capture PNG/JSON/sweep artifacts, and update docs + findings.
+  4. Task 4: Refresh `input.md`, plan README, and report summaries to hand off hi-res benchmark execution.
 - Exit Criteria:
-  - Script runs end-to-end on CPU with analytic curve faster + smoother than Monte Carlo baseline.
-  - `demo_outputs/probabilistic_vs_mc_loss.png` + `probabilistic_vs_mc_summary.json` committed.
-  - Strategy doc + README updated with reproducible command referencing outputs.
+  - Benchmark script exposes documented scenario presets + gradient diagnostics with pytest coverage.
+  - Hi-res benchmark artifacts (PNG/JSON/sweep) show ≥4× speedup and non-zero gradients and are archived under `plans/active/strat-prob-002/reports/`.
+  - Strategy doc + README reference the hi-res scenario, CLI knobs, and new evidence bundle.
+  - Supervisor handoff (`input.md`) maps to the enhanced workflow with updated mapped tests.
 
 <!-- Supervisor state updated at end of current loop -->
-
-Supervisor state: focus=STRAT-PROB-002 state=planning dwell=1 artifacts=plans/active/strat-prob-002/reports/2026-01-29T061003Z/ next_action=implement_benchmark_cli
+Supervisor state: focus=STRAT-PROB-002 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-prob-002/reports/2026-01-29T062136Z/ next_action=delegate_hi_res_benchmark_plan
