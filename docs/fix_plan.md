@@ -93,4 +93,7 @@
 - Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution/supersession of FND-PROB-2026-01.
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T085512Z/ next_action=implement_plan_tasks_7_to_9_adaptive_poisson_scaling
+13. **Tasks 7–8 (Adaptive Poisson Scaling) — COMPLETED 2026-01-29:** Extended `poisson_sample_observations()` with adaptive auto-scaling (`target_mean_counts`, `normalization` params). Replaced legacy `--fluence` CLI with `--observation-mean` / `--observation-normalization` in both `benchmark_vi_mosaic.py` and `vi_poisson_diagnostics.py`. Tests updated and passing: `test_poisson_observation_helper_auto_scale_hits_target_mean`, `test_benchmark_script_smoke`, `test_vi_diagnostics_snapshot`, `test_vi_diagnostics_beta_schedule`. Plan ref: `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md` Tasks 7–8.
+14. **Task 9 (Re-run canonical benchmark):** Ready to execute. Command: `python scripts/benchmark_vi_mosaic.py --iterations 150 --observation-mean 25.0 --observation-normalization mean --observation-seed 321 --kl-weight-start 0.2 --kl-weight-end 1.0 --kl-warmup-steps 120`. Not yet run — next supervisor loop should execute and archive artifacts.
+
+Supervisor state: focus=STRAT-VI-001 state=in_progress dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T085512Z/ next_action=run_canonical_benchmark_with_adaptive_scaling
