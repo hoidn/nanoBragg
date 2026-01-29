@@ -138,3 +138,7 @@ Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans
 Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T105208Z/prior_schedule_dev/ next_action=delegate_task24_prior_schedule_tasks1_2
 
 Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T113030Z/ next_action=delegate_task24_prior_schedule_tasks3_4
+
+25. **Task 25 (NEW 2026-01-29 23:45Z) — Multiscale geometry sweep:** Execute `docs/plans/2026-01-29-vi-multiscale-geometry.md` to (a) add the VI geometry preset module + CLI wiring, (b) build a `run_geometry_sweep` helper inside `scripts/analysis/vi_poisson_diagnostics.py`, and (c) run the new sweep + canonical benchmark on multi-scale crystal configurations (smaller cell + shorter wavelength per `docs/strategy/mainstrategy.md §9`). Artifact roots will live under `plans/active/strat-vi-001/reports/<ts>/geometry_sweep/` and `/geometry_benchmark/`. Exit once the sweep either recovers σ ≥ 1.5° or documents why richer geometries still collapse and recommends the next mitigation (e.g., flow posterior or hybrid MC-VI).
+
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-vi-multiscale-geometry.md next_action=delegate_task25_geometry_presets
