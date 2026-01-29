@@ -134,3 +134,5 @@ Supervisor state: focus=STRAT-VI-001 state=evidence_captured dwell=0 artifacts=p
 24. **Task 24 (NEW 2026-01-29 22:15Z) — Prior schedule & multi-geometry diagnostics:** Execute `docs/plans/2026-01-29-vi-prior-geometry.md` to (a) add a configurable prior schedule helper + posterior setter, (b) surface prior knobs through diagnostics and benchmark CLIs, (c) capture 32×32 / 64×64 / 128×128 short-run diagnostics with informative priors, and (d) rerun the canonical 150-iter benchmark using the best prior+geometry combo. Archive artifacts under `plans/active/strat-vi-001/reports/<ts>/prior_schedule/` and `/prior_benchmark/`. Exit once we either achieve σ≥1.5° or document why informative priors + higher resolution still collapse.
 
 Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-vi-prior-geometry.md next_action=delegate_task24_prior_schedule_geometry
+
+Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T105208Z/prior_schedule_dev/ next_action=delegate_task24_prior_schedule_tasks1_2
