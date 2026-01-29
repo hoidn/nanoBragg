@@ -169,7 +169,8 @@ Supervisor state: focus=STRAT-VI-001 state=task26_complete_failed dwell=0 artifa
     - ~~Task 3: ship the `HybridMosaicTrainer` orchestration class (warm-start → VI) with dependency injection hooks for diagnostics, plus unit tests.~~ ✅ Completed 2026-01-29
     - ~~Task 4: add `scripts/analysis/vi_hybrid_refinement.py` (diagnostics CLI) + smoke tests.~~ ✅ Completed 2026-01-29
     - ~~Task 5: integrate hybrid mode into `scripts/benchmark_vi_mosaic.py`, refresh docs/findings, and archive diagnostics + canonical benchmark artifacts under `plans/active/strat-vi-001/reports/<ts>/hybrid_{diagnostics,benchmark}/`.~~ ✅ Implementation complete 2026-01-29; evidence collection pending
+    - **Execution reference:** `docs/plans/2026-01-29-hybrid-benchmark-evidence.md` (diagnostics + canonical benchmark workflow)
     - Exit criteria: canonical 150-iter benchmark demonstrates σ≥1.5° **or** the evidence bundle proves the hybrid path also collapses, at which point STRAT-VI-001 must escalate to Gaussian likelihood or amortized inference (documented in fix_plan + strategy).
     - **Status:** Implementation complete. Ready for canonical benchmark execution (150 VI iterations following 10 MC warm-start iterations). Run via `scripts/benchmark_vi_mosaic.py --pipeline hybrid --hybrid-mc-iterations 10 --hybrid-vi-iterations 150 --observation-mean 25.0 --outdir plans/active/strat-vi-001/reports/2026-01-29T235200Z/hybrid_benchmark/` and check whether σ ≥ 1.5°.
 
-Supervisor state: focus=STRAT-VI-001 state=implementation_complete dwell=0 artifacts=docs/plans/2026-01-29-vi-hybrid-mc-vi.md next_action=execute_hybrid_canonical_benchmark
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T235800Z/ next_action=delegate_hybrid_evidence_benchmark
