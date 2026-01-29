@@ -258,6 +258,18 @@ Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=3 artifacts=p
 Supervisor state: focus=STRAT-M2-001 state=ready_for_implementation dwell=1 artifacts=plans/active/strat-m2-001/reports/2026-01-29T163444Z/scale_study/ next_action=finish_scale100_metrics_docs
 Supervisor state: focus=STRAT-M2-001 state=evidence_complete dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/summary/summary.csv next_action=close_or_mitigate
 
+**Stabilization plan execution (STRAT-M2-002, 2026-01-29):**
+- ✅ Task 1: Gradient clipping in `MultiImageTrainer` (`clip_grad_norm`, `clip_scope`) + test `test_multi_image_trainer_enforces_grad_clip`
+- ✅ Task 2: CLI wiring (`--clip-grad-norm`, `--clip-scope`) + docs (testing_strategy §6.2, strategy §7)
+- ✅ Task 3: Curriculum runner (`scripts/analysis/run_duck_curriculum.py`) + fixture + test `test_curriculum_runner_two_phase_smoke`
+- ✅ Task 4: Evidence bundles captured:
+  - Grad-clip 500-iter: NaN divergence, σ=0.500° (frozen). Artifacts: `plans/active/strat-m2-002/reports/2026-01-29T235959Z/grad_clip_500/`
+  - Curriculum sweep (5×100 iters): NaN in phase 0, σ=0.500°. Artifacts: `plans/active/strat-m2-002/reports/2026-01-29T235959Z/curriculum_sweep/`
+- Finding: FND-M2-2026-01 updated with stabilization follow-up. Grad clipping + curriculum do not resolve σ collapse.
+- **Status: evidence_captured. Stabilization tooling landed; σ recovery remains blocked by structural ELBO landscape issue.**
+
+Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=4 artifacts=plans/active/strat-m2-002/reports/2026-01-29T235959Z/ next_action=close_strat_m2_or_escalate
+
 Scale-study stability plan execution (2026-01-29):
 - ✅ Task 1 (longrun_20): 500 iters @ lr=0.003 → NaN divergence, σ frozen at 0.50°. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_longrun_20/`
 - ✅ Task 2 (scale_50): 300 iters @ lr=0.004 → loss=−16.5M, σ frozen at 0.50°. No divergence. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_scale_50/`
