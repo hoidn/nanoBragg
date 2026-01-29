@@ -1,20 +1,22 @@
-Plan: docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md (Tasks 5–6)
+Plan: docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md
 References:
-  - docs/strategy/mainstrategy.md §9 (defines canonical VI benchmark + KL schedule expectations)
-  - docs/findings.md (FND-VI-2026-01 Observation Scale Bug context + evidence format)
-  - docs/fix_plan.md (STRAT-VI-001 ledger + state machine requirements)
-  - docs/development/testing_strategy.md §1.4 (device/dtype + command guardrails)
-  - scripts/benchmark_vi_mosaic.py (CLI producing canonical MC/VI/analytic comparison)
-  - scripts/analysis/vi_poisson_diagnostics.py (metadata schema for observation stats)
-Summary: Run the full 150-iteration VI benchmark with `--fluence 1e13` and archive the PNG/JSON/log outputs under the new artifact root so we can prove whether Poisson observations restore σ≈2° and unblock STRAT-VI-001 Task 12.
-Summary (1-sentence): Capture the canonical Poisson-fluence benchmark artifacts and update findings/strategy/fix-plan with the observed σ trajectory.
+- docs/strategy/mainstrategy.md §9 (VI benchmark + Poisson ELBO context)
+- docs/findings.md (FND-VI-2026-01 observation-scale notes)
+- docs/fix_plan.md (STRAT-VI-001 status, Tasks 7–9)
+- docs/plans/2026-01-29-vi-mosaic-implementation-plan.md §Model Definition (normative Poisson ELBO math)
+- src/nanobrag_torch/vi/observation_utils.py
+- scripts/benchmark_vi_mosaic.py
+- scripts/analysis/vi_poisson_diagnostics.py
+- tests/test_vi_mosaic.py
+Summary:
+- Implement Tasks 7–9 of the Poisson likelihood rescaling plan: add adaptive observation scaling in `observation_utils`, thread the new controls/metadata through the benchmark + diagnostics CLIs, then rerun the canonical VI benchmark and refresh docs/artifacts so observation counts carry signal again.
+Summary (1-liner): Restore VI Poisson benchmarks by auto-normalising simulator intensities before sampling counts and regenerating evidence.
 Focus: STRAT-VI-001 — Variational mosaic simulator
 Branch: feature/spec-based-2
-Mapped tests:
-  - tests/test_vi_mosaic.py::test_benchmark_script_smoke
-  - tests/test_vi_mosaic.py::test_vi_diagnostics_snapshot
-Mapped Tests Guardrail: Both selectors already collect >0 tests; add a minimal targeted test if future changes introduce new CLI knobs.
-Artifacts: plans/active/strat-vi-001/reports/2026-01-29T120000Z/{benchmark,docs}
-Next Up:
-  1. If σ<1.5°, run `scripts/analysis/vi_poisson_diagnostics.py` with the same fluence to capture per-iteration curvature evidence.
-  2. Prototype per-pixel likelihood normalization or alternative priors if Poisson rescaling still under-delivers.
+Mapped Tests:
+- pytest tests/test_vi_mosaic.py::test_poisson_observation_helper_auto_scale_hits_target_mean -v
+- pytest tests/test_vi_mosaic.py::test_benchmark_script_smoke -v
+- pytest tests/test_vi_mosaic.py::test_vi_diagnostics_snapshot -v
+Artifacts: plans/active/strat-vi-001/reports/2026-01-29T100500Z/
+Next Up (optional):
+- If benchmark still stalls <1.5°, capture extra diagnostics on observation stats vs gradients for FND-VI-2026-01.
