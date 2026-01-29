@@ -83,6 +83,13 @@ We will drive this development via a single, decisive benchmark artifact.
 2.  **Convergence:** Analytic loss curve is monotonic and reaches a lower final error than the Baseline.
 3.  **Visual:** A generated plot (`demo_outputs/probabilistic_vs_mc_loss.png`) visibly demonstrates the analytic curve plummeting while the Monte Carlo curve jitters.
 
+**Measured Results (2026-01-29, 150 iterations, CPU, 64×64 detector):**
+- Speedup: **1.9×** (baseline 0.009s/iter, probabilistic 0.005s/iter).
+- Baseline converged from 0.5° → 1.46° (true: 2.0°), final loss 1.30e-04.
+- Probabilistic spread did not move (0.5° → 0.5°), final loss 2.57e-04.
+- **Finding:** The analytic Gaussian envelope produces near-zero gradients for `mosaic_spread_deg` in this geometry regime because `σ ≫ |ΔQ|` for all sampled pixels, making the envelope ≈ 1.0 everywhere. This is the **Model Mismatch** risk from §5. Next step: investigate higher-resolution or non-cubic geometries where off-Bragg contributions are more significant.
+- Artifacts: `demo_outputs/probabilistic_vs_mc_loss.png`, `demo_outputs/probabilistic_vs_mc_summary.json`, `plans/active/strat-prob-002/reports/2026-01-29T061003Z/`.
+
 ## 5. Risk Assessment & Mitigation
 
 | Risk | Impact | Mitigation Strategy |

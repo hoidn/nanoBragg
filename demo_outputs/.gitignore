@@ -1,0 +1,7 @@
+# Track benchmark artifacts
+!probabilistic_vs_mc_loss.png
+!probabilistic_vs_mc_summary.json
+
+# Ignore other generated outputs
+*.gif
+refinement_*.png

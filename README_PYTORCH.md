@@ -554,6 +554,20 @@ nanoBragg -device cpu -detpixels 256 -floatfile output.bin ...
 4. **Use smaller detectors**: `-detpixels 256` for rapid iteration
 5. **GPU acceleration**: Automatically enabled when CUDA is available
 
+### Probabilistic Mosaic Benchmark
+
+The `ProbabilisticSimulator` replaces Monte Carlo mosaic-domain sampling with an analytic Gaussian envelope in reciprocal space, yielding O(1) cost per mosaic evaluation and smooth gradients. A benchmark script compares refinement convergence between the MC baseline and the analytic approach:
+
+```bash
+KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmark_probabilistic.py --iterations 150 --device cpu
+```
+
+Artifacts produced:
+- `demo_outputs/probabilistic_vs_mc_loss.png` — loss-vs-iteration convergence plot
+- `demo_outputs/probabilistic_vs_mc_summary.json` — machine-readable results (losses, timings, speedup)
+
+The plot shows per-iteration wall-clock time and final loss for each method. The probabilistic path is faster per iteration (fewer domain evaluations); convergence quality depends on the parameter regime. See `docs/strategy/mainstrategy.md` §4 for the design rationale.
+
 ### Detailed Performance Analysis
 
 For complete performance benchmarks and optimization strategies, see:
