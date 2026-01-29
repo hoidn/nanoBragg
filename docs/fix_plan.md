@@ -3,7 +3,7 @@
 **Last Updated:** 2026-01-29 (Variational mosaic pivot)
 
 **Active Focus:**
-- STRAT-VI-001 — Execute `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md` to land the VariationalMosaicSimulator stack and retire the analytic kernel once VI passes
+- STRAT-VI-002 — Execute `docs/plans/2026-01-29-vi-gaussian-likelihood.md` to build the Gaussian-likelihood fallback for VI mosaic inference
 - STRAT-PROB-001/002/003 — Paused as legacy reference while VI replaces the analytic mosaic flow
 
 ## Index
@@ -12,7 +12,8 @@
 | [STRAT-PROB-001](#strat-prob-001-probabilistic-simulator-kernel) | ProbabilisticSimulator kernel | Critical | paused_legacy |
 | [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | paused_legacy |
 | [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | paused_legacy |
-| [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | in_progress |
+| [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | failed |
+| [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | planning |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -86,11 +87,7 @@
 10. ~~**Execute VI ELBO Rebalancing plan:** follow Tasks 1–4 in `docs/plans/2026-01-29-vi-elbo-balancing.md` (KL weighting hook → schedule helper → CLI wiring → refreshed evidence) so the canonical benchmark demonstrates σ recovery (≥1.5° by 150 iterations) and the new CLI knobs + docs cover the workflow.~~ ✅ Implementation landed but benchmark evidence still shows collapse; see Task 11 failure note below.
 11. ~~**Task 5** — Run the long-horizon KL annealing benchmark (extended diagnostics + canonical 150-iter run with β ramp) and update docs/findings/strategy with the new evidence.~~ ✅ Completed 2026-01-29. Result: σ did **not** reach 1.5° — 80-iter diagnostics (32×32) peaked at 1.25°, canonical 150-iter benchmark (64×64) collapsed to 0.148°. KL annealing alone is insufficient. Evidence: `plans/active/strat-vi-001/reports/2026-01-29T083412Z/`.
 12. ~~**New Plan — Poisson Likelihood Rescaling:** Execute `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md` Tasks 1–4 to (a) add Poisson observation helper utilities, (b) wire realistic fluence + Poisson-sampled counts through `vi_poisson_diagnostics.py` and `benchmark_vi_mosaic.py`, (c) refresh CLI/tests/artifacts, and (d) update findings/strategy with the new evidence bundle demonstrating restored likelihood curvature.~~ ✅ Tasks 1–4 landed 2026-01-29: `observation_utils.py` + tests, benchmark + diagnostics wired with `--fluence`/`--observation-seed`, docs updated. **Tasks 5–6 completed (2026-01-29):** Ran canonical `--iterations 150 --fluence 1e13 --observation-seed 321` benchmark. Result: fluence_scale=7.9e-16 zeroed all Poisson observations (mean_counts=0), VI diverged to σ=7.49°. The fluence normalization formula (1e13 / BeamConfig().fluence) is incorrect because raw intensities are not in photon-count space. Evidence: `plans/active/strat-vi-001/reports/2026-01-29T085512Z/`. **New follow-up (Tasks 7–9):** Implement adaptive observation scaling (auto-normalize intensities, metadata-rich summaries), thread the knobs through diagnostics/benchmark CLIs, rerun the canonical benchmark, and refresh docs/findings once σ recovery evidence exists.
-- Exit Criteria:
-  - New VI modules ship with deterministic seed control (`torch.Generator`) and gradcheck-proven differentiability.
-  - Benchmark artifacts (PNG/JSON/logs) demonstrate Poisson ELBO convergence and non-zero gradients compared to MC/analytic, or STRAT-VI-001 documents a mitigation plan that resolves FND-VI-2026-01.
-  - `docs/strategy/mainstrategy.md`, README_PYTORCH, and plan docs are updated to state VI is default; analytic path clearly flagged as legacy.
-- Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution/supersession of FND-PROB-2026-01.
+- Exit Criteria: **FAILED** — see FND-VI-2026-01h. All 9 mitigations are exhausted and σ never reached 1.5° on the canonical benchmark. Future work moves to STRAT-VI-002.
 
 <!-- Supervisor state updated at end of current loop -->
 13. **Tasks 7–8 (Adaptive Poisson Scaling) — COMPLETED 2026-01-29:** Extended `poisson_sample_observations()` with adaptive auto-scaling (`target_mean_counts`, `normalization` params). Replaced legacy `--fluence` CLI with `--observation-mean` / `--observation-normalization` in both `benchmark_vi_mosaic.py` and `vi_poisson_diagnostics.py`. Tests updated and passing: `test_poisson_observation_helper_auto_scale_hits_target_mean`, `test_benchmark_script_smoke`, `test_vi_diagnostics_snapshot`, `test_vi_diagnostics_beta_schedule`. Plan ref: `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md` Tasks 7–8.
@@ -174,3 +171,23 @@ Supervisor state: focus=STRAT-VI-001 state=task26_complete_failed dwell=0 artifa
     - **Status: FAILED.** MC warm-start collapsed σ 0.45°→0.04° (MSE landscape biased toward σ→0). VI fine-tune (150 iters) could not recover. All 9 VI mitigations exhausted. **STRAT-VI-001 should be closed as failed.** Next: escalate to Gaussian likelihood or amortized multi-image inference.
 
 Supervisor state: focus=STRAT-VI-001 state=task27_complete_failed dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T235800Z/ next_action=close_strat_vi_001_escalate_gaussian_likelihood
+
+## [STRAT-VI-002] Gaussian likelihood VI path
+- Strategy Reference: `docs/strategy/mainstrategy.md §9` (post-hybrid escalation) — Gaussian likelihood replaces the Poisson ELBO to inject curvature into the VI loss landscape.
+- Plan Reference: `docs/plans/2026-01-29-vi-gaussian-likelihood.md`
+- Goal: Implement a Gaussian observation helper + ELBO, update diagnostics/benchmark CLIs, and capture new benchmark evidence so we can judge whether Gaussian likelihood recovers σ≥1.5° or produces a new finding documenting failure.
+- Dependencies: STRAT-VI-001 failure bundle (artifacts under `plans/active/strat-vi-001/`) and the existing VI simulator stack.
+- Artifacts Root: `plans/active/strat-vi-002/` (current loop report: `2026-01-29T130500Z`).
+- Next Actions:
+  1. **Task 1:** Author `docs/architecture/vi_gaussian_likelihood.md`, update `docs/index.md`, and add the §9.2 Gaussian escalation narrative in `docs/strategy/mainstrategy.md`.
+  2. **Task 2:** Extend `src/nanobrag_torch/vi/observation_utils.py` with `gaussian_sample_observations()` plus new tests in `tests/test_vi_mosaic.py`.
+  3. **Task 3:** Create `src/nanobrag_torch/vi/gaussian_elbo.py`, expose it via `vi.__init__`, and add gradcheck/regression coverage.
+  4. **Task 4:** Add `--likelihood {poisson,gaussian}` plumbing to `scripts/analysis/vi_poisson_diagnostics.py` and `scripts/benchmark_vi_mosaic.py`, including CLI smoke tests and demo artifact refresh.
+  5. **Task 5:** Run the canonical 150-iteration benchmark in Gaussian mode, archive diagnostics/PNG/JSON under `plans/active/strat-vi-002/reports/<ts>/gaussian_{diagnostics,benchmark}/`, and update `docs/findings.md` + `docs/development/testing_strategy.md` with the results.
+- Exit Criteria:
+  - Gaussian helper + ELBO share the deterministic seeding and metadata contracts documented in `docs/architecture/vi_gaussian_likelihood.md`.
+  - Diagnostics and benchmark CLIs accept `--likelihood gaussian` and emit artifacts that capture σ trajectories plus observation statistics.
+  - Canonical benchmark either achieves σ≥1.5° or produces a new finding (FND-VI-2026-02) that formally records Gaussian failure with links to artifacts.
+  - Strategy doc + README articulate when to choose Gaussian vs Poisson likelihood.
+
+Supervisor state: focus=STRAT-VI-002 state=planning dwell=0 artifacts=plans/active/strat-vi-002/reports/2026-01-29T130500Z/ next_action=delegate_task1_gaussian_spec
