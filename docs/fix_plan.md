@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-01-29 (Sprint 2 VEC-001 executed — STAMP 20260129T045901Z)
 **Active Focus:**
-- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — **Sprint 2 (VEC-001 dtype reset) COMPLETE** (Attempt #24, STAMP 20260129T045901Z). Autouse dtype guard + regression test landed in `test_tricubic_vectorized.py`. 17/17 tests passed. 2 dtype mismatch failures cleared. Next: Sprint 3 (GRAD-001 timeout policy).
+- CRITICAL: `[TEST-SUITE-TRIAGE-002]` — **Sprint 2 (VEC-001 dtype reset) COMPLETE** (Attempt #23, STAMP 20260129T045901Z). Autouse dtype guard + regression test landed in `test_tricubic_vectorized.py`. 17/17 tests passed. 2 dtype mismatch failures cleared. Next: Sprint 3 (GRAD-001 timeout policy).
 - CRITICAL: `[VECTOR-PARITY-001]` — Tap 5.3 accumulation instrumentation must land to unblock full-frame parity (Phase E16–E18 capture + synthesis).
 - MONITOR: `[DETERMINISM-001]` — Documentation + validation complete (Attempt #10); optional README vignette still deferred.
 
@@ -857,7 +857,7 @@
 
 ---
 
-Supervisor state: `focus=TEST-SUITE-TRIAGE-002` `state=planning` `dwell=2` `artifacts=docs/plans/2026-01-29-sprint2-vec1-plan.md` `next_action=Delegate Sprint 2 dtype reset per new plan`
+Supervisor state: `focus=TEST-SUITE-TRIAGE-002` `state=ready_for_implementation` `dwell=0` `artifacts=docs/plans/2026-01-29-sprint3-grad1-plan.md` `next_action=Delegate Sprint 3 slow-gradient chunk plan`
 
 ### Attempt #84 — Phase R Ledger Sync (R4 Completion)
 
