@@ -41,4 +41,9 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Capture timings/metrics (CPU vs CUDA) and link them in `docs/fix_plan.md`.
    - **Gradient test performance:** Slow gradient tests (marked with `@pytest.mark.slow_gradient`) may legitimately run up to 905 seconds on CPU with float64 precision. This is expected behavior for high-precision numerical gradient checks, not a performance regression. Phase R uplift (2025-10-15T091543Z) raised ceiling to 905s after observing 900.02s breach in chunk 03 rerun.
 
+6. **Performance Evidence Refresh**
+   - Before declaring a full-suite rerun healthy, re-capture AT-PERF-003 bandwidth baselines (isolated + stressed) per `docs/development/testing_strategy.md` §6.1.
+   - Compare against `BANDWIDTH_RATIO_THRESHOLD` in `tests/test_at_perf_003.py` and update if hardware changes.
+   - Evidence path: `reports/2026-01-test-suite-refresh/phase_n/<STAMP>/sprint4/`
+
 Keep this checklist open while working; cite it in fix-plan entries so the vectorization/device guardrails stay visible.

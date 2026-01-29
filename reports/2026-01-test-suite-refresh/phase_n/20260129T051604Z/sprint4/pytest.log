@@ -1,0 +1,53 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.13, pytest-8.4.1, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/ptycho311/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization 
+============================================================
+AT-PERF-003: Memory Bandwidth Utilization
+============================================================
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+  512×512: 0.020s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  1024×1024: 0.083s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+  2048×2048: 0.565s, ~0.2 GB/s effective
+
+✅ Memory bandwidth utilization test PASSED
+PASSED
+
+=============================== warnings summary ===============================
+../../miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /home/ollie/miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: timeout
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /home/ollie/miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: timeout_func_only
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 25 durations =============================
+2.62s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+======================== 1 passed, 2 warnings in 3.51s =========================

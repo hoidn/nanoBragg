@@ -1,0 +1,205 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.13, pytest-8.4.1, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/ptycho311/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 5 items
+
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage 
+============================================================
+AT-PERF-003: Peak Memory Usage Test
+============================================================
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+
+Memory usage for 2048×2048 detector (float64):
+  Theoretical minimum: 96.0 MB
+  Actual memory used:  284.9 MB
+  Ratio:              2.97x
+✅ Peak memory usage test PASSED
+PASSED
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance 
+============================================================
+AT-PERF-003: Float32 vs Float64 Performance
+============================================================
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+
+Performance comparison (2048×2048):
+  Float64: 1.358s, 160.1 MB
+  Float32: 0.565s, 160.9 MB
+  Time ratio (64/32):   2.40x slower
+  Memory ratio (64/32): 1.00x more
+✅ Float32 vs Float64 test PASSED
+PASSED
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access 
+============================================================
+AT-PERF-003: Cache-Friendly Access Pattern Test
+============================================================
+  Warmup run for JIT compilation...
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  Run 1: 0.074s
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  Run 2: 0.083s
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  Run 3: 0.084s
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  Run 4: 0.078s
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  Run 5: 0.086s
+
+Timing statistics:
+  Mean:     0.081s
+  Std Dev:  0.004s
+  CV:       5.3%
+✅ Cache-friendly access test PASSED
+PASSED
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization 
+============================================================
+AT-PERF-003: Memory Bandwidth Utilization
+============================================================
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+  512×512: 0.020s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  1024×1024: 0.078s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+  2048×2048: 0.489s, ~0.2 GB/s effective
+
+✅ Memory bandwidth utilization test PASSED
+PASSED
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization 
+============================================================
+AT-PERF-003: Intermediate Tensor Optimization
+============================================================
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+  Output tensor: torch.Size([512, 512]), torch.float32
+  Memory layout: contiguous
+
+✅ Intermediate tensor optimization test PASSED
+PASSED
+
+=============================== warnings summary ===============================
+../../miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /home/ollie/miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: timeout
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /home/ollie/miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: timeout_func_only
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 25 durations =============================
+7.79s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance
+6.30s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage
+1.98s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.54s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access
+0.06s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_intermediate_tensor_optimization
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_float32_vs_float64_performance
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_peak_memory_usage
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_cache_friendly_access
+======================== 5 passed, 2 warnings in 17.55s ========================
+============================= test session starts ==============================
+platform linux -- Python 3.11.13, pytest-8.4.1, pluggy-1.6.0 -- /home/ollie/miniconda3/envs/ptycho311/bin/python3.11
+cachedir: .pytest_cache
+rootdir: /home/ollie/Documents/nanoBragg
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization 
+============================================================
+AT-PERF-003: Memory Bandwidth Utilization
+============================================================
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-1,-0] k=[-4,4] l=[-4,4] hit_rate=262144/262144 (100.00%)
+  512×512: 0.023s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-3,-0] k=[-7,7] l=[-7,7] hit_rate=1048576/1048576 (100.00%)
+  1024×1024: 0.085s, ~0.3 GB/s effective
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+auto-selected 1-fold oversampling
+[HKL stats] h=[-7,-0] k=[-12,12] l=[-12,12] hit_rate=4194304/4194304 (100.00%)
+  2048×2048: 0.566s, ~0.2 GB/s effective
+
+✅ Memory bandwidth utilization test PASSED
+PASSED
+
+=============================== warnings summary ===============================
+../../miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /home/ollie/miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: timeout
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474
+  /home/ollie/miniconda3/envs/ptycho311/lib/python3.11/site-packages/_pytest/config/__init__.py:1474: PytestConfigWarning: Unknown config option: timeout_func_only
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 25 durations =============================
+2.74s call     tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.00s setup    tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+0.00s teardown tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization
+======================== 1 passed, 2 warnings in 3.65s =========================
