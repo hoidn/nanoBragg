@@ -303,6 +303,14 @@ Examples:
                         help='Recompute polarization per subpixel')
     parser.add_argument('-oversample_omega', action='store_true',
                         help='Recompute solid angle per subpixel')
+
+    # Memory management (PIXEL-BATCH-001)
+    parser.add_argument('-pixel_batch_size', '--pixel-batch-size', type=int,
+                        metavar='N',
+                        help='Process detector in chunks of N rows. Reduces peak GPU memory. '
+                             'Recommended: 128-256 for 24GB GPU, 64-128 for 12GB GPU. '
+                             'Default: None (full vectorization)')
+
     parser.add_argument('-roi', nargs=4, type=int,
                         metavar=('xmin', 'xmax', 'ymin', 'ymax'),
                         help='Pixel index limits (inclusive, zero-based)')
@@ -1178,8 +1186,10 @@ def main():
             print(f"  Limiting output to pixel (fast={args.printout_pixel[0]}, slow={args.printout_pixel[1]})")
         if args.trace_pixel:
             print(f"  Tracing pixel (slow={args.trace_pixel[0]}, fast={args.trace_pixel[1]})")
+        if args.pixel_batch_size:
+            print(f"  Pixel batching: {args.pixel_batch_size} rows per chunk")
 
-        intensity = simulator.run()
+        intensity = simulator.run(pixel_batch_size=args.pixel_batch_size)
 
         # Compute statistics
         stats = simulator.compute_statistics(intensity)

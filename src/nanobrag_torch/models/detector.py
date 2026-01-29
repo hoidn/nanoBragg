@@ -11,6 +11,7 @@ import torch
 
 from ..config import DetectorConfig, DetectorConvention
 from ..utils.units import mm_to_angstroms, degrees_to_radians
+from ..utils.tensor_utils import as_tensor_preserving_grad
 
 
 def _nonzero_scalar(x) -> bool:
@@ -57,15 +58,15 @@ class Detector:
         # This is different from the physics calculations which use Angstroms
         # The C-code detector geometry calculations use meters as evidenced by
         # DETECTOR_PIX0_VECTOR outputting values like 0.1 (for 100mm distance)
-        self.distance = config.distance_mm / 1000.0  # Convert mm to meters
-        self.pixel_size = config.pixel_size_mm / 1000.0  # Convert mm to meters
-
-        # Set close_distance (used for obliquity calculations)
-        if config.close_distance_mm is not None:
-            self.close_distance = config.close_distance_mm / 1000.0  # Convert mm to meters
-        else:
-            # Default to distance if not specified
-            self.close_distance = self.distance
+        #
+        # DBEX-GRADIENT-001: distance, pixel_size, and close_distance are now
+        # properties that dynamically read from config to support post-creation
+        # parameter updates with gradient flow. This enables DBEX-style optimization
+        # where config parameters are overwritten with differentiable tensors.
+        #
+        # Internal backing field for close_distance when it needs to be cached
+        # (e.g., after _calculate_pix0_vector updates it based on r-factor)
+        self._close_distance_cached: Optional[torch.Tensor] = None
 
         # Copy dimension parameters
         self.spixels = config.spixels
@@ -106,20 +107,12 @@ class Detector:
         beam_center_f_pixels = config.beam_center_f / config.pixel_size_mm
 
         # DETECTOR-CONFIG-001 Phase C3: Conditional MOSFLM +0.5 pixel offset
-        # Per specs/spec-a-core.md §72 and arch.md §ADR-03, the MOSFLM +0.5 pixel offset
-        # applies ONLY to auto-calculated beam centers, NOT explicit user inputs.
-        #
+        # MOSFLM convention ALWAYS applies +0.5 pixel offset per spec-a-core.md:72
         # The offset is part of the beam-center mapping formula for MOSFLM convention:
         #   Fbeam = Ybeam + 0.5·pixel; Sbeam = Xbeam + 0.5·pixel
-        #
-        # However, this formula applies when beam centers are derived from detector size
-        # defaults. Explicit user-provided values should not receive this adjustment.
-        if (config.detector_convention == DetectorConvention.MOSFLM and
-            config.beam_center_source == "auto"):
-            # Auto-calculated beam center: apply MOSFLM +0.5 pixel offset
+        if config.detector_convention == DetectorConvention.MOSFLM:
             beam_center_s_pixels = beam_center_s_pixels + 0.5
             beam_center_f_pixels = beam_center_f_pixels + 0.5
-        # Explicit beam centers: no offset applied (use values as-is)
 
         # Convert to tensors on proper device
         if isinstance(beam_center_s_pixels, torch.Tensor):
@@ -180,6 +173,78 @@ class Detector:
             self.r_factor: Optional[torch.Tensor] = None
         if not hasattr(self, 'pix0_vector'):
             self.pix0_vector: Optional[torch.Tensor] = None
+
+    # =========================================================================
+    # DBEX-GRADIENT-001: Dynamic properties for geometry parameters
+    # =========================================================================
+    # These properties read from config dynamically to support post-creation
+    # parameter updates with gradient flow preservation.
+
+    @property
+    def distance(self) -> torch.Tensor:
+        """
+        Detector distance in meters, dynamically read from config.
+
+        DBEX-GRADIENT-001: This property enables post-creation parameter updates
+        where config.distance_mm can be overwritten with a differentiable tensor.
+        The property preserves gradient flow by using as_tensor_preserving_grad.
+
+        Returns:
+            torch.Tensor: Distance in meters (config.distance_mm / 1000)
+        """
+        return as_tensor_preserving_grad(
+            self.config.distance_mm / 1000.0, device=self.device, dtype=self.dtype
+        )
+
+    @property
+    def pixel_size(self) -> torch.Tensor:
+        """
+        Pixel size in meters, dynamically read from config.
+
+        DBEX-GRADIENT-001: This property enables post-creation parameter updates
+        where config.pixel_size_mm can be overwritten with a differentiable tensor.
+
+        Returns:
+            torch.Tensor: Pixel size in meters (config.pixel_size_mm / 1000)
+        """
+        return as_tensor_preserving_grad(
+            self.config.pixel_size_mm / 1000.0, device=self.device, dtype=self.dtype
+        )
+
+    @property
+    def close_distance(self) -> torch.Tensor:
+        """
+        Close distance in meters (for obliquity calculations).
+
+        DBEX-GRADIENT-001: This property supports both cached values (from r-factor
+        calculations in _calculate_pix0_vector) and dynamic config reads.
+
+        Returns:
+            torch.Tensor: Close distance in meters
+        """
+        # If cached by _calculate_pix0_vector, return cached value
+        if self._close_distance_cached is not None:
+            return self._close_distance_cached
+        # Otherwise derive from config
+        if self.config.close_distance_mm is not None:
+            return as_tensor_preserving_grad(
+                self.config.close_distance_mm / 1000.0, device=self.device, dtype=self.dtype
+            )
+        # Default to distance if not specified
+        return self.distance
+
+    @close_distance.setter
+    def close_distance(self, value: torch.Tensor) -> None:
+        """
+        Set cached close_distance value.
+
+        This setter is used by _calculate_pix0_vector to cache the r-factor
+        corrected close_distance.
+
+        Args:
+            value: Close distance tensor in meters
+        """
+        self._close_distance_cached = value
 
     def _is_default_config(self) -> bool:
         """Check if using default config (for backward compatibility)."""
@@ -886,8 +951,8 @@ class Detector:
         # The idea is that each pixel is at the same distance from the sample,
         # but at different angular positions
 
-        # The beam direction points from sample toward source
-        # So -beam_vector points from sample toward detector
+        # beam_vector is the incident beam direction (source→sample, photon propagation)
+        # So -beam_vector points from sample toward detector (opposite of incident)
         beam_dir = -self.beam_vector
 
         # Compute the angular offsets for each pixel
@@ -993,7 +1058,13 @@ class Detector:
         Otherwise use convention defaults.
 
         Returns:
-            torch.Tensor: Unit beam vector pointing from sample toward source
+            torch.Tensor: Unit beam vector representing incident beam direction (source→sample, along photon propagation)
+
+        Note:
+            C-code reference: nanoBragg.c lines 2578, 2989
+                source_X[source] = -source_distance*beam_vector[1]
+                incident[1] = -source_X[source] = beam_vector[1] * source_distance
+            Therefore beam_vector represents the incident beam direction (photon propagation).
         """
         # CUSTOM convention with user override
         if (self.config.detector_convention == DetectorConvention.CUSTOM

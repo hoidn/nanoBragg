@@ -30,6 +30,9 @@ def _resolve_c_binary():
     Returns:
         Path object if resolved, None otherwise
     """
+    # Use absolute path resolution relative to repo root
+    repo_root = Path(__file__).parent.parent
+
     nb_c_bin = os.environ.get('NB_C_BIN')
     if nb_c_bin:
         path = Path(nb_c_bin)
@@ -40,12 +43,12 @@ def _resolve_c_binary():
             return None
 
     # Fallback 1: instrumented binary (recommended)
-    fallback1 = Path('./golden_suite_generator/nanoBragg')
+    fallback1 = repo_root / 'golden_suite_generator/nanoBragg'
     if fallback1.exists():
         return fallback1
 
     # Fallback 2: frozen reference binary
-    fallback2 = Path('./nanoBragg')
+    fallback2 = repo_root / 'nanoBragg'
     if fallback2.exists():
         return fallback2
 
@@ -92,8 +95,11 @@ def _check_golden_assets():
     """
     errors = []
 
+    # Use absolute path resolution relative to repo root
+    repo_root = Path(__file__).parent.parent
+
     # Asset 1: scaled.hkl
-    hkl_path = Path('scaled.hkl')
+    hkl_path = repo_root / 'scaled.hkl'
     if not hkl_path.exists():
         errors.append(
             "Golden asset not found: scaled.hkl\n"
@@ -106,7 +112,7 @@ def _check_golden_assets():
         )
 
     # Asset 2: pix0_expected.json
-    pix0_path = Path('reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json')
+    pix0_path = repo_root / 'reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json'
     if not pix0_path.exists():
         errors.append(
             "Golden asset not found: reports/2025-10-cli-flags/phase_h/implementation/pix0_expected.json\n"

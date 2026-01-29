@@ -137,3 +137,183 @@ Principle: Differentiability is required; over-hardening is not. Prefer the mini
   - Show a before/after gradcheck result (float64 required, float32 if relevant).
   - Include a microbenchmark (≥1e6 evaluations) comparing old/new helper.
   - Confirm vectorization preserved (no data-dependent Python control flow).
+
+### 1.2.1 Stochastic Operations in Differentiable Paths
+
+Stochastic tensor operations (e.g., mosaic rotation sampling) require special
+handling for gradient correctness:
+
+**Problem**: `torch.autograd.gradcheck` evaluates the function multiple times
+with perturbed inputs. If the function uses unseeded randomness, each evaluation
+sees different random values, making numerical gradient estimation meaningless.
+
+**Solution**: Deterministic seeding + reparameterization
+
+1. **Freeze the randomness**: Create a `torch.Generator` seeded from config
+   (e.g., `config.mosaic_seed`). Pass this generator to all stochastic ops.
+
+2. **Reparameterize for gradients**: Factor stochastic values as:
+   ```python
+   actual_value = frozen_base_noise * differentiable_scale
+   ```
+   where `frozen_base_noise` is sampled with the seeded generator (no gradient),
+   and `differentiable_scale` is the parameter that should receive gradients.
+
+3. **Test both properties**:
+   - **Gradient correctness**: `gradcheck` passes with non-zero stochastic params
+   - **Seed reproducibility**: Same seed produces identical results
+
+**Example**: Mosaic rotation generation (MOSAIC-GRADIENT-001)
+```python
+gen = torch.Generator(device=device)
+gen.manual_seed(config.mosaic_seed & 0x7FFFFFFF)  # Handle negative seeds
+
+base_angles = torch.randn(n_domains, generator=gen)  # frozen
+actual_angles = base_angles * mosaic_spread_rad       # gradient flows here
+```
+
+**Evidence**: `tests/test_gradients.py::TestMosaicGradients`
+
+## 1.3 Stage-A Parameterized Experiment Model (High-Level API)
+
+Stage-A optimization introduces learnable geometry and beam parameterization on
+top of the existing config-driven models.  The core physics and vectorization
+remain in `Crystal`, `Detector`, and `Simulator`; Stage-A wraps them in a thin
+composition layer:
+
+- **Implementation:** `src/nanobrag_torch/models/experiment.py`
+- **Spec:** `docs/architecture/parameterized_experiment.md`
+
+### 1.3.1 Components
+
+- `CrystalStageAParams`
+  - Owns raw crystal Stage-A DOFs (log-length deltas, bounded angle/misset
+    deltas).
+  - Builds a derived `CrystalConfig` with tensor-valued `cell_*` and
+    `misset_deg`, consumed by `Crystal` via the existing `compute_cell_tensors`
+    pipeline (including misset and reciprocal/real duality rules).
+
+- `DetectorStageAParams`
+  - Owns raw detector Stage-A DOFs (log-distance delta, small-angle tilts,
+    beam-center shifts in pixel units).
+  - Builds a derived `DetectorConfig` that feeds the existing detector geometry
+    and pivot logic.
+
+- `BeamStageAParams`
+  - Owns a log-fluence delta around the base `BeamConfig.fluence`.
+  - Builds a derived `BeamConfig` with tensor-valued `fluence`, used by
+    `Simulator` in the final scaling.
+
+- `ExperimentModel`
+  - High-level `nn.Module` that composes the above parameter blocks with
+    `Crystal`, `Detector`, and `Simulator`.
+  - Constructor:
+
+    ```python
+    ExperimentModel(
+        crystal_config: CrystalConfig,
+        detector_config: DetectorConfig,
+        beam_config: BeamConfig,
+        device=None,
+        dtype=torch.float32,
+        param_init: str = "frozen"  # or "stage_a"
+    )
+    ```
+
+  - `forward()`:
+    - Builds derived configs via the parameter blocks.
+    - Instantiates `Crystal`, `Detector`, and `Simulator` on the requested
+      device/dtype.
+    - Returns the float image from `Simulator.run()`.
+
+### 1.3.2 Param Initialization Modes
+
+- `param_init="frozen"`
+  - All raw fields registered as buffers (no `nn.Parameter` objects).
+  - `experiment.parameters()` is empty.
+  - Output is numerically equivalent to the legacy config-driven path (within
+    acceptance tolerances) for given configs.
+
+- `param_init="stage_a"`
+  - Stage-A DOFs registered as `nn.Parameter` objects.
+  - `experiment.parameters()` exposes exactly the Stage-A parameter tensors,
+    suitable for optimizers (Adam/LBFGS).
+
+### 1.3.3 Optimizer Usage (Summary)
+
+For Stage-A refinement, the standard pattern is:
+
+```python
+experiment = ExperimentModel(
+    crystal_config=crystal_cfg,
+    detector_config=detector_cfg,
+    beam_config=beam_cfg,
+    param_init="stage_a",
+    device="cuda",
+    dtype=torch.float32,
+)
+
+optimizer = torch.optim.Adam(experiment.parameters(), lr=1e-2)
+for _ in range(num_steps):
+    optimizer.zero_grad()
+    pred = experiment()
+    loss = ((pred - target_image) ** 2).mean()
+    loss.backward()
+    optimizer.step()
+```
+
+All vectorization, device/dtype neutrality, and differentiability guarantees
+from earlier sections apply unchanged; the ExperimentModel is a thin wrapper
+that only materializes new configs from the raw parameters.
+
+### 1.3.4 Training Efficiency: Simulator.run() Parameters
+
+The `Simulator.run()` method provides two parameters for memory-efficient and
+fast training on large detectors:
+
+#### pixel_batch_size (Memory Management)
+
+For memory-constrained scenarios, process pixels in row-wise chunks:
+
+```python
+# Full vectorization (default) - fastest but highest memory
+image = simulator.run()
+
+# Chunked execution - lower memory, same result
+image = simulator.run(pixel_batch_size=256)
+```
+
+- Processes all pixels but in chunks of `pixel_batch_size` rows
+- Returns identical results to full vectorization
+- Reduces peak GPU memory at cost of multiple kernel launches
+- Recommended: 128-256 for 24GB GPU, 64-128 for 12GB GPU
+
+#### stochastic_pixel_count (SGD Minibatching)
+
+For SGD-style training, randomly sample pixels each forward pass:
+
+```python
+# Sample 5000 random pixels per iteration
+intensities, slow_idx, fast_idx = simulator.run(stochastic_pixel_count=5000)
+
+# Compute loss on sampled pixels only
+target_sampled = target_image[slow_idx, fast_idx]
+loss = ((intensities - target_sampled) ** 2).mean()
+loss.backward()
+```
+
+- Returns tuple `(intensities, slow_indices, fast_indices)` instead of full image
+- Different random pixels sampled each forward pass (true SGD)
+- Provides noisy but unbiased gradient estimates
+- ~100x faster iterations for large detectors (e.g., 2463×2527 Pilatus)
+- Typical values: 1000-10000 pixels per minibatch
+
+**Trade-offs:**
+- Smaller batches → faster iterations, noisier gradients
+- Larger batches → slower iterations, more stable gradients
+- Gradient noise can help escape shallow local minima
+
+**Mutually exclusive:** Cannot combine `pixel_batch_size` and `stochastic_pixel_count`.
+
+**Evidence:** `tests/test_stochastic_pixel_sampling.py` (8 tests validating correctness,
+gradient flow, and consistency with full-image computation).

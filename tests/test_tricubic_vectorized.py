@@ -141,7 +141,7 @@ class TestTricubicGather:
         # Should fallback to default_F due to OOB
         expected_default = crystal.config.default_F
         # Allow small tolerance due to potential floating point ops
-        assert torch.allclose(F_edge, torch.tensor(expected_default), atol=1e-5), \
+        assert torch.allclose(F_edge, torch.tensor(expected_default, dtype=F_edge.dtype, device=F_edge.device), atol=1e-5), \
             f"OOB fallback failed: expected {expected_default}, got {F_edge.item()}"
 
         # Warning should have been shown
@@ -258,7 +258,7 @@ class TestTricubicGather:
 
         # Verify fallback to default_F
         expected_default = crystal.config.default_F
-        assert torch.allclose(F_first, torch.tensor(expected_default), atol=1e-5), \
+        assert torch.allclose(F_first, torch.tensor(expected_default, dtype=F_first.dtype, device=F_first.device), atol=1e-5), \
             f"First OOB call should return default_F={expected_default}, got {F_first.item()}"
 
         # Second OOB query: should NOT print warning
@@ -279,7 +279,7 @@ class TestTricubicGather:
             "Second OOB call should not print any warnings"
 
         # Verify still returns default_F
-        assert torch.allclose(F_second, torch.tensor(expected_default), atol=1e-5), \
+        assert torch.allclose(F_second, torch.tensor(expected_default, dtype=F_second.dtype, device=F_second.device), atol=1e-5), \
             f"Second OOB call should return default_F={expected_default}, got {F_second.item()}"
 
         # Verify persistent state

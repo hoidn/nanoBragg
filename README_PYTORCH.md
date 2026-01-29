@@ -12,6 +12,7 @@ This guide explains how to use the PyTorch implementation of nanoBragg for diffr
 - [Troubleshooting](#troubleshooting)
 - [Performance](#performance)
 - [Known Limitations](#known-limitations)
+ - [Stage-A Parameterized Experiment](#stage-a-parameterized-experiment)
 
 ## PyTorch Runtime Guardrails
 
@@ -174,6 +175,48 @@ nanoBragg -mosflm -cell 100 100 100 90 90 90 ...
 # XDS convention
 nanoBragg -xds -cell 100 100 100 90 90 90 ...
 ```
+
+## Stage-A Parameterized Experiment
+
+For gradient-based refinement of crystal, detector, and beam parameters (“Stage-A”
+optimization), the PyTorch implementation provides a high-level `ExperimentModel`
+API on top of the existing `Simulator`:
+
+```python
+from nanobrag_torch.config import CrystalConfig, DetectorConfig, BeamConfig
+from nanobrag_torch.models.experiment import ExperimentModel
+
+crystal_cfg = CrystalConfig(cell_a=100.0, cell_b=100.0, cell_c=100.0)
+detector_cfg = DetectorConfig(distance_mm=100.0, pixel_size_mm=0.1)
+beam_cfg = BeamConfig(wavelength_A=1.0)
+
+# Stage-A learnable mode
+experiment = ExperimentModel(
+    crystal_config=crystal_cfg,
+    detector_config=detector_cfg,
+    beam_config=beam_cfg,
+    param_init="stage_a",
+    device="cuda",
+)
+
+optimizer = torch.optim.Adam(experiment.parameters(), lr=1e-2)
+target = ...  # target float image tensor
+
+for _ in range(num_steps):
+    optimizer.zero_grad()
+    pred = experiment()
+    loss = ((pred - target) ** 2).mean()
+    loss.backward()
+    optimizer.step()
+```
+
+To run with no learnable parameters (pure config-driven behavior) while using
+the same wrapper, set `param_init="frozen"`; in that mode
+`ExperimentModel.parameters()` is empty and the output matches the legacy
+`Simulator` path for the same configs.
+
+See `docs/architecture/parameterized_experiment.md` for the full specification
+of Stage-A degrees of freedom and parameter mappings.
 
 ## Parallel C/PyTorch Comparison
 
