@@ -1,22 +1,23 @@
 Plan: docs/plans/2026-01-29-vi-elbo-decomposition.md
 References:
-- docs/strategy/mainstrategy.md §9 (canonical VI benchmark + ELBO acceptance criteria)
-- docs/findings.md (FND-VI-2026-01 context + required evidence types)
-- docs/fix_plan.md (STRAT-VI-001 Task 16 metadata)
-- docs/plans/2026-01-29-vi-mosaic-implementation-plan.md §Model Definition (normative Poisson ELBO math)
-- src/nanobrag_torch/vi/poisson_elbo.py, src/nanobrag_torch/vi/mosaic_posterior.py
-- scripts/analysis/vi_poisson_diagnostics.py, scripts/benchmark_vi_mosaic.py
-- tests/test_vi_mosaic.py
+- docs/strategy/mainstrategy.md §9 (defines the canonical VI benchmark target ≥1.5° and the evidence bundle we must refresh)
+- docs/findings.md (FND-VI-2026-01 describes the σ collapse symptoms we are instrumenting against; cite new sweep results there)
+- docs/plans/2026-01-29-vi-elbo-decomposition.md §Task 2 (authoritative steps for the observation-count sweep harness)
+- docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md §Task 7 (normative definition of adaptive Poisson observation scaling / metadata that the sweep must report)
+- scripts/analysis/vi_poisson_diagnostics.py (add `run_observation_sweep`, CLI grid plumbing, JSON/Markdown schema updates)
+- scripts/benchmark_vi_mosaic.py (ensure sweep metadata mirrors benchmark formats so later comparisons stay consistent)
+- tests/test_vi_mosaic.py (new `test_vi_observation_sweep_runs_multiple_means` + refreshed snapshot assertions)
+- src/nanobrag_torch/vi/observation_utils.py (reuse adaptive scaling helpers without diverging from the spec)
 Summary:
-- Implement Task 1 from `docs/plans/2026-01-29-vi-elbo-decomposition.md`: extend `poisson_elbo` diagnostics so we capture per-iteration log-likelihood vs KL gradient magnitudes (μ and ρ), expose the data through `scripts/analysis/vi_poisson_diagnostics.py` and `scripts/benchmark_vi_mosaic.py`, and add pytest guards that assert the new fields populate (see `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md §Model Definition` for the normative ELBO definition).
-- Introduce CLI knobs (`--diagnostics-stride`, `capture_component_grads` plumbing) so the canonical benchmark can emit every-step diagnostics into `vi_diagnostics.json`, then refresh the JSON/Markdown schemas to include the gradient components for future analysis tied to FND-VI-2026-01.
-- Keep existing behaviors backward compatible (k-sample averaging, device/dtype neutrality) and prove the changes via the targeted pytest selectors plus whichever smoke tests you touch.
-Summary (1-liner): Add per-iteration log-likelihood vs KL gradient diagnostics to the VI tooling so we can decompose the collapsed σ behavior.
+- Implement Task 2 from `docs/plans/2026-01-29-vi-elbo-decomposition.md`: add a reusable `run_observation_sweep()` helper plus CLI flags (`--observation-mean-grid`, `--observation-grid-outdir`) in `scripts/analysis/vi_poisson_diagnostics.py` so we can loop over multiple observation-count targets with the adaptive scaling defined in `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md §Task 7` and emit combined JSON/Markdown tables of log-likelihood, KL, σ trajectories, and gradient ratios.
+- Add pytest coverage in `tests/test_vi_mosaic.py` (author `test_vi_observation_sweep_runs_multiple_means`) that calls the helper with two means, asserts deterministic metadata (mean counts increase monotonically, seeds propagate), and verifies artifacts land in a temporary outdir; keep existing diagnostics tests passing.
+- After implementation, run the CLI sweep (`python scripts/analysis/vi_poisson_diagnostics.py --iterations 25 --k-samples 4 --observation-mean-grid 25,100,300,1000 --observation-grid-outdir plans/active/strat-vi-001/reports/2026-01-29T093224Z/observation_sweep`) and update `docs/findings.md` FND-VI-2026-01 plus `docs/strategy/mainstrategy.md §9` with the new evidence summary.
+Summary (1-liner): Build and exercise the VI observation-count sweep harness so we can quantify how Poisson count levels change ELBO gradients.
 Focus: STRAT-VI-001 — Variational mosaic simulator
 Branch: feature/spec-based-2
 Mapped Tests:
-- pytest tests/test_vi_mosaic.py::test_poisson_elbo_reports_component_gradients -v
-- pytest tests/test_vi_mosaic.py::test_vi_diagnostics_snapshot -v
-Artifacts: plans/active/strat-vi-001/reports/2026-01-29T092513Z/
+- pytest tests/test_vi_mosaic.py::test_vi_diagnostics_beta_schedule -v
+- pytest tests/test_vi_mosaic.py::test_vi_observation_sweep_runs_multiple_means -v
+Artifacts: plans/active/strat-vi-001/reports/2026-01-29T093224Z/
 Next Up (optional):
-- After instrumentation, run Task 2 (observation-count sweep) from the same plan to see whether higher mean counts change the gradient balance.
+- Once the sweep lands, continue Task 3 (non-centered posterior experiment) from the same plan so we can compare parameterizations under identical observation stats.
