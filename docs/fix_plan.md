@@ -857,7 +857,7 @@
 
 ---
 
-Supervisor state: `focus=TEST-SUITE-TRIAGE-002` `state=planning` `dwell=1` `artifacts=plans/active/test-suite-triage-phase-h/reports/20260129T044422Z/` `next_action=Delegate Sprint 1 Gap 1 remediation per new plan`
+Supervisor state: `focus=TEST-SUITE-TRIAGE-002` `state=planning` `dwell=2` `artifacts=docs/plans/2026-01-29-sprint2-vec1-plan.md` `next_action=Delegate Sprint 2 dtype reset per new plan`
 
 ### Attempt #84 — Phase R Ledger Sync (R4 Completion)
 
