@@ -162,3 +162,13 @@ Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans
     - **All 8 VI mitigations exhausted.** Recommend escalation to hybrid MC-VI (`docs/plans/2026-01-29-vi-hybrid-mc-vi.md`).
 
 Supervisor state: focus=STRAT-VI-001 state=task26_complete_failed dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T235959Z/ next_action=escalate_hybrid_mc_vi_plan
+
+27. **Task 27 (NEW 2026-01-29 23:59Z) — Hybrid MC-VI escalation plan:** Execute `docs/plans/2026-01-29-vi-hybrid-mc-vi.md` to build the MC warm-start + VI fine-tune pipeline documented in `docs/strategy/mainstrategy.md §9`. Scope:
+    - Task 1: land the `run_mc_warm_start()` helper + dataclasses under `src/nanobrag_torch/vi/hybrid.py` with pytest coverage (`tests/test_vi_hybrid.py`).
+    - Task 2: add `MosaicPosterior.prime_from_sigma()` + tests so the VI stage can consume the MC σ.
+    - Task 3: ship the `HybridMosaicTrainer` orchestration class (warm-start → VI) with dependency injection hooks for diagnostics, plus unit tests.
+    - Task 4: add `scripts/analysis/vi_hybrid_refinement.py` (diagnostics CLI) + smoke tests.
+    - Task 5: integrate hybrid mode into `scripts/benchmark_vi_mosaic.py`, refresh docs/findings, and archive diagnostics + canonical benchmark artifacts under `plans/active/strat-vi-001/reports/<ts>/hybrid_{diagnostics,benchmark}/`.
+    - Exit criteria: canonical 150-iter benchmark demonstrates σ≥1.5° **or** the evidence bundle proves the hybrid path also collapses, at which point STRAT-VI-001 must escalate to Gaussian likelihood or amortized inference (documented in fix_plan + strategy).
+
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-vi-hybrid-mc-vi.md next_action=delegate_task27_hybrid_warm_start
