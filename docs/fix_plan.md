@@ -99,5 +99,12 @@
 
 16. **Task 16 — ELBO decomposition & IWAE experiments:** Execute `docs/plans/2026-01-29-vi-elbo-decomposition.md` (component gradient logging, high-count sweeps, non-centered posterior option, IWAE objective) so we can (a) quantify log-likelihood vs KL gradient magnitudes per iteration, (b) test observation means 25→1000, (c) evaluate whether a non-centered posterior stabilizes σ, and (d) determine if IWAE-style objectives restore σ≥1.5°. Artifact roots belong under `plans/active/strat-vi-001/reports/<ts>/` (subfolders: `observation_sweep/`, `noncentered/`, `iwae/`). Exit once the canonical benchmark passes or the findings document a new mitigation path.
 
+17. **Task 16A (ACTIVE 2026-01-29 15:52Z) — Execute Tasks 3 & 4 from the ELBO decomposition plan:**
+    - Implement the `MosaicPosterior` parameterization switch (log-normal vs non-centered softplus), propagate the option through `VariationalMosaicSimulator`, diagnostics, and benchmark CLIs, and refresh the variational family note in `docs/plans/2026-01-29-vi-mosaic-design.md`.
+    - Add IWAE objective support to `poisson_elbo` using the new `log_prob_sigma`/`log_prior_sigma` helpers plus per-sample log-likelihood capture; expose `--elbo-objective` CLI knobs and serialize metadata/diagnostics.
+    - Capture fresh evidence: `plans/active/strat-vi-001/reports/2026-01-29T155200Z/noncentered/` (log_normal vs noncentered runs, observation_mean=25, k=4) and `.../iwae/` (≥8-sample IWAE sweep). Update `docs/findings.md` FND-VI-2026-01 and `docs/strategy/mainstrategy.md §9` with the outcomes.
+
 Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T104900Z/ next_action=delegate_task1_vi_elbo_decomposition
 Supervisor state: focus=STRAT-VI-001 state=planning dwell=2 artifacts=plans/active/strat-vi-001/reports/2026-01-29T093224Z/ next_action=delegate_task2_vi_observation_sweep
+
+Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T155200Z/ next_action=delegate_tasks3_4_vi_noncentered_iwae
