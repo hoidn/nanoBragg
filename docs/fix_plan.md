@@ -993,3 +993,5 @@ Phase R chunk 03 rerun (Attempt #84, STAMP 20251015T102654Z) passed with 43 pass
   * [2025-11-21] Attempt #0 — Result: ✅ Planning artifact created. Authored implementation plan under `plans/active/stagea-param-001.md` describing Phase A (design/spec), Phase B (Crystal parameterization and tests), and Phase C (Detector/Beam parameterization and experiment composition). No production code or tests changed; this loop establishes initiative scope, compliance matrix, and initial exit criteria. Next: execute Phase A checklist, including drafting `docs/architecture/parameterized_experiment.md` and selecting the ownership model (module promotion vs. separate parameter modules).
 
 ---
+
+Supervisor state: `focus=TEST-SUITE-TRIAGE-002` `state=ready_for_implementation` `dwell=0` `artifacts=docs/plans/2026-01-29-sprint5-suite-plan.md` `next_action=Delegate Sprint 5 guarded full-suite validation (slow chunk + suite)`
