@@ -197,6 +197,7 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - `docs/plans/2026-01-29-m2-amortized-multi-image.md` (M1: dataset + shared-posterior demo — ✅ complete)
   - `docs/plans/2026-01-29-m2-amortized-mosaicity.md` (M2: amortized encoder + diagnostics — ✅ code complete)
   - `docs/plans/2026-01-29-m2-amortized-scale-study.md` (Scale study: longer horizons + 50/100-image datasets — 🆕)
+  - `docs/plans/2026-01-29-m2-closeout.md` (Close-out narrative + Known Limitations entry — 🆕)
 - Goal: Advance the multi-image refinement track from the fixed shared-posterior Duck demo (delivered 2026-01-29 engineer loop) to an amortized encoder that predicts per-image mosaic spread with measurable gradient amplification as dataset size grows.
 - Dependencies: STRAT-VI-001/002 findings (posterior collapse), Duck dataset artifacts under `demo_inputs/duck_multi_image/`.
 - Artifacts Root: `plans/active/strat-m2-001/`
@@ -299,3 +300,4 @@ Scale-study stability plan execution (2026-01-29):
   - CUDA smoke artifacts prove the joint pipeline runs on GPU (`device=cuda`, loss decreases, per-image scales diverge) and documentation references the workflow. ✅
 
 Supervisor state: focus=STRAT-M3-001 state=evidence_captured dwell=2 artifacts=plans/active/strat-m3-001/reports/2026-01-29T210000Z/joint_gpu_smoke/ next_action=close
+Supervisor state: focus=STRAT-M2-001 state=ready_for_implementation dwell=0 artifacts=docs/plans/2026-01-29-m2-closeout.md next_action=closeout_docs_known_limitations
