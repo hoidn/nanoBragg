@@ -35,6 +35,11 @@ from nanobrag_torch.simulator import Simulator
 from nanobrag_torch.simulators.probabilistic import ProbabilisticSimulator
 from nanobrag_torch.simulators.variational_mosaic import VariationalMosaicSimulator
 from nanobrag_torch.vi.mosaic_posterior import MosaicPosterior
+from nanobrag_torch.vi.observation_utils import (
+    poisson_sample_observations,
+    C_DEFAULT_FLUENCE,
+    DEFAULT_FLUENCE_PHOTONS,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -57,7 +62,7 @@ DEFAULT_CELL_EDGE_A = 100.0
 
 def _build_configs(*, cell_edge_A, wavelength_A, distance_mm, pixel_size_mm,
                    fpixels, spixels, mosaic_spread_deg, mosaic_domains,
-                   mosaic_seed, device, dtype):
+                   mosaic_seed, device, dtype, fluence_photons=None):
     """Build Crystal, Detector, and config objects."""
     crystal_cfg = CrystalConfig(
         cell_a=cell_edge_A, cell_b=cell_edge_A, cell_c=cell_edge_A,
@@ -72,15 +77,21 @@ def _build_configs(*, cell_edge_A, wavelength_A, distance_mm, pixel_size_mm,
         fpixels=fpixels, spixels=spixels,
         pixel_size_mm=pixel_size_mm, distance_mm=distance_mm,
     )
-    beam_cfg = BeamConfig(wavelength_A=wavelength_A, fluence=1e28)
+    beam_cfg = BeamConfig(wavelength_A=wavelength_A, fluence=fluence_photons if fluence_photons is not None else 1e28)
     crystal = Crystal(config=crystal_cfg, device=device, dtype=dtype)
     detector = Detector(config=detector_cfg, device=device, dtype=dtype)
     return crystal, detector, crystal_cfg, beam_cfg
 
 
 def _generate_ground_truth(*, cell_edge_A, wavelength_A, distance_mm,
-                           pixel_size_mm, fpixels, spixels, device, dtype):
-    """Generate high-fidelity ground truth with 50 MC domains."""
+                           pixel_size_mm, fpixels, spixels, device, dtype,
+                           fluence_photons=None, observation_seed=None):
+    """Generate high-fidelity ground truth with 50 MC domains.
+
+    When *fluence_photons* is set, the raw intensities are rescaled and
+    Poisson-sampled to produce realistic integer counts.  Returns
+    ``(image_or_counts, obs_meta_or_None)``.
+    """
     crystal, detector, cfg, beam_cfg = _build_configs(
         cell_edge_A=cell_edge_A, wavelength_A=wavelength_A,
         distance_mm=distance_mm, pixel_size_mm=pixel_size_mm,
@@ -88,6 +99,7 @@ def _generate_ground_truth(*, cell_edge_A, wavelength_A, distance_mm,
         mosaic_spread_deg=TRUE_MOSAIC_SPREAD_DEG,
         mosaic_domains=50, mosaic_seed=MOSAIC_SEED,
         device=device, dtype=dtype,
+        fluence_photons=fluence_photons,
     )
     sim = Simulator(
         crystal=crystal, detector=detector,
@@ -97,7 +109,16 @@ def _generate_ground_truth(*, cell_edge_A, wavelength_A, distance_mm,
     result = sim.run()
     if isinstance(result, tuple):
         result = result[0]
-    return result.detach()
+    raw = result.detach()
+
+    if fluence_photons is not None:
+        scale = fluence_photons / C_DEFAULT_FLUENCE
+        counts, meta = poisson_sample_observations(raw, fluence_scale=scale, seed=observation_seed)
+        meta["fluence_photons"] = fluence_photons
+        meta["poisson"] = True
+        return counts, meta
+
+    return raw, None
 
 
 def _run_mc_refinement(*, iterations, cell_edge_A, wavelength_A, distance_mm,
@@ -290,6 +311,8 @@ def run_benchmark(
     kl_weight_start: float = 1.0,
     kl_weight_end: float = 1.0,
     kl_warmup_steps: int = 0,
+    fluence_photons: float | None = None,
+    observation_seed: int = 123,
 ) -> dict:
     """Run the full MC vs Analytic vs VI benchmark.
 
@@ -308,7 +331,11 @@ def run_benchmark(
         fpixels=fpixels, spixels=spixels,
     )
 
-    gt_image = _generate_ground_truth(device=dev, dtype=dtype, **geo_kwargs)
+    gt_image, obs_meta = _generate_ground_truth(
+        device=dev, dtype=dtype,
+        fluence_photons=fluence_photons, observation_seed=observation_seed,
+        **geo_kwargs,
+    )
 
     torch.manual_seed(7)
     mc_losses, mc_times, mc_spread = _run_mc_refinement(
@@ -357,6 +384,8 @@ def run_benchmark(
             **geo_kwargs,
         },
     }
+    if obs_meta is not None:
+        summary["observations"] = obs_meta
 
     if output_dir is not None:
         outdir = Path(output_dir)
@@ -388,6 +417,10 @@ def main():
     parser.add_argument("--kl-weight-start", type=float, default=1.0)
     parser.add_argument("--kl-weight-end", type=float, default=1.0)
     parser.add_argument("--kl-warmup-steps", type=int, default=0)
+    parser.add_argument("--fluence", type=float, default=None,
+                        help="Target fluence (photons/m²) for Poisson observation sampling")
+    parser.add_argument("--observation-seed", type=int, default=123,
+                        help="Seed for Poisson observation sampling")
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parent.parent
@@ -409,6 +442,8 @@ def main():
         kl_weight_start=args.kl_weight_start,
         kl_weight_end=args.kl_weight_end,
         kl_warmup_steps=args.kl_warmup_steps,
+        fluence_photons=args.fluence,
+        observation_seed=args.observation_seed,
     )
     return 0
 

@@ -1,42 +1,36 @@
-# Engineer Summary — STRAT-PROB-002 (Benchmark Realignment)
+# Engineer Summary — VI Poisson Likelihood Rescaling (Tasks 1–4)
+
+**Date:** 2026-01-29
+**Focus:** STRAT-VI-001, `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md`
+**Branch:** feature/spec-based-2
 
 ## What I Did
 
-Executed all 4 tasks from `docs/plans/2026-01-29-probabilistic-benchmark-realignment.md`:
+Executed Tasks 1–4 of the Poisson likelihood rescaling plan:
 
-1. **Task 1:** Added `BenchmarkScenario` dataclass, `resolve_scenario()` with CLI precedence, `--diagnose-gradients` flag, and CLI test coverage (4 tests).
-2. **Task 2:** Created `scripts/benchmark_probabilistic_presets.py` with 3 presets (default, hi_res_a, hi_res_b), wired `--scenario`, `--sweep-json`, `--dry-run` into CLI.
-3. **Task 3:** Ran hi_res_b benchmark (128×128, 30Å cell, 0.5Å λ), captured artifacts, updated strategy doc §4 and fix_plan.md, logged finding FND-PROB-2026-01.
-4. **Task 4:** Updated `plans/active/strat-prob-002/README.md` with preset table and report index, wrote report summary.
+1. **Task 1 — Observation sampling utilities:** Created `src/nanobrag_torch/vi/observation_utils.py` with `poisson_sample_observations()` that scales simulator intensities by a fluence factor and draws deterministic Poisson counts. Added two unit tests.
+
+2. **Task 2 — Benchmark wiring:** Updated `scripts/benchmark_vi_mosaic.py` with `--fluence` and `--observation-seed` CLI flags. Ground truth is Poisson-sampled when fluence is provided; `observations` metadata included in summary JSON. Updated smoke test to validate.
+
+3. **Task 3 — Diagnostics wiring:** Updated `scripts/analysis/vi_poisson_diagnostics.py` with matching CLI flags. Per-record metadata (`observation_seed`, `observation_mean_counts`, `observation_max_counts`) logged. Updated beta schedule test to validate.
+
+4. **Task 4 — Documentation:** Updated FND-VI-2026-01 in `docs/findings.md` with observation scale bug, `docs/strategy/mainstrategy.md` §9 with Poisson observation pipeline description, and `docs/fix_plan.md` item 12 + supervisor state.
 
 ## Files Changed
 
-| File | Action |
-|------|--------|
-| `scripts/benchmark_probabilistic.py` | Modified — scenario resolution, CLI overrides, gradient diagnostics, sweep, dry-run |
-| `scripts/benchmark_probabilistic_presets.py` | Created — BenchmarkScenario dataclass + PRESETS dict |
-| `scripts/presets/hi_res_probe.json` | Created — sweep config for hi-res probe |
-| `tests/scripts/__init__.py` | Created |
-| `tests/scripts/test_benchmark_probabilistic_cli.py` | Created — 4 CLI tests |
-| `docs/strategy/mainstrategy.md` | Modified — added hi_res_b measured results |
-| `docs/fix_plan.md` | Modified — marked tasks done, added new action for gradient investigation, updated status |
-| `docs/findings.md` | Modified — added FND-PROB-2026-01 |
-| `plans/active/strat-prob-002/README.md` | Modified — added preset table and report index |
-| `plans/active/strat-prob-002/reports/2026-01-29T062136Z/summary.md` | Updated with full results |
-| `plans/active/strat-prob-002/reports/2026-01-29T062136Z/*.{json,png}` | Copied from demo_outputs |
-| `demo_outputs/probabilistic_vs_mc_{summary.json,loss.png}` | Regenerated with hi_res_b data |
+- **Created:** `src/nanobrag_torch/vi/observation_utils.py`
+- **Modified:** `scripts/benchmark_vi_mosaic.py`, `scripts/analysis/vi_poisson_diagnostics.py`, `tests/test_vi_mosaic.py`, `docs/findings.md`, `docs/strategy/mainstrategy.md`, `docs/fix_plan.md`, `engineer_summary.md`
+- **Created dir:** `plans/active/strat-vi-001/reports/2026-01-29T084456Z/`
 
 ## Tests Run
 
-- `pytest tests/scripts/test_benchmark_probabilistic_cli.py -v` — **4/4 passed**
-- `pytest tests/test_probabilistic_simulator.py -v` — **5/5 passed**
-- `scripts/benchmark_probabilistic.py --iterations 100 --device cpu --scenario hi_res_b --diagnose-gradients` — completed, artifacts captured
-
-## Key Finding: FND-PROB-2026-01
-
-The probabilistic kernel produces effectively **zero gradients** (mean |grad| = 9.05e-22) for `mosaic_spread_deg` across all tested presets including hi-res. The analytic Gaussian envelope width σ ≫ |ΔQ| for all sampled pixels, making envelope ≈ 1.0 everywhere. Speedup was 2.1× (below 4× target).
+All 5 mapped tests pass:
+- `test_benchmark_script_smoke` ✅
+- `test_vi_diagnostics_beta_schedule` ✅
+- `test_poisson_observation_helper_reproducible` ✅
+- `test_poisson_observation_helper_mean_matches_lambda` ✅
+- `test_vi_diagnostics_snapshot` ✅
 
 ## Blockers / Open Questions
 
-1. **Gradient vanishing** remains the critical blocker — needs kernel-level investigation (broadening formula, sampling strategy, or parameterization change).
-2. **Speedup below target** — 2.1× vs 4× goal. MC baseline with 5 domains at 128×128 is already fast; advantage may require larger detectors or higher domain counts.
+- **Remaining:** Run canonical benchmark with `--fluence 1e13` and archive artifacts to confirm σ recovery. This is a long-running benchmark not executed in this turn. Supervisor should schedule as next action.

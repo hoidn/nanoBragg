@@ -30,6 +30,10 @@ from nanobrag_torch.simulator import Simulator
 from nanobrag_torch.simulators.variational_mosaic import VariationalMosaicSimulator
 from nanobrag_torch.vi.mosaic_posterior import MosaicPosterior
 from nanobrag_torch.vi.poisson_elbo import poisson_elbo, populate_grad_norms
+from nanobrag_torch.vi.observation_utils import (
+    poisson_sample_observations,
+    C_DEFAULT_FLUENCE,
+)
 
 TRUE_SPREAD_DEG = 2.0
 INIT_SPREAD_DEG = 0.5
@@ -47,6 +51,8 @@ def run_diagnostics(
     kl_weight_start: float = 1.0,
     kl_weight_end: float = 1.0,
     kl_warmup_steps: int = 0,
+    fluence_photons: float | None = None,
+    observation_seed: int = 123,
 ) -> list[dict]:
     """Run short VI refinement and capture diagnostics."""
     dev = torch.device(device)
@@ -68,6 +74,17 @@ def run_diagnostics(
         gt_image = sim_gt.run()
     if isinstance(gt_image, tuple):
         gt_image = gt_image[0]
+
+    obs_meta = None
+    if fluence_photons is not None:
+        scale = fluence_photons / C_DEFAULT_FLUENCE
+        gt_image, obs_meta = poisson_sample_observations(
+            gt_image.detach(), fluence_scale=scale, seed=observation_seed,
+        )
+        obs_meta["fluence_photons"] = fluence_photons
+        obs_meta["poisson"] = True
+        print(f"[obs] Poisson-sampled: mean={obs_meta['mean_counts']:.2f}, "
+              f"max={obs_meta['max_counts']:.0f}, fluence={fluence_photons:.1e}")
 
     # VI setup
     crystal_cfg_vi = CrystalConfig(
@@ -111,6 +128,10 @@ def run_diagnostics(
             rec["iteration"] = i
             rec["wall_seconds"] = dt
             rec["kl_weight"] = beta
+            if obs_meta is not None:
+                rec["observation_seed"] = obs_meta.get("seed")
+                rec["observation_mean_counts"] = obs_meta.get("mean_counts")
+                rec["observation_max_counts"] = obs_meta.get("max_counts")
             records.append(rec)
             print(f"[diag][{i:3d}] loss={diag.loss:.4e} ll={diag.log_likelihood:.4e} "
                   f"kl={diag.kl:.4e} sigma_mean={diag.sigma_mean_deg:.4f}° "
@@ -154,6 +175,10 @@ def main():
     parser.add_argument("--kl-weight-start", type=float, default=1.0)
     parser.add_argument("--kl-weight-end", type=float, default=1.0)
     parser.add_argument("--kl-warmup-steps", type=int, default=0)
+    parser.add_argument("--fluence", type=float, default=None,
+                        help="Target fluence (photons/m²) for Poisson observation sampling")
+    parser.add_argument("--observation-seed", type=int, default=123,
+                        help="Seed for Poisson observation sampling")
     args = parser.parse_args()
 
     outdir = args.outdir
@@ -171,6 +196,8 @@ def main():
         kl_weight_start=args.kl_weight_start,
         kl_weight_end=args.kl_weight_end,
         kl_warmup_steps=args.kl_warmup_steps,
+        fluence_photons=args.fluence,
+        observation_seed=args.observation_seed,
     )
     return 0
 

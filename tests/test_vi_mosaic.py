@@ -373,10 +373,15 @@ def test_vi_diagnostics_beta_schedule(tmp_path):
         iterations=4, capture_stride=1, k_samples=2,
         fpixels=8, spixels=8, output_dir=str(outdir),
         kl_weight_start=0.2, kl_weight_end=1.0, kl_warmup_steps=2,
+        fluence_photons=1e13, observation_seed=99,
     )
     betas = [r["kl_weight"] for r in records]
     assert betas[0] == pytest.approx(0.2)
     assert betas[-1] == pytest.approx(1.0)
+    # Observation metadata should be present
+    assert "observation_mean_counts" in records[0]
+    assert "observation_seed" in records[0]
+    assert records[0]["observation_seed"] == 99
 
 
 def test_kl_schedule_hits_start_mid_end():
@@ -422,12 +427,16 @@ def test_benchmark_script_smoke(tmp_path):
         output_dir=str(tmp_path),
         fpixels=4,
         spixels=4,
+        fluence_photons=1e13,
+        observation_seed=321,
     )
     assert (tmp_path / "vi_vs_mc_loss.png").exists(), "Missing PNG artifact"
     assert (tmp_path / "vi_vs_mc_summary.json").exists(), "Missing JSON artifact"
     assert "mc_baseline" in result
     assert "analytic" in result
     assert "vi" in result
+    assert result["observations"]["poisson"] is True
+    assert result["observations"]["fluence_photons"] == pytest.approx(1e13)
 
 
 # ---------------------------------------------------------------------------
@@ -466,6 +475,27 @@ def test_return_components_diagnostics():
     d = diag.to_dict()
     assert "simulated" not in d
     assert "log_likelihood" in d
+
+
+def test_poisson_observation_helper_reproducible():
+    """Same seed produces identical Poisson counts."""
+    from nanobrag_torch.vi.observation_utils import poisson_sample_observations
+
+    image = torch.tensor([[12.3, 0.7], [3.3, 45.1]], dtype=torch.float64)
+    counts1, meta1 = poisson_sample_observations(image, fluence_scale=1.0, seed=123)
+    counts2, meta2 = poisson_sample_observations(image, fluence_scale=1.0, seed=123)
+    assert torch.equal(counts1, counts2)
+    assert meta1["max_counts"] == counts1.max().item()
+
+
+def test_poisson_observation_helper_mean_matches_lambda():
+    """Mean of Poisson samples should approximate the rate parameter."""
+    from nanobrag_torch.vi.observation_utils import poisson_sample_observations
+
+    image = torch.full((32, 32), 0.25, dtype=torch.float64)
+    counts, meta = poisson_sample_observations(image, fluence_scale=1.0, seed=7)
+    assert abs(counts.double().mean().item() - 0.25) < 0.05
+    assert meta["mean_counts"] == pytest.approx(counts.double().mean().item())
 
 
 def test_vi_diagnostics_snapshot(tmp_path):

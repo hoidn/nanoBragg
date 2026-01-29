@@ -204,3 +204,39 @@ A 25-iteration diagnostic run with β=0.2→1.0 over 40 warmup steps shows
 σ_mean climbing monotonically from 0.49° → 0.81° (still accelerating at
 β=0.68). Longer runs with the full warmup are expected to recover σ>1.5°.
 Evidence: `plans/active/strat-vi-001/reports/2026-01-29T082528Z/`.
+
+**Long-run KL annealing benchmark (2026-01-29, Task 5):** Extended runs
+did **not** reach the 1.5° target:
+- **80-iter diagnostics** (32×32, β=0.2→1.0, warmup=60): σ_mean reached
+  1.25° at iter 79 and was still climbing, but did not cross 1.5°.
+  The KL term dropped from 1.45 → 0.056 while log-likelihood stayed
+  nearly flat (~−155.7), confirming KL suppression works but likelihood
+  signal remains weak.
+- **150-iter canonical benchmark** (64×64, β=0.2→1.0, warmup=120):
+  VI final σ = 0.148° (collapsed). The larger grid and slower warmup
+  schedule prevented recovery within 150 iterations.
+- **MC baseline** on the same 150-iter run: final spread = 1.46°.
+
+**Interpretation:** KL annealing improves σ recovery rate on small grids
+but the effect does not transfer to the canonical 64×64 benchmark at
+150 iterations. The likelihood signal is fundamentally too weak relative
+to KL at this grid size. Next steps should investigate: (a) likelihood
+rescaling / per-pixel normalization, (b) longer warmup schedules
+(warmup >> iterations), or (c) alternative ELBO formulations.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T083412Z/`.
+
+**Poisson observation pipeline (2026-01-29):** Implemented
+`src/nanobrag_torch/vi/observation_utils.py` with
+`poisson_sample_observations()` to rescale simulator intensities from the
+C-default fluence (~1.26e28 photons/m²) to a realistic target (default
+1e13) and draw integer counts via `torch.poisson` with deterministic
+seeding.  Both `benchmark_vi_mosaic.py` and `vi_poisson_diagnostics.py`
+now accept `--fluence` (float, default None = raw intensities) and
+`--observation-seed` (int, default 123) CLI flags.  When `--fluence 1e13`
+is supplied, the ground-truth image is Poisson-sampled and the resulting
+counts (mean typically 0–100 range) are passed to `poisson_elbo`,
+restoring the expected curvature in the Poisson log-likelihood.  Summary
+metadata (`observations.poisson`, `observations.fluence_photons`,
+`observations.mean_counts`, `observations.max_counts`) is included in the
+benchmark JSON and diagnostics records.  Plan:
+`docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md`.
