@@ -252,3 +252,130 @@ rounds to zero. **Next action:** fix the fluence scaling to normalize
 intensities to their actual range before applying the target count level
 (e.g., `counts = image / image.max() * target_max_counts`), then re-run.
 Evidence: `plans/active/strat-vi-001/reports/2026-01-29T085512Z/`.
+
+**Upcoming mitigation (Task 24 — Prior schedule + multi-geometry, 2026-01-29):**
+We are drafting `docs/plans/2026-01-29-vi-prior-geometry.md` to explore
+informative prior schedules (clamping σ near the ground truth early,
+then releasing it) while sweeping detector sizes (32×32/64×64/128×128).
+The plan adds a `LinearPriorSchedule`, threads prior knobs through the
+diagnostics + benchmark CLIs, and captures new evidence bundles under
+`plans/active/strat-vi-001/reports/<ts>/prior_schedule/` plus a follow-on
+150-iteration benchmark (`prior_benchmark/`). Success criteria remain the
+canonical ≥1.5° σ recovery; otherwise, the findings will document why
+priors/high-resolution geometry still collapse and point to the next
+mitigation (e.g., multi-scale crystals or richer posterior families).
+
+**Adaptive observation scaling (2026-01-29, Tasks 7–8):**
+`poisson_sample_observations()` now supports adaptive auto-normalization.
+When `fluence_scale=None` (the new default path), the helper computes
+`scale = target_mean_counts / ref_stat` where `ref_stat` is the image
+mean, max, or 99th-percentile (configurable via `normalization`).  This
+replaces the broken physical-fluence divisor with a data-driven scale.
+Both CLI scripts expose `--observation-mean` (default 25.0) and
+`--observation-normalization` (`mean`/`max`/`p99`); `--fluence` is
+retained as a deprecated alias.  Rich metadata (`scale_mode`, `raw_mean`,
+`raw_max`, `target_mean_counts`, `scale`) is emitted in summary JSON and
+per-record diagnostics.  **Canonical benchmark with adaptive scaling (2026-01-29, Task 9):**
+Ran the full 150-iteration benchmark with adaptive Poisson scaling:
+```
+python scripts/benchmark_vi_mosaic.py --iterations 150 \
+  --observation-mean 25.0 --observation-normalization mean \
+  --observation-seed 321 --kl-weight-start 0.2 --kl-weight-end 1.0 \
+  --kl-warmup-steps 120 --outdir plans/active/strat-vi-001/reports/2026-01-29T104900Z/benchmark
+```
+Observation stats: raw_mean=0.810, scale=30.88, mean_counts=24.97, max_counts=234.
+Results:
+- **VI σ final: 0.103°** (collapsed; target 2.0°; **FAILED ≥1.5° criterion**)
+- **MC σ final: 0.024°**
+- **Analytic σ final: 3.214°** (overshoots)
+- VI ELBO: −79386 → −79818 (improving but posterior collapsed)
+- MC loss: 2278.1 → 2277.2
+
+Adaptive scaling successfully produced non-zero Poisson observations (mean≈25
+counts), but the VI posterior still collapsed to near-zero σ. The likelihood
+signal, while now non-degenerate, remains insufficient to counteract KL
+regularisation at 64×64 grid size with 150 iterations.
+
+**Next diagnostic:** decompose per-iteration log-likelihood vs KL to determine
+whether the likelihood gradient magnitude scales with observation count level;
+consider (a) increasing `--observation-mean` to 100–1000, (b) using a
+non-centered posterior parameterization, or (c) alternative KL schedules.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T104900Z/`.
+
+**Observation-count sweep (ELBO decomposition Task 2, 2026-01-29):**
+`run_observation_sweep()` added to `scripts/analysis/vi_poisson_diagnostics.py`
+with CLI flags `--observation-mean-grid` and `--observation-grid-outdir`. Sweep
+over means=[25, 100, 300, 1000] (25 iters, 32×32, k=4) confirms that likelihood
+gradient magnitude scales linearly with observation count (|∇μ_ll|: 12→446) while
+KL gradient is constant (~1.12), producing gradient ratios of 11×→400×. However,
+σ collapses to ~0.32° regardless of count level. The collapse is structural, not
+a gradient-magnitude problem — the Poisson likelihood landscape may be locally
+flat near σ≈0.3° for this geometry. Next actions: (a) non-centered posterior
+parameterization (ELBO decomp Task 3), (b) IWAE objective (Task 4).
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T093224Z/observation_sweep/`.
+
+**Non-centered posterior + IWAE (2026-01-29):** Added two new VI knobs:
+(a) `--posterior-parameterization noncentered` uses a softplus-based sampling
+path that may improve optimization geometry for collapsed posteriors;
+(b) `--elbo-objective iwae` computes the importance-weighted autoencoder
+bound, tightening the evidence estimate with more samples.  Both are
+wired through `vi_poisson_diagnostics.py` and `benchmark_vi_mosaic.py`
+(CLI flags + JSON metadata).  **Evidence (25 iters, 32×32, k=4,
+observation_mean=25):** Noncentered and log-normal posteriors both collapse
+to σ≈0.32° (target 2.0°), with near-identical gradient norms (|∇μ|≈10.5).
+IWAE (k=8) yields σ=0.34° with smaller but more balanced gradients
+(|∇μ|=1.5, |∇ρ|=1.1).  Neither intervention resolves the structural σ
+collapse at 25 iterations on 32×32 detector — the barrier is in the
+likelihood landscape geometry, not parameterization or objective choice.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T155200Z/`.
+
+**Observation-scale parity (2026-01-29, Task 17):** `poisson_elbo()` now
+accepts `observation_scale` and multiplies simulator predictions by the
+adaptive scale before computing Poisson log-likelihood, ensuring MC/analytic
+baselines and VI operate on the same scaled-count space. MC and analytic
+refinements also scale predictions by `obs_meta["scale"]` before MSE loss.
+All diagnostics and benchmark scripts propagate scale end-to-end.
+Plan: `docs/plans/2026-01-29-vi-observation-scale-parity.md`.
+**Scaled benchmark rerun (2026-01-29, Task 4):** Ran the canonical
+150-iteration benchmark with observation-scale parity:
+```
+python scripts/benchmark_vi_mosaic.py --iterations 150 \
+  --observation-mean 25.0 --observation-normalization mean \
+  --observation-seed 321 --kl-weight-start 0.2 --kl-weight-end 1.0 \
+  --kl-warmup-steps 120 --outdir plans/active/strat-vi-001/reports/2026-01-29T193000Z/scale_parity
+```
+Observation stats: scale=30.88, mean_counts=24.97, max_counts=234.
+Results:
+- **MC σ final: 1.517°** (meets ≥1.5° criterion for the first time on scaled data)
+- **VI σ final: 0.086°** (collapsed; **FAILED ≥1.5° criterion**)
+- **Analytic σ final: 2.866°** (overshoots)
+
+Observation-scale parity correctly aligns all three pipelines on the same
+count space. MC now recovers σ≥1.5°, confirming the scaling fix benefits
+MSE-based refinement. VI's structural posterior collapse persists — the
+Poisson likelihood landscape is locally flat near σ≈0.1–0.3° for this
+geometry regardless of scale. **Conclusion:** scale parity is necessary
+but not sufficient for VI σ recovery. Next mitigation: evaluate
+alternative posterior families, longer training, or temperature-scaled
+likelihoods.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T193000Z/scale_parity/`.
+
+**Extended temperature × IWAE follow-up (2026-01-29, Task 21):**
+Ran hotter temperature sweep (T∈{1,2,4,8}) with both standard ELBO (k=4)
+and IWAE objective (k=8), 25 iterations, 32×32, obs_mean=25. Results:
+- Standard ELBO: σ≈0.81° for all T. Gradient magnitudes scale linearly
+  (|∇μ|: 20→160) but σ is unchanged.
+- IWAE+temperature: σ≈0.81° for all T. IWAE produces higher |∇ρ| at
+  same T (e.g., |∇ρ|=101 at T=8 vs 15 for standard) but no σ improvement.
+- No configuration reached σ≥1.2°; the 150-iter canonical benchmark was
+  NOT triggered.
+
+**Conclusion:** The VI σ plateau at ~0.81° (25 iters) is a structural
+landscape issue that cannot be resolved by temperature scaling, IWAE
+objectives, non-centered parameterizations, or observation-count
+increases. The Poisson likelihood is locally flat near σ≈0.3–0.8° for
+this geometry. Remaining mitigations to investigate: (a) prior schedule
+(informative prior centered near true σ), (b) multi-scale geometry
+(larger detector or off-axis reflections where likelihood curvature is
+non-zero), (c) alternative variational families (normalizing flows).
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T103412Z/temperature_sweep_hot/`.
