@@ -1,0 +1,16 @@
+{
+  "channels": [
+    "https://conda.anaconda.org/conda-forge/"
+  ],
+  "description": "C++11/14/17 std::expected with functional-style extensions",
+  "dev_url": "https://github.com/TartanLlama/expected",
+  "doc_url": "https://github.com/TartanLlama/expected#readme",
+  "extra": {
+    "flow_run_id": "azure_20250422.3.1",
+    "remote_url": "https://github.com/conda-forge/cpp-expected-feedstock",
+    "sha": "638ee3d14c471f9d2d0b38c9f22070faad21f459"
+  },
+  "home": "https://github.com/TartanLlama/expected",
+  "license": "CC0-1.0",
+  "summary": "C++11/14/17 std::expected with functional-style extensions"
+}

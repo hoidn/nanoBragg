@@ -1,0 +1,17 @@
+{
+  "arch": "x86_64",
+  "build": "h07f6e7f_1",
+  "build_number": 1,
+  "depends": [
+    "__glibc >=2.17,<3.0.a0",
+    "libgcc >=13",
+    "libstdcxx >=13"
+  ],
+  "license": "MIT",
+  "license_family": "MIT",
+  "name": "fmt",
+  "platform": "linux",
+  "subdir": "linux-64",
+  "timestamp": 1742833273257,
+  "version": "11.1.4"
+}

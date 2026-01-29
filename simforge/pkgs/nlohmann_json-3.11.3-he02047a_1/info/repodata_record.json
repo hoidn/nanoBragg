@@ -1,0 +1,23 @@
+{
+    "arch": "x86_64",
+    "build": "he02047a_1",
+    "build_number": 1,
+    "channel": "https://conda.anaconda.org/conda-forge",
+    "depends": [
+        "__glibc >=2.17,<3.0.a0",
+        "libgcc-ng >=12",
+        "libstdcxx-ng >=12"
+    ],
+    "fn": "nlohmann_json-3.11.3-he02047a_1.conda",
+    "license": "MIT",
+    "license_family": "MIT",
+    "md5": "e46f7ac4917215b49df2ea09a694a3fa",
+    "name": "nlohmann_json",
+    "platform": "linux",
+    "sha256": "ce4bcced4f8eea71b7cac8bc3daac097abf7a5792f278cd811dedada199500c1",
+    "size": 122743,
+    "subdir": "linux-64",
+    "timestamp": 1723652407663,
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/nlohmann_json-3.11.3-he02047a_1.conda",
+    "version": "3.11.3"
+}

@@ -1,0 +1,25 @@
+{
+    "arch": "x86_64",
+    "build": "had4a41a_0",
+    "build_number": 0,
+    "channel": "https://conda.anaconda.org/conda-forge",
+    "depends": [
+        "__glibc >=2.17,<3.0.a0",
+        "libmamba 2.1.1 h430c389_0",
+        "reproc >=14.2,<15.0a0",
+        "reproc-cpp >=14.2,<15.0a0",
+        "zstd >=1.5.6,<1.6.0a0"
+    ],
+    "fn": "mamba-2.1.1-had4a41a_0.conda",
+    "license": "BSD-3-Clause",
+    "license_family": "BSD",
+    "md5": "a42dba86ec002c01ccf9e7b6e005bfc1",
+    "name": "mamba",
+    "platform": "linux",
+    "sha256": "2146a0dd88021492b07f754d7f7521c5e9434e2ff1397a3c247562181e7fcd54",
+    "size": 461752,
+    "subdir": "linux-64",
+    "timestamp": 1746517676854,
+    "url": "https://conda.anaconda.org/conda-forge/linux-64/mamba-2.1.1-had4a41a_0.conda",
+    "version": "2.1.1"
+}

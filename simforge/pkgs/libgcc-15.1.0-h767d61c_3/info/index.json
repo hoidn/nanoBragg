@@ -1,0 +1,19 @@
+{
+  "arch": "x86_64",
+  "build": "h767d61c_3",
+  "build_number": 3,
+  "constrains": [
+    "libgcc-ng ==15.1.0=*_3",
+    "libgomp 15.1.0 h767d61c_3"
+  ],
+  "depends": [
+    "__glibc >=2.17,<3.0.a0",
+    "_openmp_mutex >=4.5"
+  ],
+  "license": "GPL-3.0-only WITH GCC-exception-3.1",
+  "name": "libgcc",
+  "platform": "linux",
+  "subdir": "linux-64",
+  "timestamp": 1750808216066,
+  "version": "15.1.0"
+}

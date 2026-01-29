@@ -1,0 +1,15 @@
+{
+  "pybind11_abi": "4",
+  "spdlog": "1.15",
+  "target_platform": "linux-64",
+  "c_stdlib_version": "2.17",
+  "cxx_compiler": "gxx",
+  "c_stdlib": "sysroot",
+  "cxx_compiler_version": "13",
+  "python": "3.12.* *_cpython",
+  "fmt": "11.1",
+  "zstd": "1.5.6",
+  "channel_targets": "conda-forge main",
+  "openssl": "3",
+  "__glibc": "__glibc >=2.17,<3.0.a0"
+}

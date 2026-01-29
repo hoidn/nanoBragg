@@ -1,0 +1,6 @@
+{
+  "target_platform": "linux-64",
+  "triplet": "x86_64-conda-linux-gnu",
+  "channel_targets": "conda-forge main",
+  "cross_target_platform": "linux-64"
+}

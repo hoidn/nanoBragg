@@ -1,0 +1,15 @@
+{
+  "channels": [
+    "https://conda.anaconda.org/conda-forge/"
+  ],
+  "description": "libsolv, a free package dependency solver using a satisfiability algorithm.",
+  "dev_url": "https://github.com/openSUSE/libsolv",
+  "extra": {
+    "flow_run_id": "azure_20250715.4.1",
+    "remote_url": "https://github.com/conda-forge/libsolv-feedstock",
+    "sha": "b8e2f203ffd1411ca2971d885a0d945dc946be79"
+  },
+  "home": "https://github.com/openSUSE/libsolv",
+  "license": "BSD-3-Clause",
+  "summary": "Library for solving packages and reading repositories"
+}

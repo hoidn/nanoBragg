@@ -1,0 +1,15 @@
+{
+  "arch": "x86_64",
+  "build": "h8f9b012_3",
+  "build_number": 3,
+  "depends": [
+    "__glibc >=2.17,<3.0.a0",
+    "libgcc 15.1.0 h767d61c_3"
+  ],
+  "license": "GPL-3.0-only WITH GCC-exception-3.1",
+  "name": "libstdcxx",
+  "platform": "linux",
+  "subdir": "linux-64",
+  "timestamp": 1750808251302,
+  "version": "15.1.0"
+}

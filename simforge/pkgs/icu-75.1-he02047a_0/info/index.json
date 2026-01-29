@@ -1,0 +1,16 @@
+{
+  "arch": "x86_64",
+  "build": "he02047a_0",
+  "build_number": 0,
+  "depends": [
+    "__glibc >=2.17,<3.0.a0",
+    "libgcc-ng >=12",
+    "libstdcxx-ng >=12"
+  ],
+  "license": "MIT",
+  "name": "icu",
+  "platform": "linux",
+  "subdir": "linux-64",
+  "timestamp": 1720853576813,
+  "version": "75.1"
+}

@@ -1,0 +1,25 @@
+{
+  "paths": [
+    {
+      "_path": "bin/mamba",
+      "path_type": "hardlink",
+      "sha256": "4e4a7f1767173eff14eb2a48551d33c0a9e0f78b2f7b62b4f61728783aa48598",
+      "size_in_bytes": 1663168
+    },
+    {
+      "_path": "condabin/mamba",
+      "path_type": "softlink",
+      "sha256": "4e4a7f1767173eff14eb2a48551d33c0a9e0f78b2f7b62b4f61728783aa48598",
+      "size_in_bytes": 1663168
+    },
+    {
+      "_path": "etc/profile.d/mamba.sh",
+      "file_mode": "text",
+      "path_type": "hardlink",
+      "prefix_placeholder": "/home/conda/feedstock_root/build_artifacts/mamba-split_1746515836725/_h_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold",
+      "sha256": "e821954012855db1074ca274fb53daa5de50eb74627eaebaa9040418f997feaf",
+      "size_in_bytes": 2848
+    }
+  ],
+  "paths_version": 1
+}
