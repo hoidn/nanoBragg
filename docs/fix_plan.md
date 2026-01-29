@@ -119,4 +119,10 @@ Supervisor state: focus=STRAT-VI-001 state=evidence_captured dwell=0 artifacts=p
 20. **Task 18 — Likelihood-temperature sweep (NEW 2026-01-29 10:22Z):** Execute `docs/plans/2026-01-29-vi-likelihood-temperature.md` to add a `likelihood_temperature` knob to `poisson_elbo`, surface it through diagnostics/benchmark CLIs, and run temperature sweeps (e.g., T∈{1,2,4}) that quantify how hotter likelihoods change σ recovery and gradient ratios. Archive artifacts under `plans/active/strat-vi-001/reports/<ts>/temperature_sweep/`, update `docs/findings.md` (FND-VI-2026-01) and `docs/strategy/mainstrategy.md §9` with conclusions, and refresh `input.md` plus `docs/fix_plan.md` once evidence lands.
 
 Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/ next_action=delegate_task18_likelihood_temperature_sweep
-Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/ next_action=delegate_task18_likelihood_temperature_sweep 
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/ next_action=delegate_task18_likelihood_temperature_sweep
+
+21. **Task 18 evidence (COMPLETED 2026-01-29 10:22Z):** Likelihood-temperature plumbing plus the baseline sweep (T∈{1,2,4}) shipped and artifacts live under `plans/active/strat-vi-001/reports/2026-01-29T102251Z/temperature_sweep/`. σ plateaued at ≈0.81° for all temperatures, so the next step is to explore hotter temperatures and combine with the IWAE objective before escalating to longer benchmarks.
+
+22. **Task 21 (NEW 2026-01-29 21:30Z) — Temperature × IWAE follow-up:** Execute `docs/plans/2026-01-29-vi-temperature-iwae-followup.md` to (a) run an extended T∈{1,2,4,8} sweep, (b) repeat the sweep with `objective="iwae"` and k=8, (c) trigger a canonical benchmark only if σ≥1.2° shows up in diagnostics, and (d) update docs/findings/fix-plan with the new evidence bundle. Artifacts should live under `plans/active/strat-vi-001/reports/<ts>/temperature_sweep_hot/` (and `/iwae`).
+
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/temperature_sweep/ next_action=delegate_task21_temperature_iwae_followup
