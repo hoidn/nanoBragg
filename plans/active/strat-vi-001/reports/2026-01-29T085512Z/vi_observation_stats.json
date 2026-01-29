@@ -1,0 +1,15 @@
+{
+  "sigma_final_deg": 7.48981981174861,
+  "sigma_target_deg": 2.0,
+  "mc_sigma_final_deg": 1.354402780532837,
+  "vi_loss_first": 277.3554382324219,
+  "vi_loss_last": 93.30860137939453,
+  "mc_loss_first": 0.01882256008684635,
+  "mc_loss_last": 0.01746177300810814,
+  "mean_counts": 0.0,
+  "max_counts": 0.0,
+  "fluence_photons": 10000000000000.0,
+  "fluence_scale": 7.94079248018965e-16,
+  "observation_seed": 321,
+  "finding": "Poisson sampling with fluence_scale=7.9e-16 produced all-zero observations (mean_counts=0). VI diverged to 7.49 deg. The fluence scaling factor is too aggressive \u2014 intensities * 7.9e-16 rounds to zero before Poisson sampling."
+}

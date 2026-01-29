@@ -1,4 +1,4 @@
-# Engineer Summary — VI Poisson Likelihood Rescaling (Tasks 1–4)
+# Engineer Summary — VI Poisson Benchmark (Tasks 5–6)
 
 **Date:** 2026-01-29
 **Focus:** STRAT-VI-001, `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md`
@@ -6,31 +6,32 @@
 
 ## What I Did
 
-Executed Tasks 1–4 of the Poisson likelihood rescaling plan:
+Executed Tasks 5–6 of the Poisson likelihood rescaling plan:
 
-1. **Task 1 — Observation sampling utilities:** Created `src/nanobrag_torch/vi/observation_utils.py` with `poisson_sample_observations()` that scales simulator intensities by a fluence factor and draws deterministic Poisson counts. Added two unit tests.
+1. **Task 5 — Canonical benchmark:** Ran `scripts/benchmark_vi_mosaic.py --iterations 150 --fluence 1e13 --observation-seed 321 --kl-weight-start 0.2 --kl-weight-end 1.0 --kl-warmup-steps 120` on CPU (64x64 detector). Archived PNG/JSON/stats under `plans/active/strat-vi-001/reports/2026-01-29T085512Z/`.
 
-2. **Task 2 — Benchmark wiring:** Updated `scripts/benchmark_vi_mosaic.py` with `--fluence` and `--observation-seed` CLI flags. Ground truth is Poisson-sampled when fluence is provided; `observations` metadata included in summary JSON. Updated smoke test to validate.
+2. **Task 6 — Documentation:** Updated FND-VI-2026-01 in `docs/findings.md`, `docs/strategy/mainstrategy.md` §9, and `docs/fix_plan.md` STRAT-VI-001 with the benchmark outcome.
 
-3. **Task 3 — Diagnostics wiring:** Updated `scripts/analysis/vi_poisson_diagnostics.py` with matching CLI flags. Per-record metadata (`observation_seed`, `observation_mean_counts`, `observation_max_counts`) logged. Updated beta schedule test to validate.
+## Unexpected Finding
 
-4. **Task 4 — Documentation:** Updated FND-VI-2026-01 in `docs/findings.md` with observation scale bug, `docs/strategy/mainstrategy.md` §9 with Poisson observation pipeline description, and `docs/fix_plan.md` item 12 + supervisor state.
+The Poisson observation pipeline produced **all-zero observations** (mean_counts=0, max_counts=0). The fluence_scale = 1e13 / BeamConfig().fluence = 7.9e-16. Raw simulator intensities multiplied by this factor round to zero before `torch.poisson`. VI diverged to sigma=7.49 deg (target 2.0 deg); MC reached 1.35 deg.
+
+**Root cause:** The fluence scaling formula assumes raw intensities are proportional to BeamConfig().fluence (~1.26e28), but they are small dimensionless values. The normalization denominator is incorrect.
 
 ## Files Changed
 
-- **Created:** `src/nanobrag_torch/vi/observation_utils.py`
-- **Modified:** `scripts/benchmark_vi_mosaic.py`, `scripts/analysis/vi_poisson_diagnostics.py`, `tests/test_vi_mosaic.py`, `docs/findings.md`, `docs/strategy/mainstrategy.md`, `docs/fix_plan.md`, `engineer_summary.md`
-- **Created dir:** `plans/active/strat-vi-001/reports/2026-01-29T084456Z/`
+- `docs/findings.md` — appended Poisson benchmark result to FND-VI-2026-01
+- `docs/strategy/mainstrategy.md` — appended benchmark result and next action to §9
+- `docs/fix_plan.md` — updated STRAT-VI-001 Task 12 status and supervisor state
+- `plans/active/strat-vi-001/reports/2026-01-29T085512Z/` — new artifact directory with benchmark_fluence_summary.md, vi_observation_stats.json, summary.md, and benchmark/ subdirectory
+- `demo_outputs/vi_vs_mc_loss.png` — refreshed
+- `demo_outputs/vi_vs_mc_summary.json` — refreshed
 
 ## Tests Run
 
-All 5 mapped tests pass:
-- `test_benchmark_script_smoke` ✅
-- `test_vi_diagnostics_beta_schedule` ✅
-- `test_poisson_observation_helper_reproducible` ✅
-- `test_poisson_observation_helper_mean_matches_lambda` ✅
-- `test_vi_diagnostics_snapshot` ✅
+- `test_benchmark_script_smoke` PASSED
+- `test_vi_diagnostics_snapshot` PASSED
 
-## Blockers / Open Questions
+## Blockers
 
-- **Remaining:** Run canonical benchmark with `--fluence 1e13` and archive artifacts to confirm σ recovery. This is a long-running benchmark not executed in this turn. Supervisor should schedule as next action.
+- **Blocker:** Fluence scaling formula in `observation_utils.py` needs correction — normalize intensities to actual range before applying target count level. Supervisor state set to `blocked` with `next_action=fix_fluence_scaling_formula`.

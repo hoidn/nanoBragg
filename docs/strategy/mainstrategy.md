@@ -240,3 +240,15 @@ metadata (`observations.poisson`, `observations.fluence_photons`,
 `observations.mean_counts`, `observations.max_counts`) is included in the
 benchmark JSON and diagnostics records.  Plan:
 `docs/plans/2026-01-29-vi-poisson-likelihood-rescaling.md`.
+
+**Canonical Poisson benchmark result (2026-01-29, 150 iters, 64×64):**
+Ran `--iterations 150 --fluence 1e13 --observation-seed 321 --kl-weight-start 0.2 --kl-weight-end 1.0 --kl-warmup-steps 120`.
+Result: fluence_scale=7.9e-16 produced all-zero Poisson observations
+(mean_counts=0, max_counts=0). VI diverged to σ=7.49° (target 2.0°);
+MC reached 1.35°. The fluence normalization formula divides by
+BeamConfig().fluence (~1.26e28), but raw simulator intensities are not in
+photon-count space — they are small dimensionless values, so the product
+rounds to zero. **Next action:** fix the fluence scaling to normalize
+intensities to their actual range before applying the target count level
+(e.g., `counts = image / image.max() * target_max_counts`), then re-run.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T085512Z/`.
