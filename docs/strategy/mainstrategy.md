@@ -10,69 +10,95 @@ The near-term scientific objective is to replace Monte Carlo mosaic sampling wit
 This strategy is anchored in the design decisions documented in:
 - `docs/plans/2026-01-29-probabilistic-simulator-design.md`
 - `docs/plans/2026-01-29-probabilistic-simulator-implementation.md`
+- SUPERVISOR: add plans as the project progresses
 
-## Design Anchors (Non-Negotiables)
-- **Drop-in API:** The analytic model is exposed as `ProbabilisticSimulator`, a subclass of `Simulator`, with identical configuration semantics. This is essential for clean A/B comparisons and community adoption. The numeric nuisance parameter `mosaic_domains` is treated as infinite (ignored) without altering physical parameter meaning.
-- **Analytic Mosaic Envelope:** Mosaicity is modeled as an angular Gaussian in rotation space; its effect on reciprocal space broadening scales with |q|. The kernel uses `sigma = |q| * tan(mosaic_spread_rad) + eps`, yielding resolution-dependent blur that matches rotational mosaic physics.
-- **Full Metric Geometry:** Reciprocal mismatch is computed via the full metric tensor using rotated reciprocal vectors: `dQ = dh*a* + dk*b* + dl*c*`, `dr2 = dot(dQ, dQ)`. This preserves correctness for triclinic and non-orthogonal unit cells, preventing demo fragility.
-- **Stash-and-Patch Run Semantics:** The analytic simulator generates geometry with `mosaic_domains=1` and `mosaic_spread=0` while retaining the true spread for the analytic envelope. This prevents double counting and isolates the probabilistic model from Monte Carlo mechanics.
 
-These anchors are not implementation details; they define the public scientific identity of the simulator and must remain stable throughout the 3–6 month horizon.
+Here is a refined version of the strategy document, elevated to the tone of a Technical Lead/Product Owner briefing. It emphasizes **strategic intent, scientific ROI, and risk management** while retaining the specific technical mandates required for execution.
 
-## Scientific Narrative
-The simulator becomes a probabilistic likelihood engine: given a distribution over orientations, it returns a diffraction image without stochastic sampling noise. This supports deterministic gradients and enables inference workflows (including variational methods) without embedding the optimizer in the simulator. The narrative emphasizes that the algorithm is physically grounded (rotation-induced broadening), not a neural approximation. The analytic model is not a different physical regime; it is the closed-form limit of the existing Monte Carlo approach.
+***
 
-## Evidence Strategy (Demonstration-First)
-The strategy prioritizes a single, decisive benchmark that is PI-facing and reproducible:
-- **Benchmark Domain:** Diffuse, high-mosaicity synthetic images (derived from `scripts/refinement_demo_diffuse.py`).
-- **Baseline:** Monte Carlo simulation with `mosaic_domains=5` for refinement, ground truth generated with `mosaic_domains=50`.
-- **Innovation:** Analytic probabilistic simulation using `ProbabilisticSimulator` with identical physical parameters.
-- **Primary Artifact:** Loss vs wall-clock time plot with both curves. The analytic curve must reach lower loss faster and with smoother monotonic convergence.
+# Strategy: Probabilistic Forward Modeling (Horizon: 3–6 Months)
 
-The benchmark script is the public-facing evidence and should be usable as a single command without data wrangling. Its existence is a success condition, not a convenience.
+**Document ID:** STRAT-2026-01-PROB
+**Status:** Active / Execution Phase
+**Owner:** nanoBragg PyTorch Initiative
+**Date:** 2026-01-29
 
-## Scope Boundary
-This horizon explicitly defers:
-- Multi-image refinement / global structure factor learning.
-- Rich VI models (VAEs, mixture posteriors, amortized inference).
-- Experimental data pipelines and metadata tooling.
+## 1. Executive Summary
+The primary objective for the next cycle is to transform `nanoBragg` from a stochastic simulation tool into a **differentiable probabilistic engine**.
 
-The intent is to establish a robust probabilistic forward model first, then layer inference and dataset infrastructure only once the physics core is validated and credible.
+Currently, modeling crystal disorder (mosaicity) relies on brute-force Monte Carlo sampling, which scales linearly with fidelity ($O(N)$) and injects stochastic noise into gradients. We will replace this with an **analytic probabilistic model** that marginalizes over orientation distributions in closed form.
 
-## Success Conditions (Must Hold)
-The strategy is successful only if all of the following are true:
+**Strategic Value:** This is not merely an optimization; it is a **methodological pivot**. By converting the numerical nuisance of mosaicity into a smooth, differentiable operator, we unlock:
+1.  **Orders-of-magnitude speedups** (10x–100x) for diffuse scattering refinement.
+2.  **Noise-free gradients**, enabling the use of advanced optimizers (LBFGS) and Variational Inference (VI).
+3.  **A publishable advance** in differentiable crystallography.
 
-**Scientific Validity**
-- Analytic broadening matches rotational mosaicity behavior (resolution-dependent blur). The analytic model must not show systematic residual rings or bullseye artifacts under non-cubic cells.
-- The analytic model remains differentiable with respect to `mosaic_spread_deg` and does not detach gradients via scalar extraction.
+## 2. The Scientific Thesis
+**Current State:** Mosaicity is simulated by summing intensities from $N$ discrete crystal copies.
+*   *Problem:* High fidelity requires high $N$ (slow). Low $N$ creates noisy loss landscapes (optimization fails).
+*   *Result:* Refinement of diffuse scattering is computationally prohibitive.
 
-**Performance & Convergence**
-- Median iteration time for analytic refinement is at least **4x faster** than the Monte Carlo baseline (`mosaic_domains=5`) under identical settings.
-- Final loss from analytic refinement is **<=** the Monte Carlo baseline loss in the same wall-clock budget.
-- Loss curve for analytic refinement is **monotonic or near-monotonic** (no large stochastic oscillations).
+**Future State:** Mosaicity is modeled as a resolution-dependent Gaussian convolution in reciprocal space.
+*   *Insight:* The rotational distribution of the crystal maps analytically to a Gaussian broadening of the Reciprocal Lattice Point (RLP).
+*   *Benefit:* The cost becomes $O(1)$ (independent of mosaic spread). The loss landscape becomes smooth and convex.
 
-**Reproducible Artifact**
-- A single benchmark script produces:
-  - `demo_outputs/probabilistic_vs_mc_loss.png`
-  - A JSON summary with timings and final parameter errors.
-- The artifact can be regenerated without manual data setup and is robust to non-cubic unit cell parameters.
+## 3. Technical Design Anchors (Non-Negotiables)
+To ensure this initiative integrates cleanly with the existing ecosystem, the following architectural decisions are **binding**:
 
-**Architectural Integrity**
-- Existing `Simulator` behavior remains untouched; golden tests are not regressed by analytic work.
-- The probabilistic kernel is isolated to a new module and can be disabled by class selection alone.
+### A. The "Drop-in" API Contract
+The new capability will be exposed via a subclass, `ProbabilisticSimulator`, which inherits strictly from `Simulator`.
+*   **Constraint:** It must accept the *exact same* configuration objects (`CrystalConfig`, etc.) as the standard engine.
+*   **Behavior:** The parameter `mosaic_domains` is treated as infinite/irrelevant. The parameter `mosaic_spread_deg` drives the analytic width $\sigma$.
+*   **Why:** This ensures zero friction for A/B testing and allows existing scripts to switch backends by changing a single class instantiation.
 
-## Risk Posture
-- **Risk:** Analytic model underfits highly grainy/sparse mosaics.
-  - **Acceptable in this phase.** The objective is high-mosaic smooth broadening, not sparse grains.
-- **Risk:** Parameter coupling (mosaic + orientation) produces flat loss basins.
-  - **Mitigated by:** using benchmark configurations with stable convergence and reporting sensitivity.
-- **Risk:** Claims of speedup are dismissed as “unfair.”
-  - **Mitigated by:** identical physical parameters and clear disclosure that Monte Carlo domain count is a numerical nuisance parameter.
+### B. Physically Grounded "Angular" Broadening
+We reject simple isotropic blurring. The model must preserve the physics of rotational disorder:
+*   **Constraint:** The Gaussian width $\sigma$ must scale with the scattering vector magnitude $|q|$.
+*   **Kernel Logic:** `sigma = |q| * tan(mosaic_spread_rad) + epsilon`.
+*   **Why:** This preserves the physical reality that high-resolution spots blur more than low-resolution spots, which is critical for accurate parameter refinement.
 
-## Downstream Readiness Signals
-If all success conditions hold, the strategy considers the following directions validated for the next horizon:
-- Sparse-grain modeling as mixture distributions (multi-modal mosaicity).
-- Variational inference with the probabilistic simulator as a likelihood engine.
-- Multi-image refinement once per-image forward passes are demonstrably fast and stable.
+### C. Generalized Geometry (Full Metric Tensor)
+We reject "cubic-only" shortcuts.
+*   **Constraint:** Reciprocal mismatch $\Delta Q$ must be calculated using the rotated reciprocal vectors:
+    `dQ = dh*a* + dk*b* + dl*c*`
+*   **Why:** This guarantees support for triclinic, monoclinic, and non-orthogonal systems immediately, preventing "demo fragility" where the code breaks on real-world protein data.
 
-This strategy is deliberately narrow: it favors a strong, publishable signal over broad capability. It defines what “done” looks like for this horizon and uses the probabilistic simulator as the hinge for future scientific impact.
+### D. "Stash-and-Patch" Isolation
+*   **Constraint:** The `ProbabilisticSimulator` must manage its own state injection. It will temporarily patch the configuration to `mosaic=0` (to freeze the geometric center) while passing the true spread to the physics kernel.
+*   **Why:** This decouples the probabilistic logic from the legacy Monte Carlo geometry engine without requiring a rewrite of the core `Simulator.run` loop.
+
+## 4. Evidence Strategy: "The Killer Demo"
+We will drive this development via a single, decisive benchmark artifact.
+
+**The Benchmark:** `scripts/benchmark_probabilistic.py`
+*   **Scenario:** Refinement of a small-cell, high-mosaicity (2.0°) dataset (derived from `refinement_demo_diffuse`).
+*   **Competition:**
+    *   *Baseline:* Monte Carlo Simulator (`domains=5`). Fast but noisy.
+    *   *Challenger:* Probabilistic Simulator. Fast and smooth.
+*   **Ground Truth:** Monte Carlo Simulator (`domains=50`). High fidelity, very slow.
+
+**Success Criteria (The "Win"):**
+1.  **Speed:** Analytic iteration time is **>4x faster** than the Baseline.
+2.  **Convergence:** Analytic loss curve is monotonic and reaches a lower final error than the Baseline.
+3.  **Visual:** A generated plot (`demo_outputs/probabilistic_vs_mc_loss.png`) visibly demonstrates the analytic curve plummeting while the Monte Carlo curve jitters.
+
+## 5. Risk Assessment & Mitigation
+
+| Risk | Impact | Mitigation Strategy |
+| :--- | :--- | :--- |
+| **Model Mismatch** | Analytic Gaussian does not perfectly match the sum-of-discrete-rotations. | Use the "Angular Broadening" ($\sigma \propto |q|$) constraint to minimize physical discrepancy. Accept slight residual if convergence behavior is superior. |
+| **Gradient Detachment** | Implementation accidentally detaches gradients (e.g., using `.item()` on spread). | Strict code review enforcing `torch.autograd.gradcheck` on the new kernel during development. |
+| **Scope Creep** | Temptation to implement Voigt profiles, spectral dispersion, or beam divergence simultaneously. | **Strict Scope Boundary:** Mosaicity only. Beam divergence remains discrete (Monte Carlo) for this phase. |
+
+## 6. Strategic Horizon (What this enables)
+Completing this initiative creates the **foundation** for the next two major milestones:
+
+1.  **Sparse/Grainy Modeling:** Once we have a differentiable probability distribution, we can replace the single Gaussian with a *Mixture of Gaussians* to model sparse, grainy crystals (e.g., VAE latent spaces).
+2.  **Multi-Image Global Refinement:** "Recovering the structure factor" requires thousands of forward passes. This is computationally impossible with the slow Monte Carlo engine but becomes feasible with the $O(1)$ Probabilistic engine.
+
+## 7. Immediate Action Plan
+1.  **Implement** `src/nanobrag_torch/simulators/probabilistic.py` (The Kernel).
+2.  **Implement** `scripts/benchmark_probabilistic.py` (The Evidence).
+3.  **Execute** Benchmark and generate the plot.
+4.  **Review** results with PIs to authorize the Multi-Image Refinement phase.
