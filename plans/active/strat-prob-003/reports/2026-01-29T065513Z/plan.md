@@ -1,0 +1,1 @@
+- docs/plans/2026-01-29-probabilistic-gradient-recovery.md

@@ -3,7 +3,8 @@
 **Last Updated:** 2026-01-29 (Probabilistic Strategy realignment)
 
 **Active Focus:**
-- STRAT-PROB-002 — Produce benchmark evidence per `docs/strategy/mainstrategy.md` §4 and `docs/plans/2026-01-29-probabilistic-simulator-implementation.md`
+- STRAT-PROB-003 — Execute `docs/plans/2026-01-29-probabilistic-gradient-recovery.md` to resolve FND-PROB-2026-01
+- STRAT-PROB-002 — Benchmark artifacts frozen pending STRAT-PROB-003 fix
 - STRAT-PROB-001 — Kernel + tests landed; in review while STRAT-PROB-002 benchmarks ramp
 
 ## Index
@@ -11,6 +12,7 @@
 | --- | --- | --- | --- |
 | [STRAT-PROB-001](#strat-prob-001-probabilistic-simulator-kernel) | ProbabilisticSimulator kernel | Critical | in_review |
 | [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | done_with_findings |
+| [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | planning |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -44,6 +46,24 @@
   - Hi-res benchmark artifacts (PNG/JSON/sweep) show ≥4× speedup and non-zero gradients and are archived under `plans/active/strat-prob-002/reports/`.
   - Strategy doc + README reference the hi-res scenario, CLI knobs, and new evidence bundle.
   - Supervisor handoff (`input.md`) maps to the enhanced workflow with updated mapped tests.
+  - STRAT-PROB-003 delivers the gradient fix so this entry can move to **complete**.
+
+## [STRAT-PROB-003] Probabilistic gradient recovery
+- Strategy Reference: `docs/strategy/mainstrategy.md` §§3–4, speedup + gradient requirements
+- Plan Reference: `docs/plans/2026-01-29-probabilistic-gradient-recovery.md`
+- Goal: Instrument the analytic kernel, adjust the Gaussian breadth using reciprocal metric data, and refresh benchmark evidence so probabilistic gradients are >1e-4 (hi_res_b/c) and ≥4× speedup is documented.
+- Dependencies: STRAT-PROB-002 artifacts (baseline CLI + presets)
+- Artifacts Root: `plans/active/strat-prob-003/` (current loop report: `2026-01-29T065513Z`)
+- Next Actions:
+  1. Task 1 (plan §Task 1): add kernel diagnostics callback + new `scripts/analysis/probabilistic_gaussian_diagnostics.py` harness with pytest coverage.
+  2. Task 2: capture hi_res_b diagnostics, update `docs/findings.md` entry FND-PROB-2026-01 with quantified evidence.
+  3. Task 3: implement the reciprocal-norm-based Gaussian width, extend regression/grad tests, rerun focused pytest target.
+  4. Task 4: refresh benchmark presets/artifacts (add `hi_res_c`), rerun CLI, update docs + fix_plan exit criteria.
+- Exit Criteria:
+  - Diagnostics JSON/markdown exist under the artifacts root showing |ΔQ|/σ ratios and non-zero FD gradients for hi_res_b.
+  - Updated kernel & tests land with grad magnitudes ≥1e-4 for hi_res_b (unit test) and gradcheck continues to pass on CPU.
+  - `scripts/benchmark_probabilistic.py --scenario hi_res_c` yields probabilistic mean |grad| ≥1e-4 and speedup ≥4× (artifacts logged + docs updated).
+  - STRAT-PROB-002 can move to **complete** (docs referencing artifacts, README updated).
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-PROB-002 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-prob-002/reports/2026-01-29T062136Z/ next_action=delegate_hi_res_benchmark_plan
+Supervisor state: focus=STRAT-PROB-003 state=planning dwell=1 artifacts=plans/active/strat-prob-003/reports/2026-01-29T065513Z/ next_action=delegate_task1_diagnostics
