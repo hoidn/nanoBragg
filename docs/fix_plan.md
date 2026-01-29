@@ -16,7 +16,7 @@
 | [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | failed |
 | [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | failed |
 | [STRAT-M2-001](#strat-m2-001-duck-multi-image-demo) | Duck multi-image demo | Critical | evidence_captured |
-| [STRAT-M3-001](#strat-m3-001-duck-joint-global-local-refinement) | Duck joint global-local refinement | High | planning |
+| [STRAT-M3-001](#strat-m3-001-duck-joint-global-local-refinement) | Duck joint global-local refinement | High | evidence_captured |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -236,16 +236,13 @@ Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=2 artifacts=p
   - ✅ Task 2 — `StructureFactorLatent` module and `Crystal.set_hkl_tensor()` helper landed with regression tests.
   - ✅ Task 3 — `MultiImageTrainer` joint mode + per-image scales/posteriors implemented with pytest + CLI smoke coverage.
   - ✅ Task 4 — Canonical 150-iter CPU benchmark completed; artifacts live under `plans/active/strat-m3-001/reports/2026-01-29T150845Z/joint_demo/` and docs (§7 strategy, §6 testing) now describe the joint workflow with references.
-  - ⏳ Task 5 — CUDA smoke + doc propagation pending: need a 5-iteration joint CLI run on GPU, matching artifact capture, and doc/fix_plan updates per `docs/plans/2026-01-29-m3-joint-global-local.md` Task 5.
-- Next Actions:
-  1. Execute the CUDA smoke command (`scripts/demo_recover_duck.py --mode joint --iterations 5 --device cuda --k-samples 2`) with artifacts under `plans/active/strat-m3-001/reports/<ts>/joint_gpu_smoke/` plus a `torch_env.txt` snapshot proving CUDA availability.
-  2. Mirror the GPU artifacts to `demo_outputs/duck_joint_gpu/`, then extend `docs/development/testing_strategy.md §6.3` and `docs/strategy/mainstrategy.md §7` with the CUDA workflow + metrics.
-  3. Update this fix-plan entry (status → evidence_captured, cite artifact path, log completion) once GPU smoke + docs land.
+  - ✅ Task 5 — CUDA smoke completed: 5-iteration joint CLI run on RTX 3090 (PyTorch 2.9.1+cu128). Loss decreased (−6,619,002 → −6,625,689), per-image scales diverged (0.975–1.025), structure-factor norm stable (1852). Artifacts: `plans/active/strat-m3-001/reports/2026-01-29T210000Z/joint_gpu_smoke/` (run.log, duck_summary.json, duck_loss.png, torch_env.txt). Mirrored to `demo_outputs/duck_joint_gpu/`. Docs updated.
+- Next Actions: None — all exit criteria met.
 - Exit Criteria:
   - Duck dataset ships structure-factor metadata + tensor under version control and loader exposes it. ✅
   - Structure-factor latent module exists with unit tests proving differentiability and correct Crystal injection. ✅
   - MultiImageTrainer joint mode passes pytest (unit + CLI smoke) and exposes per-image sigma + scale histories. ✅
   - Canonical CPU benchmark artifacts + doc updates demonstrate coupled convergence (Task 4). ✅
-  - CUDA smoke artifacts prove the joint pipeline runs on GPU (`device=cuda`, loss decreases, per-image scales diverge) and documentation references the workflow. ⏳
+  - CUDA smoke artifacts prove the joint pipeline runs on GPU (`device=cuda`, loss decreases, per-image scales diverge) and documentation references the workflow. ✅
 
-Supervisor state: focus=STRAT-M3-001 state=planning dwell=1 artifacts=plans/active/strat-m3-001/reports/2026-01-29T150845Z/joint_demo/ next_action=delegate_task5_joint_cuda_smoke
+Supervisor state: focus=STRAT-M3-001 state=evidence_captured dwell=2 artifacts=plans/active/strat-m3-001/reports/2026-01-29T210000Z/joint_gpu_smoke/ next_action=close
