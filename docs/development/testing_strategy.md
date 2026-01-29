@@ -522,6 +522,19 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
 *   **Validation:** Phase M2 (2025-10-11T172830Z) confirmed 10/10 gradcheck tests pass with guard enabled
 *   **Reference:** `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md` for validation artifacts
 
+**Pre-Suite Slow-Gradient Chunk:**
+*   Slow gradient tests (marked `@pytest.mark.slow_gradient`) are **skipped by default** to prevent timeout failures during the full suite.
+*   **Opt-in mechanisms:** Pass `--run-slow-gradient-chunk` to pytest, or set `NB_RUN_SLOW_GRADIENT=1` in the environment. Both are registered in `tests/conftest.py`.
+*   **Dedicated chunk command (run before `pytest tests/`):**
+    ```bash
+    env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+      NB_RUN_SLOW_GRADIENT=1 pytest -vv \
+      tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability \
+      --run-slow-gradient-chunk --maxfail=1 --durations=25
+    ```
+*   **Full suite (slow gradients skipped):** Invoke `pytest -vv tests/` without `--run-slow-gradient-chunk` or `NB_RUN_SLOW_GRADIENT=1` so slow tests are reported as SKIPPED.
+*   **Evidence:** `reports/2026-01-test-suite-refresh/phase_n/20260129T050759Z/sprint3/` (policy + commands)
+
 **Performance Expectations (Slow Gradient Suite):**
 *   **Maximum runtime tolerance:** Gradient stability tests (particularly `test_property_gradient_stability`) may run up to 905 seconds on CPU with float64 precision and compile guard enabled
 *   **Rationale:** High-precision numerical gradient checks (`torch.autograd.gradcheck`) require extensive finite-difference computations across large parameter spaces, inherently slow on CPU

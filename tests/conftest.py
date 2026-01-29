@@ -8,6 +8,7 @@ that is shared across all test modules.
 import os
 import sys
 from pathlib import Path
+import functools
 import pytest
 import subprocess
 
@@ -20,22 +21,70 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
 # ============================================================================
+# Repo-root detection and CWD enforcement (Sprint 1 Gap 1)
+# ============================================================================
+
+@functools.lru_cache(maxsize=1)
+def _get_repo_root() -> Path:
+    """Return the resolved absolute path to the repository root.
+
+    Memoized so every fixture/helper in every worker process gets a
+    consistent value regardless of later ``os.chdir`` calls.
+    """
+    return Path(__file__).resolve().parents[1]
+
+
+def ensure_repo_cwd(repo_root: Path, *, allow_bypass: bool = True) -> None:
+    """Fail the pytest session when CWD is outside the repo root.
+
+    Args:
+        repo_root: Absolute resolved path returned by ``_get_repo_root()``.
+        allow_bypass: When *True* (default), honour the
+            ``NB_ALLOW_NON_ROOT_CWD=1`` env-var escape hatch.
+
+    Raises:
+        pytest.fail.Exception: When CWD is outside *repo_root* and no
+            bypass is active.
+    """
+    if allow_bypass and os.environ.get("NB_ALLOW_NON_ROOT_CWD") == "1":
+        return
+    cwd = Path.cwd().resolve()
+    if cwd != repo_root:
+        pytest.fail(
+            f"CWD ({cwd}) is not the repo root ({repo_root}).\n"
+            "Infrastructure fixtures require execution from the repository root.\n"
+            "Remediation: cd to the repo root before running pytest, or set\n"
+            "  NB_ALLOW_NON_ROOT_CWD=1 to bypass (not recommended for CI).\n"
+            "See docs/development/testing_strategy.md §1.5 for details."
+        )
+
+
+@pytest.fixture(scope="session")
+def repo_root() -> Path:
+    """Session-scoped fixture providing the resolved repo root path."""
+    return _get_repo_root()
+
+
+# ============================================================================
 # Phase K Task K1: Session Infrastructure Gate
 # ============================================================================
 
-def _resolve_c_binary():
+def _resolve_c_binary(repo_root: Path | None = None):
     """
     Resolve C binary path using documented precedence order.
+
+    Args:
+        repo_root: Absolute repo root path. Falls back to ``_get_repo_root()``.
 
     Returns:
         Path object if resolved, None otherwise
     """
-    # Use absolute path resolution relative to repo root
-    repo_root = Path(__file__).parent.parent
+    if repo_root is None:
+        repo_root = _get_repo_root()
 
     nb_c_bin = os.environ.get('NB_C_BIN')
     if nb_c_bin:
-        path = Path(nb_c_bin)
+        path = Path(nb_c_bin).resolve()
         if path.exists():
             return path
         else:
@@ -43,12 +92,12 @@ def _resolve_c_binary():
             return None
 
     # Fallback 1: instrumented binary (recommended)
-    fallback1 = repo_root / 'golden_suite_generator/nanoBragg'
+    fallback1 = (repo_root / 'golden_suite_generator/nanoBragg').resolve()
     if fallback1.exists():
         return fallback1
 
     # Fallback 2: frozen reference binary
-    fallback2 = repo_root / 'nanoBragg'
+    fallback2 = (repo_root / 'nanoBragg').resolve()
     if fallback2.exists():
         return fallback2
 
@@ -86,17 +135,20 @@ def _check_c_binary_executable(binary_path):
         return False, f"Binary execution failed: {binary_path} ({type(e).__name__}: {e})"
 
 
-def _check_golden_assets():
+def _check_golden_assets(repo_root: Path | None = None):
     """
     Verify golden asset files exist and are readable.
+
+    Args:
+        repo_root: Absolute repo root path. Falls back to ``_get_repo_root()``.
 
     Returns:
         list: Empty if all checks pass, otherwise list of error messages
     """
     errors = []
 
-    # Use absolute path resolution relative to repo root
-    repo_root = Path(__file__).parent.parent
+    if repo_root is None:
+        repo_root = _get_repo_root()
 
     # Asset 1: scaled.hkl
     hkl_path = repo_root / 'scaled.hkl'
@@ -126,6 +178,45 @@ def _check_golden_assets():
     return errors
 
 
+# ============================================================================
+# Sprint 3 GRAD-001: Slow-gradient chunk isolation
+# ============================================================================
+
+def pytest_addoption(parser):
+    """Register --run-slow-gradient-chunk flag.
+
+    When absent (and NB_RUN_SLOW_GRADIENT != "1"), tests decorated with
+    @pytest.mark.slow_gradient are automatically skipped.
+    See docs/development/testing_strategy.md §4.1.
+    """
+    parser.addoption(
+        "--run-slow-gradient-chunk",
+        action="store_true",
+        default=False,
+        help="Run slow gradient tests (marked @pytest.mark.slow_gradient). "
+             "Also enabled by NB_RUN_SLOW_GRADIENT=1 env var. "
+             "See docs/development/testing_strategy.md §4.1.",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip slow_gradient-marked tests unless explicitly opted in."""
+    run_slow = (
+        config.getoption("--run-slow-gradient-chunk", default=False)
+        or os.environ.get("NB_RUN_SLOW_GRADIENT") == "1"
+    )
+    if run_slow:
+        return
+    skip_marker = pytest.mark.skip(
+        reason="Slow gradient suite requires --run-slow-gradient-chunk "
+               "(or NB_RUN_SLOW_GRADIENT=1). "
+               "See docs/development/testing_strategy.md §4.1."
+    )
+    for item in items:
+        if "slow_gradient" in item.keywords:
+            item.add_marker(skip_marker)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def session_infrastructure_gate():
     """
@@ -143,10 +234,15 @@ def session_infrastructure_gate():
         )
         return
 
+    root = _get_repo_root()
+
+    # Check 0: CWD must be repo root (Sprint 1 Gap 1)
+    ensure_repo_cwd(root)
+
     errors = []
 
     # Check 1: C binary resolution
-    c_binary_path = _resolve_c_binary()
+    c_binary_path = _resolve_c_binary(root)
     if c_binary_path is None:
         nb_c_bin = os.environ.get('NB_C_BIN')
         if nb_c_bin:
@@ -170,7 +266,7 @@ def session_infrastructure_gate():
             errors.append(error_msg)
 
     # Check 3: Golden assets
-    asset_errors = _check_golden_assets()
+    asset_errors = _check_golden_assets(root)
     errors.extend(asset_errors)
 
     # Fail fast if any checks failed

@@ -1,0 +1,20 @@
+# Sprint 3 GRAD-001 — Verification Commands
+# STAMP: 20260129T050759Z
+
+## Skip verification (default — no flag)
+KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability
+# Expected: SKIPPED (finishes in <2s)
+
+## Opt-in verification (flag)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  NB_RUN_SLOW_GRADIENT=1 pytest -vv \
+  tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability \
+  --run-slow-gradient-chunk --maxfail=1 --durations=25
+# Expected: PASSED (~845-850s runtime)
+
+## Environment variables
+# NB_RUN_SLOW_GRADIENT=1  — env-var opt-in (alternative to CLI flag)
+# NANOBRAGG_DISABLE_COMPILE=1 — required for gradient tests (torch.compile guard)
+# CUDA_VISIBLE_DEVICES=-1 — force CPU for determinism
+# KMP_DUPLICATE_LIB_OK=TRUE — MKL conflict prevention
