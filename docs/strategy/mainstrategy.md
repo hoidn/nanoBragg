@@ -117,3 +117,18 @@ Completing this initiative creates the **foundation** for the next two major mil
 2.  **Implement** `scripts/benchmark_probabilistic.py` (The Evidence).
 3.  **Execute** Benchmark and generate the plot.
 4.  **Review** results with PIs to authorize the Multi-Image Refinement phase.
+
+## 8. Variational Mosaicity Replacement (VI)
+The analytic Gaussian envelope produces near-zero gradients for mosaicity in
+multiple test scenarios (FND-PROB-2026-01). The next strategic step is to
+replace the analytic mosaicity model with a variational inference (VI) model
+that samples mosaic rotations via reparameterization and optimizes a
+per-crystal posterior over mosaic spread.
+
+Immediate actions:
+1.  **Design** the VI simulator and posterior module (`docs/plans/2026-01-29-vi-mosaic-design.md`).
+2.  **Implement** `VariationalMosaicSimulator` and VI posterior utilities.
+3.  **Add** Poisson ELBO training and benchmarks vs MC and analytic.
+4.  **Validate** gradients (gradcheck) and convergence stability.
+5.  **Deprecate** the analytic mosaic simulator after VI benchmarks pass and
+    doc/test coverage confirms replacement.
