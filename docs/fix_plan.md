@@ -126,3 +126,7 @@ Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/acti
 22. **Task 21 (NEW 2026-01-29 21:30Z) — Temperature × IWAE follow-up:** Execute `docs/plans/2026-01-29-vi-temperature-iwae-followup.md` to (a) run an extended T∈{1,2,4,8} sweep, (b) repeat the sweep with `objective="iwae"` and k=8, (c) trigger a canonical benchmark only if σ≥1.2° shows up in diagnostics, and (d) update docs/findings/fix-plan with the new evidence bundle. Artifacts should live under `plans/active/strat-vi-001/reports/<ts>/temperature_sweep_hot/` (and `/iwae`).
 
 Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/temperature_sweep/ next_action=delegate_task21_temperature_iwae_followup
+
+23. **Task 21 evidence (COMPLETED 2026-01-29 10:34Z):** Extended temperature sweep (T∈{1,2,4,8}) and IWAE+temperature combo both yield σ≈0.81° — no improvement. No configuration reached σ≥1.2° so the 150-iter benchmark was not triggered. The VI posterior collapse is confirmed structural across all tested mitigations (temperature, IWAE, non-centered, observation scaling). Evidence: `plans/active/strat-vi-001/reports/2026-01-29T103412Z/temperature_sweep_hot/`.
+
+Supervisor state: focus=STRAT-VI-001 state=evidence_captured dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T103412Z/temperature_sweep_hot/ next_action=evaluate_prior_schedule_or_multi_scale_geometry
