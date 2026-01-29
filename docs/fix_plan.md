@@ -14,7 +14,7 @@
 | [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | paused_legacy |
 | [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | failed |
 | [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | failed |
-| [STRAT-M2-001](#strat-m2-001-duck-multi-image-demo) | Duck multi-image demo | Critical | in_progress |
+| [STRAT-M2-001](#strat-m2-001-duck-multi-image-demo) | Duck multi-image demo | Critical | evidence_captured |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -209,9 +209,16 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
 - Exit Criteria:
   - ✅ Duck dataset spec published + referenced from `docs/index.md`
   - ✅ `DuckMosaicEncoder` + amortized trainer pass targeted pytest selectors
-  - ⏳ `scripts/demo_recover_duck.py --mode amortized` generates PNG/JSON artifacts (CLI test validates structure, full benchmark pending)
-  - ⏳ Strategy/testing docs cite the new CLI workflow and artifact path
+  - ✅ `scripts/demo_recover_duck.py --mode amortized` generates PNG/JSON artifacts (150-iter benchmark completed)
+  - ✅ Strategy/testing docs cite the new CLI workflow and artifact path
+  - ✅ Full 150-iteration amortized benchmark archived with metrics snapshot
+- Evidence Bundle (2026-01-29):
+  - Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T141425Z/amortized_demo/` (run.log, duck_loss.png, duck_summary.json, metrics_snapshot.json)
+  - Mirror: `demo_outputs/duck_amortized/` (duck_loss.png, duck_summary.json)
+  - Results: Loss decreased (−2.9M → −3.5M), per-image σ diverse (11°–234°), gradients finite/non-zero. σ accuracy not converged (known limitation per STRAT-VI-001/002).
+  - Docs updated: `docs/strategy/mainstrategy.md` §7, `docs/development/testing_strategy.md` §6.2
+- Next Steps:
+  - Evaluate longer training (500+ iters) and larger datasets (N=50, 100) for σ convergence
+  - Prepare M3 outline (joint global-local refinement)
 
-Supervisor state: focus=STRAT-M2-001 state=code_complete_docs_pending dwell=0 artifacts=tests/test_vi_mosaic.py next_action=update_strategy_and_testing_docs
-
-Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=plans/active/strat-m2-001/reports/2026-01-29T234500Z/ next_action=delegate_amortized_evidence_docs
+Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T141425Z/amortized_demo/ next_action=prepare_m3_outline
