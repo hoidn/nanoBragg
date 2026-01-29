@@ -69,7 +69,7 @@
 
 ## [STRAT-VI-001] Variational mosaic simulator
 - Strategy Reference: `docs/strategy/mainstrategy.md` §8 (VI replacement for mosaicity)
-- Plan Reference: `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md`
+- Plan Reference: `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md`, `docs/plans/2026-01-29-vi-elbo-balancing.md`
 - Goal: Implement the VariationalMosaicSimulator stack (posterior module, VariationalMosaicSimulator class, Poisson ELBO helper, benchmarks, and analytic deprecation) so mosaicity gradients are recovered via VI instead of the analytic Gaussian.
 - Dependencies: STRAT-PROB-003 findings FND-PROB-2026-01 (zero gradients) plus existing Simulator API contracts.
 - Artifacts Root: `plans/active/strat-vi-001/` (current loop report: `2026-01-29T080653Z`)
@@ -81,8 +81,9 @@
 5. ~~**Task 5** — After VI passes, emit `DeprecationWarning` in the analytic simulator and mark docs accordingly.~~ ✅ Completed January 29 2026 (warning added, README_PYTORCH + analytic design doc flagged as legacy, new pytest guard).
 6. ~~Capture a CPU test log for `tests/test_vi_mosaic.py::test_probabilistic_simulator_deprecated_warning` under `plans/active/strat-vi-001/reports/2026-01-29T075930Z/` and confirm the warning appears exactly once (evidence for fix_plan exit criteria).~~ ✅ 2026-01-29 (`test_deprecation_warning.log`).
 7. ~~**Evidence gap:** run the canonical VI benchmark command (`KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 python scripts/benchmark_vi_mosaic.py --iterations 150 --outdir demo_outputs`) and archive the console log plus the resulting `vi_vs_mc_loss.png` / `vi_vs_mc_summary.json` under `plans/active/strat-vi-001/reports/2026-01-29T080653Z/`. Reference the artifact paths in `demo_outputs/` and summarize the convergence metrics in that report.~~ ✅ Logged in `benchmark_summary.md` / `vi_vs_mc_summary.json` (2026-01-29 supervisor loop).
-8. **NEW — Diagnose VI spread collapse (FND-VI-2026-01):** instrument `poisson_elbo` / benchmark to capture the log-likelihood vs KL terms, gradient magnitudes on `mu`/`rho`, and sampled sigma statistics each 10 iterations so we can understand why VI converges to 0.15° and loss ≈730. Produce a targeted repro notebook/log plus a minimal pytest that asserts the gradients are non-zero and trend upward when the posterior sigma is below the ground-truth 2°. Archive artifacts under a new timestamp in `plans/active/strat-vi-001/reports/`.
-9. **Plan update:** depending on the diagnosis, draft a focused implementation plan (e.g., ELBO rescaling, observation normalization, or alternative likelihood) so STRAT-VI-001 can proceed from evidence into design. Reference the captured artifacts and file a follow-up fix plan entry if a new component or spec change is required.
+8. ~~**Task 7** — Diagnose VI spread collapse (FND-VI-2026-01) via enriched `poisson_elbo` diagnostics + benchmark logging, then archive the JSON/markdown bundle under `plans/active/strat-vi-001/reports/2026-01-29T081427Z/`.~~ ✅ Evidence wired + findings/strategy updated 2026-01-29.
+9. ~~**Plan update** — Draft focused mitigation design (ELBO rescaling / observation normalization) now that instrumentation is done.~~ ✅ `docs/plans/2026-01-29-vi-elbo-balancing.md` captures the KL annealing rollout.
+10. **Execute VI ELBO Rebalancing plan:** follow Tasks 1–4 in `docs/plans/2026-01-29-vi-elbo-balancing.md` (KL weighting hook → schedule helper → CLI wiring → refreshed evidence) so the canonical benchmark demonstrates σ recovery (≥1.5° by 150 iterations) and the new CLI knobs + docs cover the workflow.
 - Exit Criteria:
   - New VI modules ship with deterministic seed control (`torch.Generator`) and gradcheck-proven differentiability.
   - Benchmark artifacts (PNG/JSON/logs) demonstrate Poisson ELBO convergence and non-zero gradients compared to MC/analytic, or STRAT-VI-001 documents a mitigation plan that resolves FND-VI-2026-01.
@@ -90,4 +91,4 @@
 - Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution/supersession of FND-PROB-2026-01.
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T081427Z/ next_action=diagnose_vi_spread_collapse
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T081427Z/ next_action=delegate_kl_annealing_plan
