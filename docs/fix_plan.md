@@ -86,4 +86,4 @@
   - Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution of FND-PROB-2026-01.
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-VI-001 state=planning dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T071658Z/ next_action=bootstrap_task1_mosaic_posterior
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T072441Z/ next_action=delegate_task2_variational_simulator
