@@ -220,11 +220,12 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - Mirror: `demo_outputs/duck_amortized/` (duck_loss.png, duck_summary.json)
   - Results: Loss decreased (−2.9M → −3.5M), per-image σ diverse (11°–234°), gradients finite/non-zero. σ accuracy not converged (known limitation per STRAT-VI-001/002).
   - Docs updated: `docs/strategy/mainstrategy.md` §7, `docs/development/testing_strategy.md` §6.2
-- Next Steps (Plan `docs/plans/2026-01-29-m2-amortized-scale-study.md`):
-  1. Generate `demo_inputs/duck_multi_image_n50` and `_n100` with `scripts/generate_duck_multi_image.py`.
-  2. Capture a 500-iteration amortized baseline (20 images) and 300-iteration runs for the 50-image and 100-image datasets, mirroring artifacts to `demo_outputs/`.
-  3. Land `scripts/analysis/summarize_duck_amortized.py` + unit test coverage so summary tables stay reproducible.
-  4. Update `docs/strategy/mainstrategy.md` §7, `docs/development/testing_strategy.md` §6.2, `docs/findings.md`, and this fix-plan entry with the new evidence.
+- Next Steps (Plan `docs/plans/2026-01-29-m2-scale-study-stability.md` — supersedes the original scale-study LR guidance):
+  1. ✅ Task 1: dataset generation complete (50/100 image folders). No further action.
+  2. **Task 2 (ACTIVE):** rerun the 500-iteration amortized baseline with `--lr 0.003` (fallback 0.0015/0.001) so gradients stay finite; capture artifacts under `plans/active/strat-m2-001/reports/<ts>/scale_study/amortized_longrun_20/` plus `demo_outputs/duck_amortized_longrun_20/`, and log gradient statistics in `metrics_snapshot_longrun.json`.
+  3. **Task 3 (ACTIVE):** execute the 50-image (`--lr 0.004`, fallback 0.003) and 100-image (`--lr 0.003`, fallback 0.002) 300-iteration runs, mirroring PNG/JSON files and writing `metrics_snapshot_{50,100}.json`.
+  4. **Task 4 (ACTIVE):** implement `scripts/analysis/summarize_duck_amortized.py`, add the pytest/fixture coverage, and run it across all three `duck_summary.json` files to emit a CSV under `plans/active/strat-m2-001/reports/<ts>/scale_study/summary.csv`.
+  5. **Task 5 (ACTIVE):** update `docs/strategy/mainstrategy.md` §7, `docs/development/testing_strategy.md` §6.2, `docs/fix_plan.md`, and (if σ still <1.5° even at 100 images) add `FND-M2-2026-01` documenting the limitation.
 - Exit Criteria:
   - ✅ Duck dataset spec published + referenced from `docs/index.md`
   - ✅ `DuckMosaicEncoder` + amortized trainer pass targeted pytest selectors
@@ -234,6 +235,7 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - **NEW:** Scale-study artifacts + summary prove whether σ recovers (≥1.5°) or document the limitation with a formal finding + mitigation recommendation.
 
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-m2-amortized-scale-study.md next_action=delegate_task1_scale_study
+Supervisor state: focus=STRAT-M2-001 state=planning dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T235959Z/ next_action=delegate_scale_study_stability_tasks_2_5
 
 ## [STRAT-M3-001] Duck joint global-local refinement
 - Strategy Reference: `docs/strategy/mainstrategy.md` §7 (Milestone M3)
