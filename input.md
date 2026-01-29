@@ -1,18 +1,18 @@
-Plan: docs/plans/2026-01-29-m2-scale-study-stability.md
+Plan: docs/plans/2026-01-29-m2-stabilization.md
 References:
-- docs/strategy/mainstrategy.md §7 — Defines M2 expectations, gradient-scaling goals, and artifact requirements you are extending with the scale study
-- docs/development/testing_strategy.md §6.2 — Canonical amortized CLI commands plus mapped selectors you must run after each run/test addition
-- docs/specs/duck_multi_image_dataset.md — Dataset schema + generator parameters for the 20/50/100-image Duck variants used in this study
-- docs/fix_plan.md §[STRAT-M2-001] — Current ledger status, next actions, and FSM state you are advancing with this work
-Summary: Execute the new scale-study stability plan: rerun the 500-iter baseline with safer learning rates, complete the 50- and 100-image amortized runs, add the summarizer script/tests, and feed the resulting metrics into docs + findings.
-Summary (Goal): Stabilize and document the amortized Duck scale-study evidence bundle (baseline + 50/100 images) so STRAT-M2-001 can move toward closure.
+- docs/strategy/mainstrategy.md §7 — Defines STRAT-M2 milestones plus stabilization success criteria and artifact expectations
+- docs/development/testing_strategy.md §6.2 — Canonical Duck amortized CLI/test workflow + mapped selectors to keep current
+- docs/specs/duck_multi_image_dataset.md — Normative dataset schema / observation scaling contract for amortized experiments
+- docs/fix_plan.md §[STRAT-M2-001] — Ledger status + FSM state you are advancing with this stabilization pass
+Summary: Land the new stabilization toolkit: add configurable gradient clipping to `MultiImageTrainer`, expose it through the Duck CLI/tests/docs, build the curriculum runner + fixtures, then capture a 500-iter clipped run and curriculum sweep so we can document whether σ ever moves off the 0.5° floor (per `docs/specs/duck_multi_image_dataset.md` dataset contract).
+Summary (Goal): Deliver the Duck amortized stabilization toolkit (grad clipping + curriculum) plus fresh evidence bundles so STRAT-M2-001 can proceed toward closure.
 Focus: STRAT-M2-001 — Duck multi-image demo
 Branch: feature/spec-based-2
 Mapped tests:
+- KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py::test_multi_image_trainer_enforces_grad_clip -v
 - KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py::test_demo_recover_duck_cli_amortized -v
-- KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py -k amortized -v
-- KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_analysis_duck_summary.py::test_summarize_runs_extracts_metrics -v  # author this test in Task 3 before implementation
-Artifacts: plans/active/strat-m2-001/reports/2026-01-29T235959Z/scale_study/ (create amortized_longrun_20/, amortized_scale_50/, amortized_scale_100/, summary/ and mirror PNG/JSON to demo_outputs/*)
+- KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py -k curriculum -v  # add test_curriculum_runner_two_phase_smoke first
+Artifacts: plans/active/strat-m2-002/reports/2026-01-29T235959Z/
 Next Up:
-1. If the stabilized runs still fail to raise σ≥1.5°, draft FND-M2-2026-01 documenting the limitation and cite the new summary CSV.
-2. Begin outlining mitigation options (gradient clipping vs curriculum) for a follow-on plan if evidence warrants.
+1. If gradient clipping + curriculum still fail, extend FND-M2-2026-01 with the new metrics deltas.
+2. Draft follow-on plan for alternative losses (e.g., Gaussian) if evidence suggests no σ movement.

@@ -232,7 +232,25 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - ✅ `scripts/demo_recover_duck.py --mode amortized` generates PNG/JSON artifacts (150-iter benchmark completed)
   - ✅ Strategy/testing docs cite the new CLI workflow and artifact path
   - ✅ Full 150-iteration amortized benchmark archived with metrics snapshot
-  - **NEW:** Scale-study artifacts + summary prove whether σ recovers (≥1.5°) or document the limitation with a formal finding + mitigation recommendation.
+- **NEW:** Scale-study artifacts + summary prove whether σ recovers (≥1.5°) or document the limitation with a formal finding + mitigation recommendation.
+
+**New Plan (2026-01-29 23:59Z) — Duck amortized stabilization:** Execute `docs/plans/2026-01-29-m2-stabilization.md` to add gradient clipping + curriculum tooling so 500-iteration and 50/100-image runs can be repeated under safer conditions. Outcomes needed:
+- Task 1: `MultiImageTrainer` gradient clipping hooks + pytest coverage.
+- Task 2: CLI + documentation wiring for the new knobs.
+- Task 3: Curriculum runner + smoke tests.
+- Task 4: Evidence bundle (grad-clip 500 iter + curriculum sweep) + docs/finding updates referencing `plans/active/strat-m2-002/`.
+Exit when the new artifacts are archived and findings updated (even if σ remains ≤0.5°).
+
+Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-m2-stabilization.md next_action=delegate_task1_grad_clip_trainer
+
+**New Plan (2026-01-29 23:59Z) — Duck amortized stabilization:** Execute `docs/plans/2026-01-29-m2-stabilization.md` to add gradient clipping + curriculum tooling so 500-iteration and 50/100-image runs can be repeated under safer conditions. Outcomes needed:
+- Task 1: `MultiImageTrainer` gradient clipping hooks + pytest coverage.
+- Task 2: CLI + documentation wiring for the new knobs.
+- Task 3: Curriculum runner + smoke tests.
+- Task 4: Evidence bundle (grad-clip 500 iter + curriculum sweep) + docs/finding updates referencing `plans/active/strat-m2-002/`.
+Exit when the new artifacts are archived and findings updated (even if σ remains ≤0.5°).
+
+Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-m2-stabilization.md next_action=delegate_task1_grad_clip_trainer
 
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-m2-amortized-scale-study.md next_action=delegate_task1_scale_study
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T235959Z/ next_action=delegate_scale_study_stability_tasks_2_5
