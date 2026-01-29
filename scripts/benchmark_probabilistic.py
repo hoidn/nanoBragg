@@ -33,59 +33,85 @@ from nanobrag_torch.models.detector import Detector
 from nanobrag_torch.simulator import Simulator
 from nanobrag_torch.simulators.probabilistic import ProbabilisticSimulator
 
+from benchmark_probabilistic_presets import PRESETS, BenchmarkScenario
+
 # ---------------------------------------------------------------------------
 # Constants derived from refinement_demo_diffuse.py
 # ---------------------------------------------------------------------------
 TRUE_MOSAIC_SPREAD_DEG = 2.0
 INIT_MOSAIC_SPREAD_DEG = 0.5
 
-FIXED_PARAMS = dict(
-    cell_a=100.0,
-    cell_b=100.0,
-    cell_c=100.0,
-    cell_alpha=90.0,
-    cell_beta=90.0,
-    cell_gamma=90.0,
-    N_cells=(3, 3, 3),
-    default_F=100.0,
-    mosaic_seed=42,
-)
-
-DETECTOR_CONFIG = DetectorConfig(
-    fpixels=64,
-    spixels=64,
-    pixel_size_mm=0.1,
-    distance_mm=100.0,
-)
-
-BEAM_CONFIG = BeamConfig(
-    wavelength_A=1.0,
-    fluence=1e28,
-)
+CELL_ANGLES = (90.0, 90.0, 90.0)
+N_CELLS = (3, 3, 3)
+DEFAULT_F = 100.0
+MOSAIC_SEED = 42
 
 
-def build_configs(device, dtype, mosaic_domains, mosaic_spread_deg):
+def make_detector_config(scenario: BenchmarkScenario) -> DetectorConfig:
+    """Build DetectorConfig from scenario."""
+    return DetectorConfig(
+        fpixels=scenario.fpixels,
+        spixels=scenario.spixels,
+        pixel_size_mm=scenario.pixel_size_mm,
+        distance_mm=scenario.distance_mm,
+    )
+
+
+def make_beam_config(scenario: BenchmarkScenario) -> BeamConfig:
+    """Build BeamConfig from scenario."""
+    return BeamConfig(
+        wavelength_A=scenario.wavelength_A,
+        fluence=1e28,
+    )
+
+
+def resolve_scenario(args) -> BenchmarkScenario:
+    """Resolve BenchmarkScenario from CLI args with precedence: explicit flags > --scenario > default."""
+    base = PRESETS.get(args.scenario, PRESETS["default"]) if args.scenario else PRESETS["default"]
+
+    return BenchmarkScenario(
+        cell_edge_A=args.cell_edge if args.cell_edge is not None else base.cell_edge_A,
+        wavelength_A=args.wavelength if args.wavelength is not None else base.wavelength_A,
+        distance_mm=args.distance if args.distance is not None else base.distance_mm,
+        pixel_size_mm=args.pixel_size if args.pixel_size is not None else base.pixel_size_mm,
+        fpixels=args.fpixels if args.fpixels is not None else base.fpixels,
+        spixels=args.spixels if args.spixels is not None else base.spixels,
+    )
+
+
+def build_configs(scenario: BenchmarkScenario, device, dtype, mosaic_domains, mosaic_spread_deg):
     """Build Crystal, Detector, and configs for a given domain count/spread."""
     crystal_cfg = CrystalConfig(
-        **FIXED_PARAMS,
+        cell_a=scenario.cell_edge_A,
+        cell_b=scenario.cell_edge_A,
+        cell_c=scenario.cell_edge_A,
+        cell_alpha=CELL_ANGLES[0],
+        cell_beta=CELL_ANGLES[1],
+        cell_gamma=CELL_ANGLES[2],
+        N_cells=N_CELLS,
+        default_F=DEFAULT_F,
+        mosaic_seed=MOSAIC_SEED,
         mosaic_spread_deg=mosaic_spread_deg,
         mosaic_domains=mosaic_domains,
         misset_deg=(0.0, 0.0, 0.0),
     )
+    detector_cfg = make_detector_config(scenario)
+    beam_cfg = make_beam_config(scenario)
+
     crystal = Crystal(config=crystal_cfg, device=device, dtype=dtype)
-    detector = Detector(config=DETECTOR_CONFIG, device=device, dtype=dtype)
-    return crystal, detector, crystal_cfg
+    detector = Detector(config=detector_cfg, device=device, dtype=dtype)
+    return crystal, detector, crystal_cfg, beam_cfg
 
 
-def generate_ground_truth(device, dtype):
+def generate_ground_truth(scenario: BenchmarkScenario, device, dtype):
     """Generate high-fidelity ground truth with many MC domains."""
     print("[ground_truth] Generating with mosaic_domains=50 ...")
-    crystal, detector, cfg = build_configs(
-        device, dtype, mosaic_domains=50, mosaic_spread_deg=TRUE_MOSAIC_SPREAD_DEG
+    crystal, detector, cfg, beam_cfg = build_configs(
+        scenario, device, dtype, mosaic_domains=50, mosaic_spread_deg=TRUE_MOSAIC_SPREAD_DEG
     )
     sim = Simulator(
         crystal=crystal, detector=detector,
-        crystal_config=cfg, beam_config=BEAM_CONFIG,
+        crystal_config=cfg, beam_config=beam_cfg,
         device=device, dtype=dtype,
     )
     gt = sim.run().detach()
@@ -93,9 +119,9 @@ def generate_ground_truth(device, dtype):
     return gt
 
 
-def run_refinement(label, sim_class, device, dtype, gt_image, iterations,
-                   mosaic_domains, optimizer_kwargs):
-    """Run refinement loop, return loss_history and per_iter_times."""
+def run_refinement(label, sim_class, scenario, device, dtype, gt_image, iterations,
+                   mosaic_domains, optimizer_kwargs, diagnose_gradients=False):
+    """Run refinement loop, return loss_history, per_iter_times, final_spread, and gradients."""
     spread_param = torch.tensor(
         INIT_MOSAIC_SPREAD_DEG, dtype=dtype, requires_grad=True
     )
@@ -103,6 +129,7 @@ def run_refinement(label, sim_class, device, dtype, gt_image, iterations,
 
     loss_history = []
     iter_times = []
+    gradients = []
 
     for i in range(iterations):
         t0 = time.perf_counter()
@@ -110,21 +137,36 @@ def run_refinement(label, sim_class, device, dtype, gt_image, iterations,
         optimizer.zero_grad()
 
         cfg = CrystalConfig(
-            **FIXED_PARAMS,
-            mosaic_spread_deg=spread_param,
+            cell_a=scenario.cell_edge_A,
+            cell_b=scenario.cell_edge_A,
+            cell_c=scenario.cell_edge_A,
+            cell_alpha=CELL_ANGLES[0],
+            cell_beta=CELL_ANGLES[1],
+            cell_gamma=CELL_ANGLES[2],
+            N_cells=N_CELLS,
+            default_F=DEFAULT_F,
+            mosaic_seed=MOSAIC_SEED,
+            mosaic_spread_deg=spread_param,  # type: ignore[arg-type]
             mosaic_domains=mosaic_domains,
             misset_deg=(0.0, 0.0, 0.0),
         )
+        detector_cfg = make_detector_config(scenario)
+        beam_cfg = make_beam_config(scenario)
+
         crystal = Crystal(config=cfg, device=device, dtype=dtype)
-        detector = Detector(config=DETECTOR_CONFIG, device=device, dtype=dtype)
+        detector = Detector(config=detector_cfg, device=device, dtype=dtype)
         sim = sim_class(
             crystal=crystal, detector=detector,
-            crystal_config=cfg, beam_config=BEAM_CONFIG,
+            crystal_config=cfg, beam_config=beam_cfg,
             device=device, dtype=dtype,
         )
         pred = sim.run()
         loss = torch.nn.functional.mse_loss(pred, gt_image)
         loss.backward()
+
+        if diagnose_gradients and spread_param.grad is not None:
+            gradients.append(spread_param.grad.abs().item())
+
         optimizer.step()
 
         with torch.no_grad():
@@ -138,7 +180,7 @@ def run_refinement(label, sim_class, device, dtype, gt_image, iterations,
         if i % 20 == 0 or i == iterations - 1:
             print(f"[{label}][{i:3d}] loss={loss_val:.4e}  spread={spread_param.item():.4f}  time={dt:.3f}s")
 
-    return loss_history, iter_times, spread_param.item()
+    return loss_history, iter_times, spread_param.item(), gradients
 
 
 def make_plot(baseline_losses, prob_losses, baseline_times, prob_times, outpath):
@@ -175,6 +217,59 @@ def make_plot(baseline_losses, prob_losses, baseline_times, prob_times, outpath)
     print(f"Plot saved: {outpath}")
 
 
+def run_sweep(sweep_json, scenario, device, dtype, outdir):
+    """Run parameter sweep from JSON specification."""
+    sweep_data = json.loads(Path(sweep_json).read_text())
+    results = []
+
+    for entry in sweep_data:
+        entry_scenario_name = entry.get("scenario", "default")
+        entry_iterations = entry.get("iterations", 50)
+
+        current_scenario = PRESETS.get(entry_scenario_name, scenario)
+        print(f"\n[SWEEP] Running scenario={entry_scenario_name}, iterations={entry_iterations}")
+
+        gt_image = generate_ground_truth(current_scenario, device, dtype)
+
+        torch.manual_seed(7)
+        _, bl_times, bl_spread, bl_grads = run_refinement(
+            label="sweep_baseline", sim_class=Simulator,
+            scenario=current_scenario, device=device, dtype=dtype, gt_image=gt_image,
+            iterations=entry_iterations, mosaic_domains=5,
+            optimizer_kwargs=dict(lr=0.02), diagnose_gradients=True,
+        )
+
+        torch.manual_seed(7)
+        pr_losses, pr_times, pr_spread, pr_grads = run_refinement(
+            label="sweep_prob", sim_class=ProbabilisticSimulator,
+            scenario=current_scenario, device=device, dtype=dtype, gt_image=gt_image,
+            iterations=entry_iterations, mosaic_domains=1,
+            optimizer_kwargs=dict(lr=0.02), diagnose_gradients=True,
+        )
+
+        results.append({
+            "scenario": entry_scenario_name,
+            "iterations": entry_iterations,
+            "baseline": {
+                "final_loss": bl_times[-1] if bl_times else None,
+                "final_spread": bl_spread,
+                "mean_iteration_time": sum(bl_times) / len(bl_times) if bl_times else 0,
+                "mean_abs_gradient": sum(bl_grads) / len(bl_grads) if bl_grads else 0,
+            },
+            "probabilistic": {
+                "final_loss": pr_losses[-1] if pr_losses else None,
+                "final_spread": pr_spread,
+                "mean_iteration_time": sum(pr_times) / len(pr_times) if pr_times else 0,
+                "mean_abs_gradient": sum(pr_grads) / len(pr_grads) if pr_grads else 0,
+            },
+        })
+
+    sweep_out = Path(outdir) / "probabilistic_vs_mc_sweep.json"
+    sweep_out.write_text(json.dumps(results, indent=2))
+    print(f"\n[SWEEP] Results saved: {sweep_out}")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description="Probabilistic vs MC benchmark")
     parser.add_argument("--iterations", type=int, default=150)
@@ -182,7 +277,48 @@ def main():
     parser.add_argument("--outdir", default=None)
     parser.add_argument("--plot-only", action="store_true",
                         help="Load existing JSON and regenerate plot without rerunning")
+
+    # Scenario selection
+    parser.add_argument("--scenario", choices=list(PRESETS.keys()), default=None,
+                        help="Use a named scenario preset")
+    parser.add_argument("--cell-edge", type=float, default=None,
+                        help="Override cell edge length (Angstroms)")
+    parser.add_argument("--wavelength", type=float, default=None,
+                        help="Override wavelength (Angstroms)")
+    parser.add_argument("--distance", type=float, default=None,
+                        help="Override detector distance (mm)")
+    parser.add_argument("--pixel-size", type=float, default=None,
+                        help="Override pixel size (mm)")
+    parser.add_argument("--fpixels", type=int, default=None,
+                        help="Override fast-axis pixel count")
+    parser.add_argument("--spixels", type=int, default=None,
+                        help="Override slow-axis pixel count")
+
+    # Diagnostics
+    parser.add_argument("--diagnose-gradients", action="store_true",
+                        help="Capture and report gradient magnitudes")
+    parser.add_argument("--sweep-json", type=str, default=None,
+                        help="Path to JSON file with sweep specification")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print resolved scenario and exit")
+
     args = parser.parse_args()
+
+    scenario = resolve_scenario(args)
+
+    if args.dry_run:
+        print(json.dumps({
+            "scenario": args.scenario or "default",
+            "resolved": {
+                "cell_edge_A": scenario.cell_edge_A,
+                "wavelength_A": scenario.wavelength_A,
+                "distance_mm": scenario.distance_mm,
+                "pixel_size_mm": scenario.pixel_size_mm,
+                "fpixels": scenario.fpixels,
+                "spixels": scenario.spixels,
+            }
+        }, indent=2))
+        return 0
 
     repo_root = Path(__file__).resolve().parent.parent
     outdir = Path(args.outdir) if args.outdir else repo_root / "demo_outputs"
@@ -203,6 +339,12 @@ def main():
         )
         return 0
 
+    if args.sweep_json:
+        device = torch.device(args.device)
+        dtype = torch.float32
+        torch.manual_seed(7)
+        return run_sweep(args.sweep_json, scenario, device, dtype, outdir)
+
     device = torch.device(args.device)
     dtype = torch.float32
 
@@ -211,22 +353,25 @@ def main():
     print("=" * 60)
     print("PROBABILISTIC vs MONTE CARLO BENCHMARK")
     print(f"  device={device}, iterations={args.iterations}")
+    print(f"  scenario: {args.scenario or 'default'}")
+    print(f"  geometry: {scenario.fpixels}x{scenario.spixels} @ {scenario.pixel_size_mm}mm, {scenario.distance_mm}mm distance")
+    print(f"  beam: wavelength={scenario.wavelength_A}A, cell_edge={scenario.cell_edge_A}A")
     print(f"  ground truth mosaic_spread={TRUE_MOSAIC_SPREAD_DEG} deg")
     print(f"  init mosaic_spread={INIT_MOSAIC_SPREAD_DEG} deg")
     print("=" * 60)
 
-    gt_image = generate_ground_truth(device, dtype)
+    gt_image = generate_ground_truth(scenario, device, dtype)
 
     # --- Baseline MC refinement ---
     print(f"\n{'='*60}")
     print("BASELINE: Simulator (MC, domains=5)")
     print(f"{'='*60}")
     torch.manual_seed(7)
-    bl_losses, bl_times, bl_final_spread = run_refinement(
+    bl_losses, bl_times, bl_final_spread, bl_grads = run_refinement(
         label="baseline", sim_class=Simulator,
-        device=device, dtype=dtype, gt_image=gt_image,
+        scenario=scenario, device=device, dtype=dtype, gt_image=gt_image,
         iterations=args.iterations, mosaic_domains=5,
-        optimizer_kwargs=dict(lr=0.02),
+        optimizer_kwargs=dict(lr=0.02), diagnose_gradients=args.diagnose_gradients,
     )
 
     # --- Probabilistic refinement ---
@@ -234,11 +379,11 @@ def main():
     print("CHALLENGER: ProbabilisticSimulator (analytic)")
     print(f"{'='*60}")
     torch.manual_seed(7)
-    pr_losses, pr_times, pr_final_spread = run_refinement(
+    pr_losses, pr_times, pr_final_spread, pr_grads = run_refinement(
         label="probabilistic", sim_class=ProbabilisticSimulator,
-        device=device, dtype=dtype, gt_image=gt_image,
+        scenario=scenario, device=device, dtype=dtype, gt_image=gt_image,
         iterations=args.iterations, mosaic_domains=1,
-        optimizer_kwargs=dict(lr=0.02),
+        optimizer_kwargs=dict(lr=0.02), diagnose_gradients=args.diagnose_gradients,
     )
 
     # --- Summary ---
@@ -265,13 +410,25 @@ def main():
         "config": {
             "iterations": args.iterations,
             "device": str(device),
+            "scenario": args.scenario or "default",
+            "geometry": {
+                "cell_edge_A": scenario.cell_edge_A,
+                "wavelength_A": scenario.wavelength_A,
+                "distance_mm": scenario.distance_mm,
+                "pixel_size_mm": scenario.pixel_size_mm,
+                "fpixels": scenario.fpixels,
+                "spixels": scenario.spixels,
+            },
             "init_spread_deg": INIT_MOSAIC_SPREAD_DEG,
             "true_spread_deg": TRUE_MOSAIC_SPREAD_DEG,
-            "detector": "64x64, 0.1mm pixel, 100mm distance",
             "optimizer": "Adam lr=0.02",
         },
         "speedup": round(speedup, 2),
     }
+
+    if args.diagnose_gradients:
+        summary["baseline"]["spread_gradients"] = bl_grads
+        summary["probabilistic"]["spread_gradients"] = pr_grads
 
     json_path.write_text(json.dumps(summary, indent=2))
     print(f"\nSummary JSON: {json_path}")
@@ -288,6 +445,12 @@ def main():
     print(f"  Speedup:                   {speedup:.1f}x")
     print(f"  Baseline final spread:     {bl_final_spread:.4f} deg (true: {TRUE_MOSAIC_SPREAD_DEG})")
     print(f"  Probabilistic final spread:{pr_final_spread:.4f} deg (true: {TRUE_MOSAIC_SPREAD_DEG})")
+
+    if args.diagnose_gradients:
+        bl_mean_grad = sum(bl_grads) / len(bl_grads) if bl_grads else 0
+        pr_mean_grad = sum(pr_grads) / len(pr_grads) if pr_grads else 0
+        print(f"  Baseline mean |grad|:      {bl_mean_grad:.4e}")
+        print(f"  Probabilistic mean |grad|: {pr_mean_grad:.4e}")
 
     return 0
 

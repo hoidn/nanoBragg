@@ -1,0 +1,4 @@
+[
+  {"scenario": "hi_res_a", "iterations": 60},
+  {"scenario": "hi_res_b", "iterations": 60}
+]

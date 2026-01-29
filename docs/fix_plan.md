@@ -10,7 +10,7 @@
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
 | [STRAT-PROB-001](#strat-prob-001-probabilistic-simulator-kernel) | ProbabilisticSimulator kernel | Critical | in_review |
-| [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | ready_for_implementation |
+| [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | done_with_findings |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -34,10 +34,11 @@
 - Dependencies: STRAT-PROB-001 (ProbabilisticSimulator must exist)
 - Artifacts Root: `plans/active/strat-prob-002/`
 - Next Actions:
-  1. Task 1 (Alignment Plan): Refactor `scripts/benchmark_probabilistic.py` to introduce `BenchmarkScenario`, CLI geometry overrides, `--scenario`, and `--diagnose-gradients`. Add `tests/scripts/test_benchmark_probabilistic_cli.py`.
-  2. Task 2: Add preset catalog + sweep helper (`scripts/benchmark_probabilistic_presets.py`, `--sweep-json`, `--dry-run`), and refresh implementation plan references.
-  3. Task 3: Run hi-res scenarios (≥4× speedup) with diagnostics, capture PNG/JSON/sweep artifacts, and update docs + findings.
-  4. Task 4: Refresh `input.md`, plan README, and report summaries to hand off hi-res benchmark execution.
+  1. ~~Task 1: Refactor benchmark with BenchmarkScenario, CLI overrides, gradient diagnostics, tests.~~ ✅ Done.
+  2. ~~Task 2: Preset catalog + sweep helper + dry-run.~~ ✅ Done.
+  3. ~~Task 3: Run hi-res scenarios with diagnostics, capture artifacts, update docs.~~ ✅ Done — gradient zero-out confirmed in hi-res (FND-PROB-2026-01).
+  4. ~~Task 4: Refresh handoff docs.~~ ✅ Done.
+  5. **NEW:** Investigate why probabilistic kernel produces zero gradients across all presets. The σ ≫ |ΔQ| regime makes the Gaussian envelope ≈ 1.0 everywhere. Potential fixes: (a) change broadening formula so σ is comparable to ΔQ, (b) add structured off-Bragg sampling, (c) validate kernel math separately before running full refinement loop.
 - Exit Criteria:
   - Benchmark script exposes documented scenario presets + gradient diagnostics with pytest coverage.
   - Hi-res benchmark artifacts (PNG/JSON/sweep) show ≥4× speedup and non-zero gradients and are archived under `plans/active/strat-prob-002/reports/`.

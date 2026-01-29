@@ -90,6 +90,14 @@ We will drive this development via a single, decisive benchmark artifact.
 - **Finding:** The analytic Gaussian envelope produces near-zero gradients for `mosaic_spread_deg` in this geometry regime because `σ ≫ |ΔQ|` for all sampled pixels, making the envelope ≈ 1.0 everywhere. This is the **Model Mismatch** risk from §5. Next step: investigate higher-resolution or non-cubic geometries where off-Bragg contributions are more significant.
 - Artifacts: `demo_outputs/probabilistic_vs_mc_loss.png`, `demo_outputs/probabilistic_vs_mc_summary.json`, `plans/active/strat-prob-002/reports/2026-01-29T061003Z/`.
 
+**Measured Results (2026-01-29, hi_res_b scenario, 100 iterations, CPU, 128×128 detector, 30Å cell, 0.5Å wavelength):**
+- Speedup: **2.1×** (baseline 0.012s/iter, probabilistic 0.006s/iter). Below 4× target.
+- Baseline converged from 0.5° → 0.36° (true: 2.0°), final loss 7.98e-05.
+- Probabilistic spread did not move (0.5° → 0.5°), final loss 8.61e-05, mean |grad| = 9.1e-22.
+- **Finding (FND-PROB-2026-01):** Even with hi-res geometry (smaller cell, shorter wavelength, finer pixels), the probabilistic kernel still produces effectively zero gradients for `mosaic_spread_deg`. The σ ≫ |ΔQ| regime persists. The model mismatch risk from §5 is confirmed across both default and hi-res presets. The speedup target of ≥4× is not met because the MC baseline with 5 domains is already fast at this detector size; the speedup advantage may only manifest at larger detector dimensions or higher domain counts.
+- CLI: `scripts/benchmark_probabilistic.py --iterations 100 --device cpu --scenario hi_res_b --diagnose-gradients`
+- Artifacts: `demo_outputs/probabilistic_vs_mc_loss.png`, `demo_outputs/probabilistic_vs_mc_summary.json`, `plans/active/strat-prob-002/reports/2026-01-29T062136Z/`.
+
 ## 5. Risk Assessment & Mitigation
 
 | Risk | Impact | Mitigation Strategy |
