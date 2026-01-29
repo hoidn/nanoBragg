@@ -131,4 +131,43 @@ Immediate actions:
 3.  **Add** Poisson ELBO training and benchmarks vs MC and analytic.
 4.  **Validate** gradients (gradcheck) and convergence stability.
 5.  **Deprecate** the analytic mosaic simulator after VI benchmarks pass and
-    doc/test coverage confirms replacement.
+    doc/test coverage confirms replacement. *(Completed January 29 2026: `ProbabilisticSimulator` now emits a `DeprecationWarning`, README_PYTORCH and the analytic design doc call out the VI path as the recommended workflow, and `tests/test_vi_mosaic.py::test_probabilistic_simulator_deprecated_warning` guards the behavior.)*
+
+**Current benchmark status (2026-01-29):** The canonical VI benchmark
+(`scripts/benchmark_vi_mosaic.py --iterations 150 --outdir demo_outputs`)
+now ships with archived artifacts
+(`plans/active/strat-vi-001/reports/2026-01-29T080653Z/`), confirming that
+MC remains the accuracy leader (loss 1.3e-4, spread 1.46°) while VI’s Poisson
+ELBO plateaus near 7.3e2 and the posterior collapses to 0.15°. This evidence
+is tracked as **FND-VI-2026-01** and motivates the next action: instrument
+`poisson_elbo` to expose log-likelihood vs KL balance plus gradient
+magnitudes so we understand and correct the collapse.
+
+**Benchmark tooling:** `scripts/benchmark_vi_mosaic.py` provides the canonical
+three-way comparison (MC vs analytic vs VI). Run via CLI or call
+`run_benchmark()` programmatically. Smoke-tested in
+`tests/test_vi_mosaic.py::test_benchmark_script_smoke`. Now supports
+`--diagnostics-log` to capture per-iteration ELBO component metrics
+(log-likelihood, KL, sigma stats, gradient norms).
+
+**Task 7 diagnostics (2026-01-29):** `poisson_elbo` now returns an
+`ELBODiagnostics` dataclass when `return_components=True`, including
+log-likelihood, KL, sampled σ stats (mean/std/min/max in degrees), and
+gradient norms for μ/ρ (populated via `populate_grad_norms()` after
+backward). A 25-iteration 32×32 diagnostic run confirms:
+- Gradient norms are finite and non-zero (|∇μ|≈0.3–0.5, |∇ρ|≈0.8)
+- Log-likelihood is nearly flat while KL decreases → the likelihood
+  signal is too weak relative to KL regularisation
+- σ_mean crawls from 0.5° → 0.78° after 25 iters (true=2.0°)
+Diagnostics harness: `scripts/analysis/vi_poisson_diagnostics.py`.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T081427Z/`.
+
+**KL annealing implementation (2026-01-29):** Added `kl_weight` parameter
+to `poisson_elbo()` and `LinearKLWeightSchedule` helper
+(`src/nanobrag_torch/vi/kl_schedule.py`) for β-VAE style annealing.
+Both `vi_poisson_diagnostics.py` and `benchmark_vi_mosaic.py` now accept
+`--kl-weight-start`, `--kl-weight-end`, `--kl-warmup-steps` CLI flags.
+A 25-iteration diagnostic run with β=0.2→1.0 over 40 warmup steps shows
+σ_mean climbing monotonically from 0.49° → 0.81° (still accelerating at
+β=0.68). Longer runs with the full warmup are expected to recover σ>1.5°.
+Evidence: `plans/active/strat-vi-001/reports/2026-01-29T082528Z/`.
