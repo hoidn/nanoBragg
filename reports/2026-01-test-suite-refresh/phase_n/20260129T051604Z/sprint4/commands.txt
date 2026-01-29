@@ -1,0 +1,37 @@
+# Sprint 4 Commands — STAMP 20260129T051604Z
+
+## Step 1: Isolated bandwidth test
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+  pytest -vv -s tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization \
+  --maxfail=1 --durations=25
+# Result: PASS
+
+## Step 2: Full module run (stressed)
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+  pytest -vv -s tests/test_at_perf_003.py --maxfail=1 --durations=25
+# Result: 5/5 PASS
+
+## Step 3: Post-stress bandwidth re-run
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+  pytest -vv -s tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization \
+  --maxfail=1 --durations=25
+# Result: PASS
+
+## Step 4: Additional standalone measurements (3 runs via python one-liner)
+# Observed ratios: 0.7051, 0.6299, 0.6334
+
+## Step 5: Updated BANDWIDTH_RATIO_THRESHOLD = 0.45 in tests/test_at_perf_003.py
+
+## Step 6: Verification of updated test
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv tests/test_at_perf_003.py --maxfail=1 --durations=25
+# Result: 5/5 PASS
+
+## Step 7: Doc updates
+# - docs/development/testing_strategy.md §4: added AT-PERF-003 subsection
+# - docs/development/pytorch_runtime_checklist.md: added perf evidence reminder
+# - docs/findings.md: added FND-PERF-2026-01
+# - docs/fix_plan.md: logged Attempt #26

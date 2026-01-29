@@ -3,6 +3,10 @@
 
 This module implements Tier 2 testing from the Testing Strategy:
 gradient correctness verification using torch.autograd.gradcheck.
+
+Slow gradient tests (marked @pytest.mark.slow_gradient) are skipped by
+default.  To run them, pass ``--run-slow-gradient-chunk`` to pytest or set
+``NB_RUN_SLOW_GRADIENT=1``.  See docs/development/testing_strategy.md §4.1.
 """
 
 import os

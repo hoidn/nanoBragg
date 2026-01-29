@@ -522,6 +522,19 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
 *   **Validation:** Phase M2 (2025-10-11T172830Z) confirmed 10/10 gradcheck tests pass with guard enabled
 *   **Reference:** `reports/2026-01-test-suite-triage/phase_m2/20251011T172830Z/summary.md` for validation artifacts
 
+**Pre-Suite Slow-Gradient Chunk:**
+*   Slow gradient tests (marked `@pytest.mark.slow_gradient`) are **skipped by default** to prevent timeout failures during the full suite.
+*   **Opt-in mechanisms:** Pass `--run-slow-gradient-chunk` to pytest, or set `NB_RUN_SLOW_GRADIENT=1` in the environment. Both are registered in `tests/conftest.py`.
+*   **Dedicated chunk command (run before `pytest tests/`):**
+    ```bash
+    env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+      NB_RUN_SLOW_GRADIENT=1 pytest -vv \
+      tests/test_gradients.py::TestPropertyBasedGradients::test_property_gradient_stability \
+      --run-slow-gradient-chunk --maxfail=1 --durations=25
+    ```
+*   **Full suite (slow gradients skipped):** Invoke `pytest -vv tests/` without `--run-slow-gradient-chunk` or `NB_RUN_SLOW_GRADIENT=1` so slow tests are reported as SKIPPED.
+*   **Evidence:** `reports/2026-01-test-suite-refresh/phase_n/20260129T050759Z/sprint3/` (policy + commands)
+
 **Performance Expectations (Slow Gradient Suite):**
 *   **Maximum runtime tolerance:** Gradient stability tests (particularly `test_property_gradient_stability`) may run up to 905 seconds on CPU with float64 precision and compile guard enabled
 *   **Rationale:** High-precision numerical gradient checks (`torch.autograd.gradcheck`) require extensive finite-difference computations across large parameter spaces, inherently slow on CPU
@@ -603,3 +616,28 @@ All debugging of physics discrepancies **must** begin with a parallel trace comp
 - **Environment parity:** All tooling must honour the same environment contract as the tests (`KMP_DUPLICATE_LIB_OK=TRUE`, `NB_C_BIN` precedence, editable install). Scripts SHOULD exit with a non-zero status if prerequisites are missing.
 - **Plan integration:** When a benchmark exposes a regression, log the command, metrics, and artifact path under `docs/fix_plan.md` › `## Suite Failures` or the relevant tracking section.
 - **Generalisation:** These expectations apply to any PyTorch project you touch—structure tooling predictably, rely on documented env vars, and keep benchmark commands discoverable through project docs.
+
+### 6.1 AT-PERF-003 memory bandwidth tolerance
+
+**Test:** `tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization`
+
+**What it measures:** The ratio of effective memory bandwidth at 2048×2048 detector size versus 512×512. A ratio near 1.0 means bandwidth scales linearly; lower values indicate cache/memory pressure at larger sizes.
+
+**Canonical command:**
+```bash
+env CUDA_VISIBLE_DEVICES=-1 KMP_DUPLICATE_LIB_OK=TRUE NANOBRAGG_DISABLE_COMPILE=1 \
+  pytest -vv -s tests/test_at_perf_003.py::TestATPERF003MemoryBandwidth::test_memory_bandwidth_utilization \
+  --maxfail=1 --durations=25
+```
+
+**Observed ratios (STAMP 20260129T051604Z):**
+- Baseline (isolated): ~0.67
+- Stressed (after full module): ~0.67
+- Standalone repeated runs: 0.63–0.71
+- Worst-case (post-stress): 0.555
+
+**Threshold:** `BANDWIDTH_RATIO_THRESHOLD = 0.45` (~80% of worst-case 0.555). Replaces the legacy `bandwidths[512] * 0.5` comparison.
+
+**Evidence:** `reports/2026-01-test-suite-refresh/phase_n/20260129T051604Z/sprint4/`
+
+**Guidance:** Before declaring a full-suite rerun healthy, re-run the bandwidth test in both isolated and stressed contexts (Task 1 of the Sprint 4 plan) and verify the ratio exceeds the threshold. If the ratio drops below threshold on new hardware, refresh the evidence and update `BANDWIDTH_RATIO_THRESHOLD` accordingly.

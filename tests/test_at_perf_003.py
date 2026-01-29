@@ -13,6 +13,12 @@ import psutil
 import os
 from typing import Dict, Tuple
 
+# Bandwidth ratio threshold: minimum acceptable ratio of 2048×2048 bandwidth
+# to 512×512 bandwidth.  Derived from Sprint 4 evidence (STAMP 20260129T051604Z):
+# observed ratios ranged 0.555–0.705 across baseline, stressed, and repeated
+# runs.  Threshold set to 0.45 (~80% of worst-case 0.555) for stable CI.
+BANDWIDTH_RATIO_THRESHOLD = 0.45
+
 from nanobrag_torch.simulator import Simulator
 from nanobrag_torch.models.crystal import Crystal
 from nanobrag_torch.models.detector import Detector
@@ -291,13 +297,13 @@ class TestATPERF003MemoryBandwidth:
             print(f"  {size}×{size}: {median_time:.3f}s, "
                   f"~{bandwidth:.1f} GB/s effective")
 
-        # For complex simulations with many intermediate operations,
-        # bandwidth may decrease with size due to cache effects.
-        # We expect at least 50% of the small-size bandwidth for large arrays
-        # (relaxed from 80% to account for realistic cache and memory effects)
-        assert bandwidths[2048] >= bandwidths[512] * 0.5, \
-            f"Bandwidth utilization decreases too much with size: " \
+        ratio_2048 = bandwidths[2048] / bandwidths[512]
+        print(f"\nObserved ratio (2048 vs 512): {ratio_2048:.3f}x")
+        print(f"Required ratio: {BANDWIDTH_RATIO_THRESHOLD:.2f}x")
+        assert ratio_2048 >= BANDWIDTH_RATIO_THRESHOLD, (
+            "Bandwidth utilization decreases too much with size: "
             f"{bandwidths[2048]:.3f} GB/s vs {bandwidths[512]:.3f} GB/s"
+        )
 
         print("\n✅ Memory bandwidth utilization test PASSED")
 

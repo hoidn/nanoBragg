@@ -17,6 +17,22 @@ from nanobrag_torch.models.crystal import Crystal
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 
+@pytest.fixture(autouse=True)
+def reset_default_dtype():
+    """Reset torch default dtype to float32 before each test, restore after.
+
+    Prevents dtype leakage from tests like AT-PARALLEL-013 which set
+    torch.set_default_dtype(torch.float64). Without this guard, downstream
+    tricubic gather tests fail with RuntimeError: Float did not match Double.
+
+    See: reports/2026-01-test-suite-refresh/phase_m/20251015T201831Z/analysis/cluster_mapping.md
+    """
+    prev = torch.get_default_dtype()
+    torch.set_default_dtype(torch.float32)
+    yield
+    torch.set_default_dtype(prev)
+
+
 class TestTricubicGather:
     """Test suite for batched neighborhood gathering (Phase C1)."""
 
@@ -312,6 +328,26 @@ class TestTricubicGather:
         print(f"  - First OOB: warning printed, interpolation disabled, returned default_F={expected_default}")
         print(f"  - Second OOB: no warning, still returns default_F={expected_default}")
         print(f"  - In-bounds post-disable: uses fallback path, returns {F_third.item()}")
+
+    def test_vectorized_respects_float32_when_global_dtype_changes(self, crystal_with_data):
+        """Regression test: tricubic gather returns float32 even when global dtype is float64.
+
+        Simulates the state AT-PARALLEL-013 leaves behind (torch.set_default_dtype(float64)).
+        Without the autouse reset_default_dtype fixture, this would fail with
+        RuntimeError: Float did not match Double.
+
+        Reference: CLUSTER-VEC-001, Sprint 2 plan Task 1 Step 1.
+        """
+        prev_dtype = torch.get_default_dtype()
+        torch.set_default_dtype(torch.float64)
+        try:
+            h = torch.tensor([1.5], dtype=torch.float32)
+            k = torch.tensor([0.5], dtype=torch.float32)
+            l = torch.tensor([0.0], dtype=torch.float32)
+            result = crystal_with_data._tricubic_interpolation(h, k, l)
+            assert result.dtype == torch.float32
+        finally:
+            torch.set_default_dtype(prev_dtype)
 
     @pytest.mark.parametrize("device", [
         "cpu",

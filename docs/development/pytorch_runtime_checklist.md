@@ -27,6 +27,7 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Watch the console for Dynamo "graph break" warnings; treat them as blockers.
    - Benchmarks should reuse compiled functions; avoid changing shapes every call unless batching logic handles it.
    - **Gradient tests MUST disable compile:** Set `NANOBRAG_DISABLE_COMPILE=1` (preferred, DBEX spelling) or `NANOBRAGG_DISABLE_COMPILE=1` before running gradient tests to prevent torch.compile interference with `torch.autograd.gradcheck`. See `docs/development/testing_strategy.md` §4.1 for canonical command. Test files set `os.environ["NANOBRAGG_DISABLE_COMPILE"] = "1"` before importing torch; `Simulator` now honours both spellings for backward compatibility.
+   - **Slow-gradient tests require dedicated chunk execution:** Tests marked `@pytest.mark.slow_gradient` are skipped unless `--run-slow-gradient-chunk` or `NB_RUN_SLOW_GRADIENT=1` is provided. Run the dedicated chunk with both `NANOBRAGG_DISABLE_COMPILE=1` and the opt-in flag before the main suite. See `docs/development/testing_strategy.md` §4.1 "Pre-Suite Slow-Gradient Chunk".
 
 4. **Source Handling & Equal Weighting (C-Parity)**
    - **Do not apply source weights as multiplicative factors.** The weight column in sourcefiles is parsed but ignored per `specs/spec-a-core.md:151-153`.
@@ -39,5 +40,10 @@ Use this quick checklist before and after every PyTorch simulator edit. It disti
    - Update relevant docs/tests when you change vectorization or device handling.
    - Capture timings/metrics (CPU vs CUDA) and link them in `docs/fix_plan.md`.
    - **Gradient test performance:** Slow gradient tests (marked with `@pytest.mark.slow_gradient`) may legitimately run up to 905 seconds on CPU with float64 precision. This is expected behavior for high-precision numerical gradient checks, not a performance regression. Phase R uplift (2025-10-15T091543Z) raised ceiling to 905s after observing 900.02s breach in chunk 03 rerun.
+
+6. **Performance Evidence Refresh**
+   - Before declaring a full-suite rerun healthy, re-capture AT-PERF-003 bandwidth baselines (isolated + stressed) per `docs/development/testing_strategy.md` §6.1.
+   - Compare against `BANDWIDTH_RATIO_THRESHOLD` in `tests/test_at_perf_003.py` and update if hardware changes.
+   - Evidence path: `reports/2026-01-test-suite-refresh/phase_n/<STAMP>/sprint4/`
 
 Keep this checklist open while working; cite it in fix-plan entries so the vectorization/device guardrails stay visible.

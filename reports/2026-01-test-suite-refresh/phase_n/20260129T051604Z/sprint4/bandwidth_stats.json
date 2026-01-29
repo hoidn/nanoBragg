@@ -1,0 +1,30 @@
+{
+  "baseline": {
+    "512": {
+      "median_seconds": 0.02,
+      "bandwidth_gbps": 0.3
+    },
+    "1024": {
+      "median_seconds": 0.083,
+      "bandwidth_gbps": 0.3
+    },
+    "2048": {
+      "median_seconds": 0.565,
+      "bandwidth_gbps": 0.2
+    }
+  },
+  "stressed": {
+    "512": {
+      "median_seconds": 0.023,
+      "bandwidth_gbps": 0.3
+    },
+    "1024": {
+      "median_seconds": 0.085,
+      "bandwidth_gbps": 0.3
+    },
+    "2048": {
+      "median_seconds": 0.566,
+      "bandwidth_gbps": 0.2
+    }
+  }
+}

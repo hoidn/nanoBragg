@@ -1,0 +1,13 @@
+# Sprint 2 VEC-001 dtype reset — commands executed 2026-01-29T04:59Z
+
+# Step 1: Verify regression test + guard pass
+pytest -vv tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_respects_float32_when_global_dtype_changes
+pytest -vv tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar
+pytest -vv tests/test_tricubic_vectorized.py::TestTricubicGather::test_oob_warning_single_fire
+
+# Step 2: Full module (17/17 passed)
+pytest -vv tests/test_tricubic_vectorized.py
+
+# Step 3: Root-cause demo — AT-PARALLEL-013 sets float64, then tricubic still passes
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_at_parallel_013.py::TestATParallel013CrossPlatformConsistency::test_pytorch_determinism_same_seed --maxfail=1
+env KMP_DUPLICATE_LIB_OK=TRUE pytest -vv tests/test_tricubic_vectorized.py::TestTricubicGather::test_vectorized_matches_scalar

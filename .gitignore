@@ -107,3 +107,5 @@ reports/pyrefly/
 commands
 Fdump.bin
 logs/
+
+.worktrees/
