@@ -142,3 +142,11 @@ Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 arti
 25. **Task 25 (NEW 2026-01-29 23:45Z) — Multiscale geometry sweep:** Execute `docs/plans/2026-01-29-vi-multiscale-geometry.md` to (a) add the VI geometry preset module + CLI wiring, (b) build a `run_geometry_sweep` helper inside `scripts/analysis/vi_poisson_diagnostics.py`, and (c) run the new sweep + canonical benchmark on multi-scale crystal configurations (smaller cell + shorter wavelength per `docs/strategy/mainstrategy.md §9`). Artifact roots will live under `plans/active/strat-vi-001/reports/<ts>/geometry_sweep/` and `/geometry_benchmark/`. Exit once the sweep either recovers σ ≥ 1.5° or documents why richer geometries still collapse and recommends the next mitigation (e.g., flow posterior or hybrid MC-VI).
 
 Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-vi-multiscale-geometry.md next_action=delegate_task25_geometry_presets
+
+26. **Task 26 (NEW 2026-01-29 23:59Z) — Flow posterior / hybrid pathfinding:** Execute `docs/plans/2026-01-29-vi-flow-posterior.md` to land a normalizing-flow parameterization for `MosaicPosterior`, expose the knobs via diagnostics + benchmark CLIs, and capture evidence showing whether the expressive posterior can break the σ≤0.8° ceiling logged in FND-VI-2026-01f. Scope:
+    - Task 1–2: build affine-coupling flow layers + integrate them into `MosaicPosterior` with gradcheck coverage.
+    - Task 3: wire CLI flags (`--posterior-parameterization flow`, `--posterior-flow-layers`, etc.) plus simulator plumbing and snapshot tests.
+    - Task 4: run comparative diagnostics / canonical benchmark (`plans/active/strat-vi-001/reports/<ts>/flow_{diagnostics,benchmark}/`), update `docs/findings.md` + `docs/strategy/mainstrategy.md` with go/no-go results, and set the next mitigation (e.g., hybrid MC-VI) if σ is still <1.5°.
+    - Exit criteria: flow posterior code + tests merged, artifacts demonstrating sigma trajectory ≥1.5° **or** documented structural failure plus recommendation for the hybrid path.
+
+Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=docs/plans/2026-01-29-vi-flow-posterior.md next_action=delegate_task26_flow_posterior
