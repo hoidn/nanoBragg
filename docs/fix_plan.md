@@ -3,6 +3,7 @@
 **Last Updated:** 2026-01-29 (Variational mosaic pivot)
 
 **Active Focus:**
+- STRAT-M3-001 — Execute `docs/plans/2026-01-29-m3-joint-global-local.md` to land Strategy §7 Milestone M3 (joint global-local Duck refinement)
 - STRAT-M2-001 — Execute `docs/plans/2026-01-29-m2-amortized-multi-image.md` to deliver the Duck amortized multi-image demo (Strategy §7 Milestone M1)
 - STRAT-PROB-001/002/003 — Paused as legacy reference while VI replaces the analytic mosaic flow
 
@@ -15,6 +16,7 @@
 | [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | failed |
 | [STRAT-VI-002](#strat-vi-002-gaussian-likelihood-vi-path) | Gaussian likelihood VI path | Critical | failed |
 | [STRAT-M2-001](#strat-m2-001-duck-multi-image-demo) | Duck multi-image demo | Critical | evidence_captured |
+| [STRAT-M3-001](#strat-m3-001-duck-joint-global-local-refinement) | Duck joint global-local refinement | High | planning |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -222,3 +224,22 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - Prepare M3 outline (joint global-local refinement)
 
 Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T141425Z/amortized_demo/ next_action=prepare_m3_outline
+
+## [STRAT-M3-001] Duck joint global-local refinement
+- Strategy Reference: `docs/strategy/mainstrategy.md` §7 (Milestone M3)
+- Plan Reference: `docs/plans/2026-01-29-m3-joint-global-local.md`
+- Goal: Add a joint training path where MultiImageTrainer optimizes the shared structure-factor field (F_hkl) alongside per-image mosaic spread and observation scale so the Duck demo can show coupled global/local inference.
+- Dependencies: STRAT-M2-001 dataset/assets; STRAT-VI findings (structural collapse context); dataset spec updates from Task 1.
+- Artifacts Root: `plans/active/strat-m3-001/`
+- Next Actions:
+  1. Task 1 — Update Duck dataset spec/generator/loader to emit `structure_factors.pt` plus metadata, add pytest coverage (`tests/test_duck_dataset.py::test_duck_dataset_includes_structure_factors`).
+  2. Task 2 — Implement `StructureFactorLatent` + `Crystal.set_hkl_tensor`, add unit tests verifying gradient propagation.
+  3. Task 3 — Extend `MultiImageTrainer` with `joint_mode`, per-image posterior parameters, and learnable observation scales; capture pytest evidence for the new mode.
+  4. Task 4 — Add `--mode joint` to `scripts/demo_recover_duck.py`, refresh docs (strategy + testing), and archive the canonical joint benchmark under `plans/active/strat-m3-001/reports/<ts>/joint_demo/`.
+- Exit Criteria:
+  - Duck dataset ships structure-factor metadata + tensor under version control and loader exposes it.
+  - Structure-factor latent module exists with unit tests proving differentiability and correct Crystal injection.
+  - MultiImageTrainer joint mode passes pytest (unit + CLI smoke) and exposes per-image sigma + scale histories.
+  - Canonical `demo_recover_duck.py --mode joint` benchmark artifacts + docs updates demonstrate coupled convergence and refresh STRAT §7.
+
+Supervisor state: focus=STRAT-M3-001 state=planning dwell=1 artifacts=plans/active/strat-m3-001/reports/2026-01-29T142358Z/ next_action=delegate_task1_dataset_structure_factors

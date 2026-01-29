@@ -1,14 +1,20 @@
-Plan: docs/plans/2026-01-29-m2-amortized-evidence.md
+Plan: docs/plans/2026-01-29-m3-joint-global-local.md
 References:
-- docs/strategy/mainstrategy.md §7 — defines STRAT-M2-001 success metrics (150-iter Duck demo, per-image σ divergence, gradient scaling expectations)
-- docs/development/testing_strategy.md §6.2 — canonical pytest/CLI selectors plus artifact + gradient validation workflow for the amortized Duck path
-- docs/specs/duck_multi_image_dataset.md — dataset schema and observation scaling guarantees consumed by the demo/encoder
-- docs/fix_plan.md — authoritative ledger for marking STRAT-M2-001 exit criteria + supervisor state updates after evidence lands
-Summary:
-Execute the new STRAT-M2-001 evidence plan: (1) run the canonical amortized Duck demo for 150 iterations with `--log-gradients`, stage artifacts under `plans/active/strat-m2-001/reports/2026-01-29T234500Z/amortized_demo/` and mirror them into `demo_outputs/duck_amortized/`, (2) fold the recorded σ trajectory + gradient norms into `docs/strategy/mainstrategy.md §7` so the milestone reflects actual results, (3) refresh `docs/development/testing_strategy.md §6.2` with the final canonical command/selector list and artifact expectations, and (4) close the STRAT-M2-001 entry in `docs/fix_plan.md` with references to the evidence bundle and next-step guidance for M3.
-Summary: Capture the amortized Duck evidence bundle and update strategy/testing docs plus the fix-plan with the new artifacts.
-Focus: STRAT-M2-001 — Duck multi-image demo
+- docs/strategy/mainstrategy.md §7 — defines M3 acceptance criteria and expected CLI workflows
+- docs/specs/duck_multi_image_dataset.md — dataset schema that must be extended with structure-factor payloads
+- specs/spec-a-core.md §Structure Factors & Fdump — normative unit/shape rules for HKL tensors injected into Crystal
+- docs/development/testing_strategy.md §6 — authoritative Duck demo testing workflow + CLI guidance
+- docs/fix_plan.md — current initiative states + dependencies
+Summary: Extend the Duck dataset + tooling so joint global/local refinement is possible: emit a reproducible structure-factor tensor in the generator/spec, add a differentiable `StructureFactorLatent` that can override Crystal HKL data per specs/spec-a-core.md §Structure Factors & Fdump, teach `MultiImageTrainer` a `joint_mode` that optimizes that latent plus per-image sigma/scale parameters, and expose the path via `scripts/demo_recover_duck.py --mode joint` with updated docs + evidence under STRAT-M3-001.
+Summary (Goal): Deliver a joint-mode Duck benchmark where shared structure factors and per-image mosaics co-train with passing pytest + refreshed CLI docs.
+Focus: STRAT-M3-001 — Duck joint global-local refinement
 Branch: feature/spec-based-2
-Mapped tests: pytest tests/test_vi_mosaic.py::test_demo_recover_duck_cli_amortized -v; pytest tests/test_vi_mosaic.py::test_multi_image_trainer_amortized_mode -v; pytest tests/test_vi_mosaic.py::test_duck_mosaic_encoder_outputs_mu_rho -v
-Artifacts: plans/active/strat-m2-001/reports/2026-01-29T234500Z/
-Next Up: 1) If time remains, add dataset-size gradient scaling notes to Strategy §7; 2) Prepare outline for STRAT-M2-001 Task M3 (joint global-local refinement).
+Mapped tests:
+- pytest tests/test_duck_dataset.py::test_duck_dataset_includes_structure_factors -v
+- pytest tests/test_vi_mosaic.py::TestStructureFactorLatent::test_latent_applies_tensor_and_tracks_grads -v
+- pytest tests/test_vi_mosaic.py::test_multi_image_trainer_joint_mode_wires_latents -v
+- pytest tests/test_vi_mosaic.py::test_demo_recover_duck_cli_joint -v
+Artifacts: plans/active/strat-m3-001/reports/2026-01-29T142358Z/
+Next Up:
+1. Once joint CLI artifacts exist, rerun the 150-iteration benchmark with 20-image Duck dataset and archive screenshots/logs.
+2. Add GPU smoke coverage for joint mode to ensure StructureFactorLatent stays device-neutral.
