@@ -115,3 +115,8 @@ Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 arti
 19. ~~**Task 17 benchmark rerun (2026-01-29 19:30Z):**~~ ✅ Completed. Ran canonical 150-iter benchmark with observation-scale parity. MC σ=1.517° (meets ≥1.5°), VI σ=0.086° (collapsed). Scale parity is necessary but not sufficient — VI posterior collapse is structural. Evidence: `plans/active/strat-vi-001/reports/2026-01-29T193000Z/scale_parity/`. Demo artifacts refreshed in `demo_outputs/`. Docs (findings, strategy §9, fix_plan) updated with scaled results.
 
 Supervisor state: focus=STRAT-VI-001 state=evidence_captured dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T193000Z/scale_parity/ next_action=evaluate_alternative_posteriors_or_temperature_scaling
+
+20. **Task 18 — Likelihood-temperature sweep (NEW 2026-01-29 10:22Z):** Execute `docs/plans/2026-01-29-vi-likelihood-temperature.md` to add a `likelihood_temperature` knob to `poisson_elbo`, surface it through diagnostics/benchmark CLIs, and run temperature sweeps (e.g., T∈{1,2,4}) that quantify how hotter likelihoods change σ recovery and gradient ratios. Archive artifacts under `plans/active/strat-vi-001/reports/<ts>/temperature_sweep/`, update `docs/findings.md` (FND-VI-2026-01) and `docs/strategy/mainstrategy.md §9` with conclusions, and refresh `input.md` plus `docs/fix_plan.md` once evidence lands.
+
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/ next_action=delegate_task18_likelihood_temperature_sweep
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=plans/active/strat-vi-001/reports/2026-01-29T102251Z/ next_action=delegate_task18_likelihood_temperature_sweep 
