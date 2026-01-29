@@ -1,18 +1,18 @@
 # Fix Plan Ledger
 
-**Last Updated:** 2026-01-29 (Probabilistic Strategy realignment)
+**Last Updated:** 2026-01-29 (Variational mosaic pivot)
 
 **Active Focus:**
-- STRAT-PROB-003 — Execute `docs/plans/2026-01-29-probabilistic-gradient-recovery.md` to resolve FND-PROB-2026-01
-- STRAT-PROB-002 — Benchmark artifacts frozen pending STRAT-PROB-003 fix
-- STRAT-PROB-001 — Kernel + tests landed; in review while STRAT-PROB-002 benchmarks ramp
+- STRAT-VI-001 — Execute `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md` to land the VariationalMosaicSimulator stack and retire the analytic kernel once VI passes
+- STRAT-PROB-001/002/003 — Paused as legacy reference while VI replaces the analytic mosaic flow
 
 ## Index
 | ID | Title | Priority | Status |
 | --- | --- | --- | --- |
-| [STRAT-PROB-001](#strat-prob-001-probabilistic-simulator-kernel) | ProbabilisticSimulator kernel | Critical | in_review |
-| [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | done_with_findings |
-| [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | in_progress |
+| [STRAT-PROB-001](#strat-prob-001-probabilistic-simulator-kernel) | ProbabilisticSimulator kernel | Critical | paused_legacy |
+| [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | paused_legacy |
+| [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | paused_legacy |
+| [STRAT-VI-001](#strat-vi-001-variational-mosaic-simulator) | Variational mosaic simulator | Critical | in_planning |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -61,9 +61,29 @@
   4. Task 4: refresh benchmark presets/artifacts (add `hi_res_c`), rerun CLI, and roll the evidence into `docs/strategy/mainstrategy.md` + README once Task 3 proves non-zero gradients and ≥4× speedup.
 - Exit Criteria:
   - Diagnostics JSON/markdown exist under the artifacts root showing |ΔQ|/σ ratios and non-zero FD gradients for hi_res_b.
-  - Updated kernel & tests land with grad magnitudes ≥1e-4 for hi_res_b (unit test) and gradcheck continues to pass on CPU.
-  - `scripts/benchmark_probabilistic.py --scenario hi_res_c` yields probabilistic mean |grad| ≥1e-4 and speedup ≥4× (artifacts logged + docs updated).
-  - STRAT-PROB-002 can move to **complete** (docs referencing artifacts, README updated).
+- Updated kernel & tests land with grad magnitudes ≥1e-4 for hi_res_b (unit test) and gradcheck continues to pass on CPU.
+- `scripts/benchmark_probabilistic.py --scenario hi_res_c` yields probabilistic mean |grad| ≥1e-4 and speedup ≥4× (artifacts logged + docs updated).
+- STRAT-PROB-002 can move to **complete** (docs referencing artifacts, README updated).
+
+> **Status:** Paused as of 2026-01-29. The analytic Gaussian fix is no longer on the critical path because VI mosaic modeling supersedes it. Preserve artifacts for documentation but do not resume until STRAT-VI-001 completes.
+
+## [STRAT-VI-001] Variational mosaic simulator
+- Strategy Reference: `docs/strategy/mainstrategy.md` §8 (VI replacement for mosaicity)
+- Plan Reference: `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md`
+- Goal: Implement the VariationalMosaicSimulator stack (posterior module, VariationalMosaicSimulator class, Poisson ELBO helper, benchmarks, and analytic deprecation) so mosaicity gradients are recovered via VI instead of the analytic Gaussian.
+- Dependencies: STRAT-PROB-003 findings FND-PROB-2026-01 (zero gradients) plus existing Simulator API contracts.
+- Artifacts Root: `plans/active/strat-vi-001/` (current loop report: `2026-01-29T071658Z`)
+- Next Actions:
+  1. **Task 1** — Stand up `src/nanobrag_torch/vi/mosaic_posterior.py` with a reparameterized log-normal sampler, KL helper, and `tests/test_vi_mosaic.py::test_mosaic_posterior_*` coverage (write test first).
+  2. **Task 2** — Implement `VariationalMosaicSimulator` in `src/nanobrag_torch/simulators/variational_mosaic.py` plus smoke tests that show `k_samples=1` matches deterministic rotations and averages across seeds; update `__init__.py`.
+  3. **Task 3** — Add `src/nanobrag_torch/vi/poisson_elbo.py` and gradcheck/regression coverage tying simulator + posterior together.
+  4. **Task 4** — Build `scripts/benchmark_vi_mosaic.py` + documentation/README updates to compare MC, analytic, and VI plus CLI instructions.
+  5. **Task 5** — After VI passes, emit `DeprecationWarning` in the analytic simulator and mark docs accordingly.
+- Exit Criteria:
+  - New VI modules ship with deterministic seed control (`torch.Generator`) and gradcheck-proven differentiability.
+  - Benchmark artifacts (PNG/JSON/logs) demonstrate Poisson ELBO convergence and non-zero gradients compared to MC/analytic.
+  - `docs/strategy/mainstrategy.md`, README_PYTORCH, and plan docs are updated to state VI is default; analytic path clearly flagged as legacy.
+  - Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution of FND-PROB-2026-01.
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-PROB-003 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-prob-003/reports/2026-01-29T070535Z/ next_action=implement_task3_sigma_fix
+Supervisor state: focus=STRAT-VI-001 state=planning dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T071658Z/ next_action=bootstrap_task1_mosaic_posterior
