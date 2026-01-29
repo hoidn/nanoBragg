@@ -1,52 +1,19 @@
-Summary: Synthesize the Phase L failure set into Phase M artifacts (failures.json, cluster mapping, tracker delta, next-steps brief).
-Mode: Docs
-Focus: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage (Next Action 20 — Phase M failure synthesis & remediation hand-off)
+Summary: Launch Sprint 1 to harden repo-root infrastructure guards (Gap 1) and stabilize nb-compare CLI tooling per Phase M next steps.
+Mode: Implementation
+Focus: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage-refresh (Next Action 21 — Sprint 1 Gap 1/TOOLS remediation)
 Branch: feature/spec-based-2
-Mapped tests: none — evidence-only
-Artifacts: reports/2026-01-test-suite-refresh/phase_m/$STAMP/{analysis,notes}
-Do Now: docs/fix_plan.md#test-suite-triage-002-full-pytest-rerun-and-triage — Execute Phase M tasks M1–M4 using Phase L STAMP `reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/` as input. Capture failures.json, cluster_mapping.md, tracker update, and next_steps.md under a new Phase M STAMP, then record the attempt in docs/fix_plan.md and galph_memory.
-If Blocked: Document the blocker (e.g., missing scripts, parsing failure) in `reports/2026-01-test-suite-refresh/phase_m/$STAMP/analysis/blockers.md` with log snippets and notify galph via fix_plan Attempts History.
+Mapped tests:
+- pytest -vv tests/test_repo_root_fixture.py
+- pytest -vv tests/test_cli_flags.py::TestPix0VectorAlias::test_pix0_vector_mm_beam_pivot[cpu]
+- pytest -vv tests/test_at_tools_001.py::TestAT_TOOLS_001_DualRunnerComparison::test_script_integration
+Artifacts: plans/active/test-suite-triage-phase-h/reports/20260129T044422Z/
+Next Up (optional): Sprint 2 dtype reset (VEC-001) if Sprint 1 lands quickly
+
+Do Now: Execute `docs/plans/2026-01-29-sprint1-gap1-plan.md` Tasks 1–4 in order. (1) Introduce the shared `repo_root` helper + `ensure_repo_cwd` guard inside `tests/conftest.py`, add `tests/test_repo_root_fixture.py`, and make C binary / golden asset checks consume the helper — reference `docs/development/testing_strategy.md §1.5` for authoritative NB_C_BIN precedence. (2) Refactor `tests/test_cli_flags.py` to use the new `repo_root` fixture everywhere the tests touch golden assets per `docs/architecture/c_parameter_dictionary.md` beam-center conventions; keep device/dtype guards intact. (3) Harden `tests/test_at_tools_001.py::test_script_integration` so nb-compare resolution follows `scripts/nb_compare` console script semantics from `pyproject.toml` and falls back to `sys.executable -m scripts.nb_compare`; make sure subprocess `cwd` stays at repo root. (4) Update docs/fix_plan.md Attempt history + Next Actions, append Gap 1 lesson to `docs/findings.md`, and capture STAMPed evidence (commands, pytest logs, PATH diagnostics) under `reports/2026-01-test-suite-refresh/phase_n/$STAMP/sprint1/` before committing.
+
+If Blocked: Document the blocker (logs + diagnosis) in `reports/2026-01-test-suite-refresh/phase_n/$STAMP/sprint1/blockers.md`, update fix_plan Attempts with the failure reason, and halt implementation pending supervisor guidance.
+
 Priorities & Rationale:
-- plans/active/test-suite-triage-phase-h.md: Phase M table (M1–M4) requires synthesis artifacts before remediation can resume.
-- docs/fix_plan.md: Active Focus now targets Phase M; Next Action 20 flagged READY pending classification bundle.
-- reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/analysis/summary.md: Provides authoritative failure counts and deltas to reference in the mapping.
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md: Baseline tracker that must be refreshed with Phase L counts.
-- docs/development/testing_strategy.md §1.4: Reference for environment/timeouts when describing gradient timeout remediation options in next steps.
-How-To Map:
-- `STAMP=$(date -u +%Y%m%dT%H%M%SZ)`
-- `BASE=reports/2026-01-test-suite-refresh/phase_m/$STAMP`
-- `mkdir -p "$BASE"/analysis "$BASE"/notes`
-- `INPUT=reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z`
-- Parse failures: `python - <<'PY2'
-import json, sys
-from pathlib import Path
-failures = []
-for line in Path(sys.argv[1]).read_text().splitlines():
-    if line.startswith('FAILED '):
-        parts = line.split()
-        failures.append({"nodeid": parts[1], "summary": ' '.join(parts[2:])})
-Path(sys.argv[2]).write_text(json.dumps(failures, indent=2) + '\n')
-PY2" "$INPUT"/logs/pytest_full.log "$BASE"/analysis/failures.json`
-- Map clusters: create `$BASE/analysis/cluster_mapping.md` summarising each failure group (CREF, PERF, TOOLS, CLI, GRAD, VEC) with links to Phase G + Phase L summaries; flag any new regressions.
-- Tracker refresh: either edit `reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md` in-place with new counts or author `$BASE/analysis/tracker_update.md` detailing deltas and owner assignments; note whichever path you take in the doc header.
-- Next steps brief: draft `$BASE/analysis/next_steps.md` with remediation ordering, required decisions (e.g., gradient timeout policy), and selectors/commands per cluster.
-- Update documentation: append Attempt entry to `docs/fix_plan.md` (Next Action 20) citing `$BASE`; add the run to galph_memory Attempts History with STAMP + key findings.
-Pitfalls To Avoid:
-- Do not overwrite or delete Phase L artifacts; reference them read-only.
-- Avoid running pytest; this loop is evidence-only.
-- Keep failure parsing deterministic (stable ordering, include nodeids).
-- When updating the remediation tracker, preserve existing historical rows and note deltas clearly.
-- Reference authoritative docs (specs/arch/testing strategy) when noting remediation implications.
-- Include absolute or repo-relative paths in all new markdown tables.
-- Use ASCII only; avoid Unicode bullets/quotes.
-- Commit updates after verifying diffs; no partial edits left staged.
-- Update fix_plan and galph_memory in the same STAMP to avoid drift.
-- Do not modify protected assets listed in docs/index.md.
-- Capture $STAMP in every new artifact filename or header to maintain traceability.
-Pointers:
-- plans/active/test-suite-triage-phase-h.md:78-90
-- docs/fix_plan.md:1-25,918-965
-- reports/2026-01-test-suite-refresh/phase_l/20251015T190350Z/analysis/summary.md
-- reports/2026-01-test-suite-refresh/phase_g/20251015T163131Z/analysis/summary.md
-- reports/2026-01-test-suite-triage/phase_j/20251011T043327Z/remediation_tracker.md
-Next Up: Parse tricubic + gradient remediation options for Phase N sequencing if time allows.
+- `docs/plans/2026-01-29-sprint1-gap1-design.md`: canonical description of Gap 1 impact on CLUSTER-CREF-001 and CLUSTER-CLI-001.
+- `plans/active/test-suite-triage-phase-h.md` Phase M rows: ensures Sprint sequencing remains aligned with the remediation tracker.
+- `docs/development/testing_strategy.md §§1.4–1.5`: authoritative constraints for NB_C_BIN precedence, infrastructure fixtures, and environment guards.
