@@ -4,7 +4,7 @@ Scope: deliver the VariationalMosaicSimulator stack (posterior module, simulator
 
 Artifact roots:
 - Reports: `plans/active/strat-vi-001/reports/`
-- Current supervisor loop: `plans/active/strat-vi-001/reports/2026-01-29T071658Z/`
+- Current supervisor loop: `plans/active/strat-vi-001/reports/2026-01-29T075930Z/`
 
 Strategy references:
 - `docs/strategy/mainstrategy.md §8`
