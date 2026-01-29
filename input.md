@@ -1,26 +1,23 @@
-Plan: docs/plans/2026-01-29-vi-prior-geometry.md
+Plan: docs/plans/2026-01-29-vi-prior-geometry.md §Tasks 3-4
 References:
-- docs/strategy/mainstrategy.md §9 — strategy mandate for replacing analytic mosaicity with VI plus evidence expectations for Task 24
-- docs/plans/2026-01-29-vi-prior-geometry.md — step-by-step instructions for the prior schedule + multi-geometry diagnostics workflow
-- docs/findings.md (FND-VI-2026-01 / FND-VI-2026-01b / FND-VI-2026-01c) — captures the structural collapse evidence we must improve and cites existing artifacts
-- docs/plans/2026-01-29-vi-mosaic-design.md §Variational Family — normative definition of the mosaic posterior, KL, and Poisson ELBO math we must preserve
-- scripts/analysis/vi_poisson_diagnostics.py & scripts/benchmark_vi_mosaic.py — CLIs that need the new prior schedule knobs and metadata logging
-- src/nanobrag_torch/vi/mosaic_posterior.py & src/nanobrag_torch/vi/poisson_elbo.py — posterior+diagnostics plumbing that must expose the schedule and capture prior metadata
-- tests/test_vi_mosaic.py — regression targets for the new helper, CLI wiring, and smoke coverage
+- docs/strategy/mainstrategy.md §9 — authoritative VI readiness criteria + prior-schedule context
+- docs/plans/2026-01-29-vi-prior-geometry.md — canonical commands + artifact layout for detector sweeps & prior benchmark
+- docs/findings.md (FND-VI-2026-01 family) — baseline collapse evidence you must extend with new data
+- docs/plans/2026-01-29-vi-mosaic-design.md §Variational Family — normative posterior/ELBO math for σ interpretations
+- docs/development/testing_strategy.md §1.4 — device/dtype + logging expectations for PyTorch runs
+- scripts/analysis/vi_poisson_diagnostics.py & scripts/benchmark_vi_mosaic.py — CLIs to execute for diagnostics/benchmark
 Summary:
-- Implement Task 1 from the plan: add `LinearPriorSchedule` (new module) plus `MosaicPosterior.set_prior`, write/execute the targeted tests (`test_interpolates_spread`, `test_mosaic_posterior_set_prior_updates_buffers`), and stash pytest logs under `plans/active/strat-vi-001/reports/2026-01-29T105208Z/prior_schedule_dev/`.
-- Execute Task 2: thread the prior schedule knobs through `run_diagnostics` / `run_benchmark`, emit prior metadata in JSON + Markdown summaries, update ELBO diagnostics if needed, and extend smoke tests so the new CLI options collect.
-- After each task, rerun the mapped selectors, capture logs in the artifact directory, and leave docs untouched until Task 3 (diagnostics runs) delivers data; ensure CLI help text explains defaults so future sweeps are reproducible.
-Summary (Goal): Land the prior-schedule plumbing (helper + CLI wiring) so VI experiments can sweep informative priors across detector sizes.
-Focus: STRAT-VI-001 — Prior schedule & multi-geometry diagnostics (Task 24)
+- Execute Task 3 detector sweeps exactly as specified: create `plans/active/strat-vi-001/reports/2026-01-29T113030Z/prior_schedule/{32x32,64x64,128x128}`, run `KMP_DUPLICATE_LIB_OK=TRUE python scripts/analysis/vi_poisson_diagnostics.py ... --prior-*` for each size, tee stdout into each folder, and write `summary.md` capturing σ trajectories, gradient-ratio trends, and whether informative priors delay collapse.
+- Parse each `vi_diagnostics.json` to extract σ_max, σ_last, mu/rho gradient norms, and append the findings (with artifact paths) to `docs/findings.md` under FND-VI-2026-01 plus `docs/strategy/mainstrategy.md §9` so the strategy reflects the new evidence.
+- For Task 4 choose the detector/prior combo with the best σ from Task 3, run the 150-iter benchmark into `plans/active/strat-vi-001/reports/2026-01-29T113030Z/prior_benchmark/` (archive CLI log, PNG, JSON, summary.md), and update `docs/fix_plan.md` + docs/strategy/findings with the pass/fail result relative to the ≥1.5° σ criterion.
+Summary (one sentence): Run the prior-schedule multi-geometry diagnostics and canonical benchmark to determine if informative priors recover VI σ ≥ 1.5°.
+Focus: STRAT-VI-001 — Task 24 prior schedule + multi-geometry diagnostics (Steps 3–4)
 Branch: feature/spec-based-2
 Mapped tests:
-- KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py::TestLinearPriorSchedule::test_interpolates_spread -v
-- KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py::test_mosaic_posterior_set_prior_updates_buffers -v
 - KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py::test_vi_diagnostics_records_prior_schedule -v
 - KMP_DUPLICATE_LIB_OK=TRUE pytest tests/test_vi_mosaic.py::test_benchmark_script_smoke -v
-Artifacts: plans/active/strat-vi-001/reports/2026-01-29T105208Z/prior_schedule_dev/
+Artifacts: plans/active/strat-vi-001/reports/2026-01-29T113030Z/{prior_schedule/,prior_benchmark/}
 Next Up (optional):
-1. Run Task 3 multi-geometry diagnostics sweeps once the new knobs are validated.
-2. Run Task 4 canonical 150-iter benchmark with the best prior schedule configuration.
-Normative Math/Physics: See docs/plans/2026-01-29-vi-mosaic-design.md §Variational Family for the authoritative posterior/ELBO equations and docs/strategy/mainstrategy.md §9 for the VI initiative objectives governing prior scheduling.
+1. If σ still collapses, draft mitigation options (e.g., detector slicing or posterior flows) under docs/plans.
+2. If benchmark succeeds, prep docs/strategy updates to redefine VI readiness criteria and schedule follow-on sweeps.
+Normative Math/Physics: Cite docs/plans/2026-01-29-vi-mosaic-design.md §Variational Family whenever interpreting posterior math, and reference docs/strategy/mainstrategy.md §9 when discussing σ thresholds or benchmark exit criteria.
