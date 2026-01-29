@@ -84,7 +84,7 @@
 8. ~~**Task 7** — Diagnose VI spread collapse (FND-VI-2026-01) via enriched `poisson_elbo` diagnostics + benchmark logging, then archive the JSON/markdown bundle under `plans/active/strat-vi-001/reports/2026-01-29T081427Z/`.~~ ✅ Evidence wired + findings/strategy updated 2026-01-29.
 9. ~~**Plan update** — Draft focused mitigation design (ELBO rescaling / observation normalization) now that instrumentation is done.~~ ✅ `docs/plans/2026-01-29-vi-elbo-balancing.md` captures the KL annealing rollout.
 10. **Execute VI ELBO Rebalancing plan:** follow Tasks 1–4 in `docs/plans/2026-01-29-vi-elbo-balancing.md` (KL weighting hook → schedule helper → CLI wiring → refreshed evidence) so the canonical benchmark demonstrates σ recovery (≥1.5° by 150 iterations) and the new CLI knobs + docs cover the workflow.
-11. **Task 5 (NEW)** — Run the long-horizon KL annealing benchmark (extended diagnostics + canonical 150-iter run with β ramp) and update docs/findings/strategy with the new evidence per the plan addendum dated 2026-01-29. Artifacts go under a fresh timestamped directory in `plans/active/strat-vi-001/reports/`.
+11. ~~**Task 5** — Run the long-horizon KL annealing benchmark (extended diagnostics + canonical 150-iter run with β ramp) and update docs/findings/strategy with the new evidence.~~ ✅ Completed 2026-01-29. Result: σ did **not** reach 1.5° — 80-iter diagnostics (32×32) peaked at 1.25°, canonical 150-iter benchmark (64×64) collapsed to 0.148°. KL annealing alone is insufficient. Evidence: `plans/active/strat-vi-001/reports/2026-01-29T083412Z/`.
 - Exit Criteria:
   - New VI modules ship with deterministic seed control (`torch.Generator`) and gradcheck-proven differentiability.
   - Benchmark artifacts (PNG/JSON/logs) demonstrate Poisson ELBO convergence and non-zero gradients compared to MC/analytic, or STRAT-VI-001 documents a mitigation plan that resolves FND-VI-2026-01.
@@ -92,4 +92,4 @@
 - Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution/supersession of FND-PROB-2026-01.
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-VI-001 state=planning dwell=2 artifacts=plans/active/strat-vi-001/reports/2026-01-29T081427Z/ next_action=delegate_long_run_annealing
+Supervisor state: focus=STRAT-VI-001 state=evidence_review dwell=3 artifacts=plans/active/strat-vi-001/reports/2026-01-29T083412Z/ next_action=design_likelihood_rescaling_or_alternative_elbo
