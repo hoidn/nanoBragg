@@ -1,14 +1,14 @@
-Plan: docs/plans/2026-01-29-m2-amortized-mosaicity.md
+Plan: docs/plans/2026-01-29-m2-amortized-evidence.md
 References:
-- docs/strategy/mainstrategy.md §7 — authoritative success criteria for M2 (per-image σ recovery ≥1.5° plus gradient growth with dataset size)
-- docs/specs/duck_multi_image_dataset.md — dataset layout, per-image metadata contract, observation scaling guarantees
-- docs/development/testing_strategy.md §CLI Workflows — canonical pytest/CLI selectors and artifact expectations for Duck demos
-- docs/fix_plan.md — STRAT-M2-001 ledger with task breakdown + exit criteria to update after landing evidence
+- docs/strategy/mainstrategy.md §7 — defines STRAT-M2-001 success metrics (150-iter Duck demo, per-image σ divergence, gradient scaling expectations)
+- docs/development/testing_strategy.md §6.2 — canonical pytest/CLI selectors plus artifact + gradient validation workflow for the amortized Duck path
+- docs/specs/duck_multi_image_dataset.md — dataset schema and observation scaling guarantees consumed by the demo/encoder
+- docs/fix_plan.md — authoritative ledger for marking STRAT-M2-001 exit criteria + supervisor state updates after evidence lands
 Summary:
-Execute Tasks 3–4 of the M2 plan: (1) add the `ConditionedMosaicPosterior` helper and overhaul `MultiImageTrainer` so it supports an amortized encoder path with orientation features, per-image sigma stats, gradient logging, and optional dataset sub-selection, and (2) wire focused pytest coverage (`test_amortized_trainer_recovers_per_image_spread`, CLI smoke) plus update `tests/test_vi_mosaic.py` to record the new diagnostics. Then extend `scripts/demo_recover_duck.py` with `--mode {shared,amortized}`, `--log-gradients`, and dataset-size sweeps, emit artifacts under `plans/active/strat-m2-001/reports/2026-01-29T230500Z/amortized_demo/` + `demo_outputs/duck_amortized/`, and refresh docs (strategy/testing/fix-plan/index) so Strategy §7’s amortized workflow is documented with citations to the new evidence bundle.
-Summary: Land the amortized Duck trainer + CLI evidence bundle per Strategy §7, proving per-image σ inference and gradient amplification.
+Execute the new STRAT-M2-001 evidence plan: (1) run the canonical amortized Duck demo for 150 iterations with `--log-gradients`, stage artifacts under `plans/active/strat-m2-001/reports/2026-01-29T234500Z/amortized_demo/` and mirror them into `demo_outputs/duck_amortized/`, (2) fold the recorded σ trajectory + gradient norms into `docs/strategy/mainstrategy.md §7` so the milestone reflects actual results, (3) refresh `docs/development/testing_strategy.md §6.2` with the final canonical command/selector list and artifact expectations, and (4) close the STRAT-M2-001 entry in `docs/fix_plan.md` with references to the evidence bundle and next-step guidance for M3.
+Summary: Capture the amortized Duck evidence bundle and update strategy/testing docs plus the fix-plan with the new artifacts.
 Focus: STRAT-M2-001 — Duck multi-image demo
 Branch: feature/spec-based-2
-Mapped tests: pytest tests/test_vi_mosaic.py::test_multi_image_trainer_batches_duck -v; pytest tests/test_vi_mosaic.py::test_demo_recover_duck_cli_smoke -v; pytest tests/test_vi_mosaic.py::test_amortized_trainer_recovers_per_image_spread -v (new); pytest tests/test_vi_mosaic.py::test_demo_recover_duck_cli_amortized -v (new)
-Artifacts: plans/active/strat-m2-001/reports/2026-01-29T230500Z/
-Next Up: 1) After amortized CLI lands, add GPU smoke + gradient plots; 2) Start documenting dataset-size gradient scaling results in docs/strategy/mainstrategy.md.
+Mapped tests: pytest tests/test_vi_mosaic.py::test_demo_recover_duck_cli_amortized -v; pytest tests/test_vi_mosaic.py::test_multi_image_trainer_amortized_mode -v; pytest tests/test_vi_mosaic.py::test_duck_mosaic_encoder_outputs_mu_rho -v
+Artifacts: plans/active/strat-m2-001/reports/2026-01-29T234500Z/
+Next Up: 1) If time remains, add dataset-size gradient scaling notes to Strategy §7; 2) Prepare outline for STRAT-M2-001 Task M3 (joint global-local refinement).
