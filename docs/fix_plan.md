@@ -237,6 +237,7 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-m2-amortized-scale-study.md next_action=delegate_task1_scale_study
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T235959Z/ next_action=delegate_scale_study_stability_tasks_2_5
 Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=3 artifacts=plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/ next_action=collect_pending_50_100_runs
+Supervisor state: focus=STRAT-M2-001 state=ready_for_implementation dwell=1 artifacts=plans/active/strat-m2-001/reports/2026-01-29T163444Z/scale_study/ next_action=finish_scale100_metrics_docs
 
 Scale-study stability plan execution (2026-01-29):
 - ✅ Task 1 (longrun_20): 500 iters @ lr=0.003 → NaN divergence, σ frozen at 0.50°. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_longrun_20/`
