@@ -154,4 +154,11 @@ Supervisor state: focus=STRAT-VI-001 state=planning dwell=1 artifacts=docs/plans
     2. Run the canonical 150-iteration benchmark with `--posterior-parameterization flow --posterior-flow-layers 4 --posterior-flow-hidden 32 --k-samples 4 --observation-mean 25 --observation-normalization mean --kl-weight-start 0.2 --kl-weight-end 1.0 --kl-warmup-steps 120 --prior-spread-start 2.0 --prior-spread-end 0.5 --prior-warmup-steps 120`. Archive PNG/JSON/logs under `plans/active/strat-vi-001/reports/2026-01-29T235959Z/flow_benchmark/` (copy the `vi_vs_mc_*` files there in addition to `demo_outputs/`).
     3. Update `docs/findings.md` (FND-VI-2026-01) and `docs/strategy/mainstrategy.md §9` with the new flow evidence + conclusion (still collapses), refresh this fix-plan entry and `input.md`, and articulate whether we escalate to the hybrid MC-VI plan.
 
-Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T235959Z/ next_action=delegate_task26_flow_evidence_docs
+- **Status 2026-01-29 (Task 26 COMPLETED — FAILED):** All three actions executed:
+    1. ✅ Flow vs log-normal diagnostics archived: `plans/active/strat-vi-001/reports/2026-01-29T235959Z/flow_diagnostics/{flow/,baseline/,summary.md}`. Flow σ blew up to 37–56° (vs baseline 0.81°).
+    2. ✅ 150-iter canonical benchmark: `plans/active/strat-vi-001/reports/2026-01-29T235959Z/flow_benchmark/`. Flow diverged to NaN by iteration 2. Demo artifacts copied to `demo_outputs/`.
+    3. ✅ `docs/findings.md` (FND-VI-2026-01g), `docs/strategy/mainstrategy.md §9`, and this fix-plan updated.
+    - **Result: FAILED ≥1.5° criterion.** Flow posterior introduces catastrophic σ blow-up / NaN divergence.
+    - **All 8 VI mitigations exhausted.** Recommend escalation to hybrid MC-VI (`docs/plans/2026-01-29-vi-hybrid-mc-vi.md`).
+
+Supervisor state: focus=STRAT-VI-001 state=task26_complete_failed dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T235959Z/ next_action=escalate_hybrid_mc_vi_plan
