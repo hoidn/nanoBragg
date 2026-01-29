@@ -33,6 +33,7 @@ Currently, modeling crystal disorder (mosaicity) relies on brute-force Monte Car
 1.  **Orders-of-magnitude speedups** (10x–100x) for diffuse scattering refinement.
 2.  **Noise-free gradients**, enabling the use of advanced optimizers (LBFGS) and Variational Inference (VI).
 3.  **A publishable advance** in differentiable crystallography.
+4.  **Parallel Track:** Multi-image global refinement (starting with the Duck demo) to validate global-local gradient flow and unlock amortized inference of mosaicity.
 
 ## 2. The Scientific Thesis
 **Current State:** Mosaicity is simulated by summing intensities from $N$ discrete crystal copies.
@@ -112,13 +113,45 @@ Completing this initiative creates the **foundation** for the next two major mil
 1.  **Sparse/Grainy Modeling:** Once we have a differentiable probability distribution, we can replace the single Gaussian with a *Mixture of Gaussians* to model sparse, grainy crystals (e.g., VAE latent spaces).
 2.  **Multi-Image Global Refinement:** "Recovering the structure factor" requires thousands of forward passes. This is computationally impossible with the slow Monte Carlo engine but becomes feasible with the $O(1)$ Probabilistic engine.
 
-## 7. Immediate Action Plan
+## 7. Parallel Track: Multi-Image Refinement & Amortized Inference
+This track runs **in parallel** with probabilistic forward modeling. It can start immediately on synthetic data and does not require the analytic kernel to be complete, though the analytic path is preferred for scale.
+
+**Purpose:** Validate global parameter recovery (shared F_hkl) and build the foundation for amortized inference of per-image mosaicity.
+
+**Dependencies & Defaults:**
+- **Optimizer:** Use SGD-style training with **Adam** (already in the codebase) as the default.
+- **Mosaicity model:** Prefer **VI mosaicity** when available; **Monte Carlo** is acceptable for MVP and stability baselines.
+- **Staging:** Start with **fixed orientations** and **fixed F_hkl** when learning mosaicity to avoid identifiability traps.
+
+**Milestones:**
+1.  **M1: Duck Demo (Fixed Orientations, Global F_hkl)**  
+    - Recover a single-slice "Duck" from 20 images.  
+    - Success: loss decreases; Duck slice recovered; adjacent slice remains background.
+2.  **M2: Amortized Mosaicity (Fixed F_hkl)**  
+    - Train an encoder/posterior to predict per-image mosaicity using multi-image loss.  
+    - Success: mosaic posteriors recover ground truth; gradient norms increase with dataset size.
+3.  **M3: Joint Global-Local Refinement**  
+    - Optimize F_hkl + per-image mosaicity + per-image scale.  
+    - Success: stable convergence without collapse into mosaicity.
+
+**Gating Metrics:**
+- **Gradient signal vs dataset size:** |∇μ| and |∇ρ| should grow with N images.
+- **Amortized accuracy:** recover mosaic spread on synthetic datasets across 20–100 images.
+- **Compute scaling:** time/epoch improves with analytic kernel; MC acceptable for MVP.
+
+**Risks & Mitigations:**
+- **Identifiability (mosaicity vs divergence/spectrum/scale):** stage refinement; fix F_hkl first.
+- **Bias absorption (mosaicity absorbs F_hkl errors):** enforce global priors and regularize per-image terms.
+- **Demo fragility:** start with Duck; add harder synthetic cases after M1.
+
+## 8. Immediate Action Plan
 1.  **Implement** `src/nanobrag_torch/simulators/probabilistic.py` (The Kernel).
 2.  **Implement** `scripts/benchmark_probabilistic.py` (The Evidence).
 3.  **Execute** Benchmark and generate the plot.
 4.  **Review** results with PIs to authorize the Multi-Image Refinement phase.
+5.  **Parallel:** Implement `scripts/demo_recover_duck.py` and the global F_hkl refinement loop (M1).
 
-## 8. Variational Mosaicity Replacement (VI)
+## 9. Variational Mosaicity Replacement (VI)
 The analytic Gaussian envelope produces near-zero gradients for mosaicity in
 multiple test scenarios (FND-PROB-2026-01). The next strategic step is to
 replace the analytic mosaicity model with a variational inference (VI) model
