@@ -4,3 +4,6 @@
 [submodule ".claude"]
 	path = .claude
 	url = git@github.com:hoidn/claude.git
+[submodule "scripts/orchestration"]
+	path = scripts/orchestration
+	url = git@github.com:hoidn/orchestration.git
