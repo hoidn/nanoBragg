@@ -196,6 +196,7 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
 - Plan References:
   - `docs/plans/2026-01-29-m2-amortized-multi-image.md` (M1: dataset + shared-posterior demo — ✅ complete)
   - `docs/plans/2026-01-29-m2-amortized-mosaicity.md` (M2: amortized encoder + diagnostics — ✅ code complete)
+  - `docs/plans/2026-01-29-m2-amortized-scale-study.md` (Scale study: longer horizons + 50/100-image datasets — 🆕)
 - Goal: Advance the multi-image refinement track from the fixed shared-posterior Duck demo (delivered 2026-01-29 engineer loop) to an amortized encoder that predicts per-image mosaic spread with measurable gradient amplification as dataset size grows.
 - Dependencies: STRAT-VI-001/002 findings (posterior collapse), Duck dataset artifacts under `demo_inputs/duck_multi_image/`.
 - Artifacts Root: `plans/active/strat-m2-001/`
@@ -219,11 +220,20 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - Mirror: `demo_outputs/duck_amortized/` (duck_loss.png, duck_summary.json)
   - Results: Loss decreased (−2.9M → −3.5M), per-image σ diverse (11°–234°), gradients finite/non-zero. σ accuracy not converged (known limitation per STRAT-VI-001/002).
   - Docs updated: `docs/strategy/mainstrategy.md` §7, `docs/development/testing_strategy.md` §6.2
-- Next Steps:
-  - Evaluate longer training (500+ iters) and larger datasets (N=50, 100) for σ convergence
-  - Prepare M3 outline (joint global-local refinement)
+- Next Steps (Plan `docs/plans/2026-01-29-m2-amortized-scale-study.md`):
+  1. Generate `demo_inputs/duck_multi_image_n50` and `_n100` with `scripts/generate_duck_multi_image.py`.
+  2. Capture a 500-iteration amortized baseline (20 images) and 300-iteration runs for the 50-image and 100-image datasets, mirroring artifacts to `demo_outputs/`.
+  3. Land `scripts/analysis/summarize_duck_amortized.py` + unit test coverage so summary tables stay reproducible.
+  4. Update `docs/strategy/mainstrategy.md` §7, `docs/development/testing_strategy.md` §6.2, `docs/findings.md`, and this fix-plan entry with the new evidence.
+- Exit Criteria:
+  - ✅ Duck dataset spec published + referenced from `docs/index.md`
+  - ✅ `DuckMosaicEncoder` + amortized trainer pass targeted pytest selectors
+  - ✅ `scripts/demo_recover_duck.py --mode amortized` generates PNG/JSON artifacts (150-iter benchmark completed)
+  - ✅ Strategy/testing docs cite the new CLI workflow and artifact path
+  - ✅ Full 150-iteration amortized benchmark archived with metrics snapshot
+  - **NEW:** Scale-study artifacts + summary prove whether σ recovers (≥1.5°) or document the limitation with a formal finding + mitigation recommendation.
 
-Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T141425Z/amortized_demo/ next_action=prepare_m3_outline
+Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans/2026-01-29-m2-amortized-scale-study.md next_action=delegate_task1_scale_study
 
 ## [STRAT-M3-001] Duck joint global-local refinement
 - Strategy Reference: `docs/strategy/mainstrategy.md` §7 (Milestone M3)
