@@ -223,7 +223,7 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
 - Next Steps (Plan `docs/plans/2026-01-29-m2-scale-study-stability.md` — supersedes the original scale-study LR guidance):
   1. ✅ Task 1: dataset generation complete (50/100 image folders). No further action.
   2. ✅ **Task 2:** Reran 500-iter baseline @ lr=0.003 → NaN divergence, σ=0.50° (frozen). Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_longrun_20/`, mirrored to `demo_outputs/duck_amortized_longrun_20/`.
-  3. ⏳ **Task 3:** 50-image (lr=0.004) and 100-image (lr=0.003) 300-iter runs still executing on CPU. Artifact dirs reserved at `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_scale_{50,100}/`.
+  3. ✅ **Task 3:** 50-image (lr=0.004, loss=−16.5M, σ=0.50°, no divergence) and 100-image (lr=0.003, NaN divergence, σ=0.50°). Neither recovered σ≥1.5°. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_scale_{50,100}/`. Mirrored to `demo_outputs/duck_amortized_scale_{50,100}/`. Summary CSV: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/summary/summary.csv`.
   4. ✅ **Task 4:** `scripts/analysis/summarize_duck_amortized.py` + `tests/test_analysis_duck_summary.py` + `tests/fixtures/duck_summary_sample.json` landed. Test passes.
   5. ✅ **Task 5:** `docs/strategy/mainstrategy.md` §7 updated with scale-study table, `docs/findings.md` updated with FND-M2-2026-01, `docs/fix_plan.md` updated.
 - Exit Criteria:
@@ -238,10 +238,12 @@ Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=docs/plans
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T235959Z/ next_action=delegate_scale_study_stability_tasks_2_5
 Supervisor state: focus=STRAT-M2-001 state=evidence_captured dwell=3 artifacts=plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/ next_action=collect_pending_50_100_runs
 Supervisor state: focus=STRAT-M2-001 state=ready_for_implementation dwell=1 artifacts=plans/active/strat-m2-001/reports/2026-01-29T163444Z/scale_study/ next_action=finish_scale100_metrics_docs
+Supervisor state: focus=STRAT-M2-001 state=evidence_complete dwell=2 artifacts=plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/summary/summary.csv next_action=close_or_mitigate
 
 Scale-study stability plan execution (2026-01-29):
 - ✅ Task 1 (longrun_20): 500 iters @ lr=0.003 → NaN divergence, σ frozen at 0.50°. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_longrun_20/`
-- ⏳ Task 2 (scale_50/scale_100): 300-iter runs still executing on CPU
+- ✅ Task 2 (scale_50): 300 iters @ lr=0.004 → loss=−16.5M, σ frozen at 0.50°. No divergence. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_scale_50/`
+- ✅ Task 2 (scale_100): 300 iters @ lr=0.003 → NaN divergence, σ frozen at 0.50°. Artifacts: `plans/active/strat-m2-001/reports/2026-01-29T151722Z/scale_study/amortized_scale_100/`
 - ✅ Task 3 (summarizer): `scripts/analysis/summarize_duck_amortized.py` + test + fixture landed
 - ✅ Task 4 (docs): FND-M2-2026-01 added to findings, strategy §7 updated, fix_plan updated
 - Finding: FND-M2-2026-01 documents σ-frozen + NaN divergence limitation
