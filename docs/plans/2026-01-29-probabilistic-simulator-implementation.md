@@ -135,22 +135,58 @@ Script requirements:
 - Workflow per strategy §4: generate ground-truth Monte Carlo image (`Simulator` w/ `mosaic_domains=50`), baseline Monte Carlo refinement (`mosaic_domains=5`), analytic refinement (`ProbabilisticSimulator`).
 - Use `scripts/refinement_demo_diffuse.py` constants as starting point (reuse `refinement_demo_diffuse.FIXED_PARAMS`).
 - Each refinement loop: track loss per iteration (MSE between simulated and GT), record wall-clock via `time.perf_counter()` around forward+backward+optimizer step.
+- Define helper builders:
+  - `build_configs(device, dtype, mosaic_domains, mosaic_spread_deg)` that returns `Crystal`, `Detector`, configs, and `BeamConfig` derived from the diffuse demo constants so both simulators share identical geometry.
+  - `run_refinement(simulator, spread_param, iterations, optimizer_kwargs, label)` that performs a gradient descent loop, returns `loss_history` and `per_iter_times`.
+- Deterministic seeding: call `torch.manual_seed(7)` and fix any `torch.Generator` used for random numbers so MC baseline stays repeatable (aligns with plan Task 1 seeds).
+- Parameterization:
+  - Optimize only `mosaic_spread_deg` for both simulators (misset locked to demo defaults) to isolate the probabilistic benefit.
+  - Use identical optimizer hyperparameters (e.g., Adam LR=0.02) and initialize spread to `0.5°` for both baselines to make curves comparable.
+- Device/dtype neutrality: accept `--device` argument (`cpu` default) and cast configs + tensors accordingly; keep dtype float32 for runtime parity, but allow overriding via CLI flag in the future.
+- Add structured logging (e.g., `print(f"[baseline][{i}] loss=... time=...")`) so the supervisor can skim convergence from terminal output.
 
 **Step 2: Plot + summary outputs**
 
 - Use Matplotlib to plot loss vs iteration for baseline vs analytic plus ground truth reference; label curves clearly, include speedup annotation.
-- Save summary JSON containing arrays: `baseline_loss`, `probabilistic_loss`, `baseline_time_s`, `probabilistic_time_s`, `ground_truth_loss` plus config snapshot.
-- Ensure script creates `demo_outputs/` if missing and writes to `demo_outputs/probabilistic_vs_mc_loss.png` + JSON by default or to `--outdir` if provided.
+- Annotate plot with:
+  - Average iteration time for each curve (e.g., `1.21s/iter` vs `0.24s/iter`)
+  - Final loss values so PI reviewers can read off the convergence win visually.
+- Save summary JSON containing:
+  ```json
+  {
+    "ground_truth": {"mosaic_spread_deg": 2.0, "domains": 50},
+    "baseline": {
+      "label": "Simulator (MC, domains=5)",
+      "loss": [...],
+      "per_iteration_seconds": [...],
+      "total_seconds": 12.3
+    },
+    "probabilistic": {
+      "label": "ProbabilisticSimulator",
+      "loss": [...],
+      "per_iteration_seconds": [...],
+      "total_seconds": 2.8
+    },
+    "config": {...}
+  }
+  ```
+  Include the exact CLI arguments used so runs are reproducible.
+- Ensure script creates `demo_outputs/` if missing and writes to `demo_outputs/probabilistic_vs_mc_loss.png` + JSON by default or to `--outdir` if provided. Support `--plot-only` by loading an existing JSON file and regenerating the PNG without rerunning the refinement loops.
 
 **Step 3: Document benchmark hook**
 
-- Update `README_PYTORCH.md` (Performance or Tutorials section) with a new subsection “Probabilistic Mosaic Benchmark” showing how to run the script and interpret outputs.
-- Update `docs/strategy/mainstrategy.md` §4 bullet to reference the specific script/outputs now that they exist.
+- Update `README_PYTORCH.md` (Performance section) with a “Probabilistic Mosaic Benchmark” subsection that includes:
+  - One-paragraph summary of what the script demonstrates.
+  - Exact command (`KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmark_probabilistic.py --iterations 150 --device cpu`) and the expected artifacts (`demo_outputs/probabilistic_vs_mc_loss.png` and `.json`).
+  - Interpreting the plot (probabilistic curve smoother, faster, reaches lower loss).
+- Update `docs/strategy/mainstrategy.md` §4 bullet to reference the specific script/outputs now that they exist and cite the measured speedup ratio from Step 4 so strategy evidence is concrete.
 
 **Step 4: Run benchmark for evidence**
 
 Command: `KMP_DUPLICATE_LIB_OK=TRUE python scripts/benchmark_probabilistic.py --iterations 150 --device cpu`
 Expected: script prints per-iteration stats, produces PNG/JSON in `demo_outputs/`. Capture runtime + final losses for supervisor report.
+- Copy the resulting PNG, JSON, and console log into `plans/active/strat-prob-002/reports/<timestamp>/` so future reviewers can audit the exact evidence bundle without rerunning the script.
+- Record the measured speedup (baseline mean iter time ÷ probabilistic mean iter time) in both the report and `docs/strategy/mainstrategy.md`.
 
 **Step 5: Commit benchmark + docs**
 
@@ -164,4 +200,3 @@ git commit -m "feat: add probabilistic benchmark and docs"
 ### Task 4: (Optional) Integration Smoke Test
 
 If time permits, run `KMP_DUPLICATE_LIB_OK=TRUE pytest -v tests/test_at_perf_005.py::TestTorchCompile::test_simulator_compile` to make sure the new subclass doesn’t break compile guards. Not part of acceptance but recommended before merging.
-
