@@ -72,12 +72,12 @@
 - Plan Reference: `docs/plans/2026-01-29-vi-mosaic-implementation-plan.md`
 - Goal: Implement the VariationalMosaicSimulator stack (posterior module, VariationalMosaicSimulator class, Poisson ELBO helper, benchmarks, and analytic deprecation) so mosaicity gradients are recovered via VI instead of the analytic Gaussian.
 - Dependencies: STRAT-PROB-003 findings FND-PROB-2026-01 (zero gradients) plus existing Simulator API contracts.
-- Artifacts Root: `plans/active/strat-vi-001/` (current loop report: `2026-01-29T073616Z`)
+- Artifacts Root: `plans/active/strat-vi-001/` (current loop report: `2026-01-29T081720Z`)
 - Next Actions:
   1. ~~**Task 1** — Stand up `src/nanobrag_torch/vi/mosaic_posterior.py` with a reparameterized log-normal sampler, KL helper, and `tests/test_vi_mosaic.py::test_mosaic_posterior_*` coverage (write test first).~~ ✅ (2026-01-29 engineer loop)
   2. ~~**Task 2** — Implement `VariationalMosaicSimulator` in `src/nanobrag_torch/simulators/variational_mosaic.py` plus smoke tests that show `k_samples=1` matches deterministic rotations and averages across seeds; update `__init__.py`.~~ ✅ (2026-01-29 engineer loop; tests recorded in `engineer_summary.md`)
-  3. **Task 3 (ACTIVE)** — Add `src/nanobrag_torch/vi/poisson_elbo.py` and gradcheck/regression coverage tying simulator + posterior together.
-  4. **Task 4** — Build `scripts/benchmark_vi_mosaic.py` + documentation/README updates to compare MC, analytic, and VI plus CLI instructions.
+  3. ~~**Task 3** — Add `src/nanobrag_torch/vi/poisson_elbo.py` and gradcheck/regression coverage tying simulator + posterior together.~~ ✅ (2026-01-29 engineer loop — verified via `pytest tests/test_vi_mosaic.py::TestPoissonELBO::*` on CPU with gradcheck.)
+  4. **Task 4 (ACTIVE)** — Build `scripts/benchmark_vi_mosaic.py` with a reusable `run_benchmark()` helper, add `tests/test_vi_mosaic.py::test_benchmark_script_smoke`, and refresh `docs/strategy/mainstrategy.md` + `docs/development/testing_strategy.md` so the VI benchmark workflow (PNG/JSON artifacts + CLI commands) is documented.
   5. **Task 5** — After VI passes, emit `DeprecationWarning` in the analytic simulator and mark docs accordingly.
 - Exit Criteria:
   - New VI modules ship with deterministic seed control (`torch.Generator`) and gradcheck-proven differentiability.
@@ -86,4 +86,4 @@
   - Analytic simulator emits DeprecationWarning gated on VI success; `docs/findings.md` references the VI resolution of FND-PROB-2026-01.
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T073616Z/ next_action=delegate_task3_poisson_elbo
+Supervisor state: focus=STRAT-VI-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-vi-001/reports/2026-01-29T081720Z/ next_action=delegate_task4_vi_benchmark
