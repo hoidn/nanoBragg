@@ -209,3 +209,5 @@ Supervisor state: focus=STRAT-VI-002 state=failed dwell=0 artifacts=plans/active
   - Strategy/testing docs cite the new CLI workflow and artifact path; demo outputs synced under `demo_outputs/duck_amortized/`.
 
 Supervisor state: focus=STRAT-M2-001 state=planning dwell=1 artifacts=plans/active/strat-m2-001/reports/TBD next_action=delegate_task1_dataset_spec
+
+Supervisor state: focus=STRAT-M2-001 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-m2-001/reports/2026-01-29T230500Z/ next_action=delegate_tasks3_4_amortized_trainer_cli
