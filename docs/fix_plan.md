@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | [STRAT-PROB-001](#strat-prob-001-probabilistic-simulator-kernel) | ProbabilisticSimulator kernel | Critical | in_review |
 | [STRAT-PROB-002](#strat-prob-002-probabilistic-benchmark-artifacts) | Probabilistic benchmark artifacts | Critical | done_with_findings |
-| [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | planning |
+| [STRAT-PROB-003](#strat-prob-003-probabilistic-gradient-recovery) | Probabilistic gradient recovery | Critical | in_progress |
 
 ## [STRAT-PROB-001] ProbabilisticSimulator kernel
 - Strategy Reference: `docs/strategy/mainstrategy.md` §§2–3 (drop-in API, angular broadening, stash-and-patch requirement)
@@ -55,10 +55,10 @@
 - Dependencies: STRAT-PROB-002 artifacts (baseline CLI + presets)
 - Artifacts Root: `plans/active/strat-prob-003/` (current loop report: `2026-01-29T065513Z`)
 - Next Actions:
-  1. Task 1 (plan §Task 1): add kernel diagnostics callback + new `scripts/analysis/probabilistic_gaussian_diagnostics.py` harness with pytest coverage.
-  2. Task 2: capture hi_res_b diagnostics, update `docs/findings.md` entry FND-PROB-2026-01 with quantified evidence.
-  3. Task 3: implement the reciprocal-norm-based Gaussian width, extend regression/grad tests, rerun focused pytest target.
-  4. Task 4: refresh benchmark presets/artifacts (add `hi_res_c`), rerun CLI, update docs + fix_plan exit criteria.
+  1. ~~Task 1 (plan §Task 1): add kernel diagnostics callback + new `scripts/analysis/probabilistic_gaussian_diagnostics.py` harness with pytest coverage.~~ ✅ Completed 2026-01-29 (artifacts: `plans/active/strat-prob-003/reports/2026-01-29T065513Z/task1_pytest.log`).
+  2. ~~Task 2: capture hi_res_b diagnostics, update `docs/findings.md` entry FND-PROB-2026-01 with quantified evidence.~~ ✅ Completed 2026-01-29 (artifacts: `plans/active/strat-prob-003/reports/2026-01-29T065513Z/hi_res_b_diag.*`).
+  3. **Task 3 (ACTIVE):** update the design doc with the Δθ-based Gaussian width, refactor `compute_probabilistic_physics` to use `g_norm`/`delta_theta`, extend the diagnostics script + pytest coverage, and add the hi_res_b spread regression plus `tests/test_probabilistic_gradients.py` (≥1e-4 gradient magnitude).
+  4. Task 4: refresh benchmark presets/artifacts (add `hi_res_c`), rerun CLI, and roll the evidence into `docs/strategy/mainstrategy.md` + README once Task 3 proves non-zero gradients and ≥4× speedup.
 - Exit Criteria:
   - Diagnostics JSON/markdown exist under the artifacts root showing |ΔQ|/σ ratios and non-zero FD gradients for hi_res_b.
   - Updated kernel & tests land with grad magnitudes ≥1e-4 for hi_res_b (unit test) and gradcheck continues to pass on CPU.
@@ -66,4 +66,4 @@
   - STRAT-PROB-002 can move to **complete** (docs referencing artifacts, README updated).
 
 <!-- Supervisor state updated at end of current loop -->
-Supervisor state: focus=STRAT-PROB-003 state=planning dwell=1 artifacts=plans/active/strat-prob-003/reports/2026-01-29T065513Z/ next_action=delegate_task1_diagnostics
+Supervisor state: focus=STRAT-PROB-003 state=ready_for_implementation dwell=0 artifacts=plans/active/strat-prob-003/reports/2026-01-29T070535Z/ next_action=implement_task3_sigma_fix
